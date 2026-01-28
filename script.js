@@ -21,8 +21,19 @@ const PRICING = {
     taxRate: 0.0825
 };
 
-// Current quote data for webhook
-let currentQuoteData = {};
+// Service type display names
+const SERVICE_NAMES = {
+    'onsite': 'Store at My Property',
+    'facility-inside': 'Store at MI-BOX (Climate Controlled)',
+    'facility-outside': 'Store at MI-BOX (Outside)',
+    'moving-direct': 'Moving (Property to Property)',
+    'moving-facility': 'Moving (via MI-BOX Facility)'
+};
+
+// Current wizard state
+let currentStep = 1;
+let quoteData = {};
+let turnstileToken = null;
 
 // Get delivery zone from ZIP
 function getDeliveryZone(zip) {
@@ -42,10 +53,7 @@ function calculateQuote() {
     if (!serviceType || !deliveryZip) return null;
 
     const zone = getDeliveryZone(deliveryZip);
-    if (!zone) {
-        alert('Sorry, we do not currently serve that ZIP code. Please call us at (713) 929-6051 to discuss options.');
-        return null;
-    }
+    if (!zone) return null;
 
     let deliveryFee = PRICING.delivery[zone].fee;
     let firstMonthRent = PRICING.firstMonth[containerSize];
@@ -58,15 +66,15 @@ function calculateQuote() {
         pickupFee = PRICING.pickup[zone];
     } else if (serviceType === 'facility-inside') {
         monthlyRent = PRICING.monthly[containerSize].facilityInside;
-        pickupFee = 0; // Free pickup for facility storage
+        pickupFee = 0;
     } else if (serviceType === 'facility-outside') {
         monthlyRent = PRICING.monthly[containerSize].facilityOutside;
-        pickupFee = 0; // Free pickup for facility storage
+        pickupFee = 0;
     } else if (serviceType === 'moving-direct') {
         monthlyRent = PRICING.monthly[containerSize].onsite;
         const destZone = getDeliveryZone(destinationZip);
         if (destZone) {
-            pickupFee = PRICING.delivery[destZone].fee; // Destination delivery fee
+            pickupFee = PRICING.delivery[destZone].fee;
         }
     } else if (serviceType === 'moving-facility') {
         monthlyRent = PRICING.monthly[containerSize].facilityInside;
@@ -107,21 +115,248 @@ function formatCurrency(amount) {
     return '$' + amount.toFixed(2);
 }
 
+// Format date for display
+function formatDate(dateString) {
+    if (!dateString) return '--';
+    const date = new Date(dateString + 'T00:00:00');
+    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+// Navigate to step
+function goToStep(step) {
+    // Update progress indicators
+    document.querySelectorAll('.wizard-step').forEach((el, index) => {
+        el.classList.remove('active', 'completed');
+        if (index + 1 < step) {
+            el.classList.add('completed');
+        } else if (index + 1 === step) {
+            el.classList.add('active');
+        }
+    });
+
+    // Update panels
+    document.querySelectorAll('.wizard-panel').forEach(panel => {
+        panel.classList.remove('active');
+    });
+
+    const targetPanel = document.getElementById('step' + step);
+    if (targetPanel) {
+        targetPanel.classList.add('active');
+    }
+
+    currentStep = step;
+
+    // If going to step 3, calculate and display quote
+    if (step === 3) {
+        displayQuoteSummary();
+    }
+
+    // If going to step 4, pre-populate the ZIP from step 1
+    if (step === 4) {
+        document.getElementById('deliveryZipConfirm').value = document.getElementById('deliveryZip').value;
+    }
+}
+
+// Display quote summary on step 3
+function displayQuoteSummary() {
+    const serviceType = document.getElementById('serviceType').value;
+    const containerSize = document.getElementById('containerSize').value;
+    const deliveryZip = document.getElementById('deliveryZip').value;
+    const deliveryDate = document.getElementById('deliveryDate').value;
+
+    // Update summary info
+    document.getElementById('summaryService').textContent = SERVICE_NAMES[serviceType] || '--';
+    document.getElementById('summaryContainer').textContent = containerSize === '16' ? "8' x 16'" : "8' x 20'";
+    document.getElementById('summaryDate').textContent = formatDate(deliveryDate);
+    document.getElementById('summaryZip').textContent = deliveryZip;
+
+    // Calculate quote
+    const quote = calculateQuote();
+    if (!quote) return;
+
+    // Update Due Today box
+    document.getElementById('tableDeliveryFee').textContent = formatCurrency(quote.deliveryFee);
+    document.getElementById('tableFirstMonth').textContent = formatCurrency(quote.firstMonthRent);
+    document.getElementById('tableTaxToday').textContent = formatCurrency(quote.taxToday);
+    document.getElementById('tableDueToday').textContent = formatCurrency(quote.dueToday);
+
+    // Update Ongoing Monthly box
+    document.getElementById('tableMonthlyRent').textContent = formatCurrency(quote.monthlyRent);
+    document.getElementById('tableMonthlyTax').textContent = formatCurrency(quote.taxMonthly);
+    document.getElementById('tableMonthlyTotal').textContent = formatCurrency(quote.ongoingMonthly);
+
+    // Update When Finished box
+    document.getElementById('tablePickupFee').textContent = quote.pickupFee > 0 ? formatCurrency(quote.pickupFee) : 'FREE';
+    document.getElementById('tablePickupTax').textContent = quote.pickupFee > 0 ? formatCurrency(quote.taxPickup) : '$0.00';
+    document.getElementById('tablePickupTotal').textContent = quote.pickupFee > 0 ? formatCurrency(quote.dueWhenDone) : 'FREE';
+
+    // Store quote data
+    quoteData = {
+        serviceType,
+        containerSize,
+        deliveryZip,
+        destinationZip: document.getElementById('destinationZip').value,
+        deliveryDate,
+        firstName: document.getElementById('firstName').value,
+        lastName: document.getElementById('lastName').value,
+        email: document.getElementById('email').value,
+        phone: document.getElementById('phone').value,
+        howHeard: document.getElementById('howHeard').value,
+        ...quote
+    };
+}
+
+// Validate step fields
+function validateStep(step) {
+    let isValid = true;
+    let firstInvalid = null;
+
+    if (step === 1) {
+        const fields = ['serviceType', 'deliveryZip', 'containerSize', 'deliveryDate'];
+        const serviceType = document.getElementById('serviceType').value;
+
+        // Add destination ZIP if moving
+        if (serviceType.includes('moving')) {
+            fields.push('destinationZip');
+        }
+
+        fields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (!field.value) {
+                field.classList.add('is-invalid');
+                isValid = false;
+                if (!firstInvalid) firstInvalid = field;
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+
+        // Validate ZIP code is in service area
+        const deliveryZip = document.getElementById('deliveryZip').value;
+        if (deliveryZip && !getDeliveryZone(deliveryZip)) {
+            document.getElementById('deliveryZip').classList.add('is-invalid');
+            alert('Sorry, we do not currently serve that ZIP code. Please call us at (713) 929-6051 to discuss options.');
+            isValid = false;
+        }
+
+        // Validate destination ZIP if moving
+        if (serviceType.includes('moving')) {
+            const destZip = document.getElementById('destinationZip').value;
+            if (destZip && !getDeliveryZone(destZip)) {
+                document.getElementById('destinationZip').classList.add('is-invalid');
+                alert('Sorry, we do not currently serve the destination ZIP code. Please call us at (713) 929-6051 to discuss options.');
+                isValid = false;
+            }
+        }
+
+    } else if (step === 2) {
+        const fields = ['firstName', 'email', 'phone'];
+
+        fields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (!field.value) {
+                field.classList.add('is-invalid');
+                isValid = false;
+                if (!firstInvalid) firstInvalid = field;
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+
+        // Validate email format
+        const email = document.getElementById('email');
+        if (email.value && !email.value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+            email.classList.add('is-invalid');
+            isValid = false;
+            if (!firstInvalid) firstInvalid = email;
+        }
+    } else if (step === 4) {
+        const fields = ['deliveryAddress', 'deliveryCity', 'placementLocation', 'surfaceType'];
+
+        fields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (!field.value) {
+                field.classList.add('is-invalid');
+                isValid = false;
+                if (!firstInvalid) firstInvalid = field;
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+    }
+
+    if (firstInvalid) {
+        firstInvalid.focus();
+    }
+
+    return isValid;
+}
+
+// Check if we're on localhost/file protocol (for development)
+function isLocalDevelopment() {
+    return window.location.protocol === 'file:' ||
+           window.location.hostname === 'localhost' ||
+           window.location.hostname === '127.0.0.1';
+}
+
+// Turnstile callback - stores the token
+function onTurnstileSuccess(token) {
+    turnstileToken = token;
+    document.getElementById('turnstileToken').value = token;
+}
+
+// Make callback available globally
+window.onTurnstileSuccess = onTurnstileSuccess;
+
+// Send data to webhooks
+function sendToWebhook(type) {
+    const zapierUrl = 'https://hooks.zapier.com/hooks/catch/21414077/2axrkxs/';
+    const stellaUrl = 'https://api.runstella.com/webhook/16216eb0';
+
+    const data = {
+        ...quoteData,
+        formType: type,
+        timestamp: new Date().toISOString(),
+        source: 'miboxhouston.com',
+        turnstileToken: turnstileToken
+    };
+
+    // Send to Zapier
+    fetch(zapierUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    }).catch(err => console.log('Zapier webhook error:', err));
+
+    // Send to Stella
+    fetch(stellaUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    }).catch(err => console.log('Stella webhook error:', err));
+}
+
 // Set button loading state
 function setButtonLoading(button, loading) {
     if (loading) {
         button.disabled = true;
         button.dataset.originalText = button.innerHTML;
-        const spinnerHTML = '<span class="btn-spinner"></span>';
-        button.innerHTML = spinnerHTML + 'Processing...';
+        button.innerHTML = '<span class="btn-spinner"></span>Submitting...';
     } else {
         button.disabled = false;
         button.innerHTML = button.dataset.originalText;
     }
 }
 
-// Initialize form handlers
+// Initialize on DOM ready
 document.addEventListener('DOMContentLoaded', function() {
+    // Set minimum delivery date to tomorrow
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    document.getElementById('deliveryDate').min = tomorrow.toISOString().split('T')[0];
+
     // Show/hide destination ZIP based on service type
     document.getElementById('serviceType').addEventListener('change', function() {
         const destGroup = document.getElementById('destinationZipGroup');
@@ -133,152 +368,93 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             destGroup.style.display = 'none';
             destInput.required = false;
-            destInput.value = ''; // Clear destination ZIP when not needed
+            destInput.value = '';
         }
     });
 
-    // Quote form submission
-    document.getElementById('quoteCalculator').addEventListener('submit', function(e) {
-        e.preventDefault();
-
-        const submitBtn = this.querySelector('button[type="submit"]');
-        setButtonLoading(submitBtn, true);
-
-        // Simulate brief processing delay for UX
-        setTimeout(function() {
-            const quote = calculateQuote();
-            setButtonLoading(submitBtn, false);
-
-            if (!quote) return;
-
-            // Update display - totals
-            document.getElementById('dueToday').textContent = formatCurrency(quote.dueToday);
-            document.getElementById('ongoingMonthly').textContent = formatCurrency(quote.ongoingMonthly);
-            document.getElementById('dueWhenDone').textContent = formatCurrency(quote.dueWhenDone);
-
-            // Update display - itemized breakdown
-            document.getElementById('deliveryFeeDisplay').textContent = formatCurrency(quote.deliveryFee);
-            document.getElementById('firstMonthDisplay').textContent = formatCurrency(quote.firstMonthRent);
-            document.getElementById('taxTodayDisplay').textContent = formatCurrency(quote.taxToday);
-            document.getElementById('monthlyRentDisplay').textContent = formatCurrency(quote.monthlyRent);
-            document.getElementById('taxMonthlyDisplay').textContent = formatCurrency(quote.taxMonthly);
-            document.getElementById('pickupFeeDisplay').textContent = formatCurrency(quote.pickupFee);
-            document.getElementById('taxPickupDisplay').textContent = formatCurrency(quote.taxPickup);
-
-            // Store quote data for webhook
-            currentQuoteData = {
-                serviceType: document.getElementById('serviceType').value,
-                containerSize: document.getElementById('containerSize').value,
-                deliveryZip: document.getElementById('deliveryZip').value,
-                destinationZip: document.getElementById('destinationZip').value,
-                firstName: document.getElementById('firstName').value,
-                lastName: document.getElementById('lastName').value,
-                email: document.getElementById('email').value,
-                phone: document.getElementById('phone').value,
-                deliveryFee: quote.deliveryFee,
-                firstMonthRent: quote.firstMonthRent,
-                monthlyRent: quote.monthlyRent,
-                pickupFee: quote.pickupFee,
-                taxToday: quote.taxToday,
-                dueToday: quote.dueToday,
-                ongoingMonthly: quote.ongoingMonthly,
-                dueWhenDone: quote.dueWhenDone
-            };
-
-            // Show results and booking form
-            document.getElementById('quoteResults').classList.add('show');
-            document.getElementById('bookingForm').classList.add('show');
-
-            // Scroll to quote results so user sees full quote and "Ready to Book" CTA
-            setTimeout(function() {
-                document.getElementById('quoteResults').scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 100);
-
-            // Set minimum delivery date to tomorrow
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            document.getElementById('deliveryDate').min = tomorrow.toISOString().split('T')[0];
-
-            // Send quote to webhooks
-            sendToWebhook('quote');
-        }, 300);
+    // Step 1 -> Step 2
+    document.getElementById('nextToStep2').addEventListener('click', function() {
+        if (validateStep(1)) {
+            goToStep(2);
+        }
     });
 
-    // Booking submission
-    document.getElementById('submitBooking').addEventListener('click', function() {
-        const form = document.getElementById('bookingForm');
-        const requiredFields = form.querySelectorAll('[required]');
-        let valid = true;
+    // Step 2 -> Step 1
+    document.getElementById('backToStep1').addEventListener('click', function() {
+        goToStep(1);
+    });
 
-        requiredFields.forEach(field => {
-            if (!field.value) {
-                field.classList.add('is-invalid');
-                valid = false;
-            } else {
-                field.classList.remove('is-invalid');
-            }
-        });
+    // Step 2 -> Step 3
+    document.getElementById('nextToStep3').addEventListener('click', function() {
+        // Require Turnstile only in production (not on localhost/file://)
+        if (!isLocalDevelopment() && !turnstileToken) {
+            alert('Please complete the security verification.');
+            return;
+        }
+        if (validateStep(2)) {
+            goToStep(3);
+        }
+    });
 
-        if (!valid) {
-            alert('Please fill in all required fields.');
+    // Step 3 -> Step 2
+    document.getElementById('backToStep2').addEventListener('click', function() {
+        goToStep(2);
+    });
+
+    // Step 3 -> Step 4
+    document.getElementById('nextToStep4').addEventListener('click', function() {
+        goToStep(4);
+    });
+
+    // Step 4 -> Step 3
+    document.getElementById('backToStep3').addEventListener('click', function() {
+        goToStep(3);
+    });
+
+    // Form submission - Reserve Container (from Step 4)
+    document.getElementById('quoteWizard').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // Validate Step 4 fields
+        if (!validateStep(4)) {
             return;
         }
 
-        const submitBtn = this;
+        const submitBtn = document.getElementById('submitBooking');
         setButtonLoading(submitBtn, true);
 
-        // Add booking data
-        currentQuoteData.company = document.getElementById('company').value;
-        currentQuoteData.deliveryAddress = document.getElementById('deliveryAddress').value;
-        currentQuoteData.containerPlacement = document.getElementById('containerPlacement').value;
-        currentQuoteData.deliveryDate = document.getElementById('deliveryDate').value;
-        currentQuoteData.doorFacing = document.querySelector('input[name="doorFacing"]:checked').value;
-        currentQuoteData.gateCode = document.getElementById('gateCode').value;
-        currentQuoteData.howHeard = document.getElementById('howHeard').value;
-        currentQuoteData.notes = document.getElementById('notes').value;
-        currentQuoteData.bookingSubmitted = true;
+        // Add booking details to quote data
+        quoteData.deliveryAddress = document.getElementById('deliveryAddress').value;
+        quoteData.deliveryCity = document.getElementById('deliveryCity').value;
+        quoteData.deliveryState = document.getElementById('deliveryState').value;
+        quoteData.placementLocation = document.getElementById('placementLocation').value;
+        quoteData.surfaceType = document.getElementById('surfaceType').value;
+        quoteData.doorFacing = document.querySelector('input[name="doorFacing"]:checked').value;
+        quoteData.gateCode = document.getElementById('gateCode').value;
+        quoteData.specialNotes = document.getElementById('specialNotes').value;
 
-        // Send to webhook
+        // Send booking to webhooks
         sendToWebhook('booking');
 
-        // Show success message after brief delay
+        // Show success state after brief delay
         setTimeout(function() {
             setButtonLoading(submitBtn, false);
-            document.getElementById('bookingForm').classList.remove('show');
-            document.getElementById('bookingSuccess').classList.add('show');
-        }, 500);
+
+            // Hide progress indicator
+            document.querySelector('.wizard-progress').style.display = 'none';
+
+            // Show success panel
+            document.querySelectorAll('.wizard-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            document.getElementById('stepSuccess').classList.add('active');
+        }, 1000);
+    });
+
+    // Clear validation styling on input
+    document.querySelectorAll('.form-control, .form-select').forEach(field => {
+        field.addEventListener('input', function() {
+            this.classList.remove('is-invalid');
+        });
     });
 });
-
-// Send data to Zapier and Stella webhooks
-function sendToWebhook(type) {
-    const zapierUrl = 'https://hooks.zapier.com/hooks/catch/21414077/2axrkxs/';
-    const stellaUrl = 'https://api.runstella.com/webhook/16216eb0';
-
-    const data = {
-        ...currentQuoteData,
-        formType: type,
-        timestamp: new Date().toISOString(),
-        source: 'miboxhouston.com'
-    };
-
-    // Send to Zapier
-    fetch(zapierUrl, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-    }).catch(err => console.log('Zapier webhook error:', err));
-
-    // Send to Stella
-    fetch(stellaUrl, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-    }).catch(err => console.log('Stella webhook error:', err));
-}
