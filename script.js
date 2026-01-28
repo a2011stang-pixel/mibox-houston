@@ -359,7 +359,7 @@ function handleBookingSubmit(e) {
 
     // DEBUG: Show visible alert on mobile to confirm button tap works
     // Remove this line after debugging is complete
-    alert('Button tapped! Processing submission...');
+    alert('SUCCESS! Button tap registered. Step: ' + currentStep);
 
     if (e) {
         e.preventDefault();
@@ -428,6 +428,45 @@ function handleBookingSubmit(e) {
 
 // Make function available globally
 window.handleBookingSubmit = handleBookingSubmit;
+
+// Fallback: Window-level click/touch handler to catch button taps
+// This catches events even if something else is intercepting them
+document.addEventListener('click', function(e) {
+    var target = e.target;
+    // Check if clicked element or its parent is the submit button
+    while (target && target !== document) {
+        if (target.id === 'submitBooking') {
+            e.preventDefault();
+            e.stopPropagation();
+            handleBookingSubmit(e);
+            return;
+        }
+        target = target.parentElement;
+    }
+}, true); // Use capture phase
+
+// Also listen for touchstart as backup for mobile
+document.addEventListener('touchstart', function(e) {
+    var touch = e.touches[0];
+    var target = document.elementFromPoint(touch.clientX, touch.clientY);
+    while (target && target !== document) {
+        if (target.id === 'submitBooking') {
+            // Mark that we're handling via touch
+            target.dataset.touchStarted = 'true';
+            return;
+        }
+        target = target.parentElement;
+    }
+}, true);
+
+document.addEventListener('touchend', function(e) {
+    var submitBtn = document.getElementById('submitBooking');
+    if (submitBtn && submitBtn.dataset.touchStarted === 'true') {
+        submitBtn.dataset.touchStarted = 'false';
+        e.preventDefault();
+        handleBookingSubmit(e);
+    }
+}, true);
 
 // Initialize on DOM ready
 document.addEventListener('DOMContentLoaded', function() {

@@ -728,10 +728,25 @@ footer a:hover {
     /* Ensure submit button is always tappable on mobile */
     #submitBooking {
         position: relative;
-        z-index: 10;
+        z-index: 9999 !important;
         cursor: pointer;
         user-select: none;
         -webkit-user-select: none;
+        pointer-events: auto !important;
+    }
+
+    /* Ensure wizard buttons container doesn't block taps */
+    .wizard-buttons {
+        position: relative;
+        z-index: 100;
+        pointer-events: auto;
+    }
+
+    /* Ensure form and panels don't block button */
+    #step4,
+    #step4 .wizard-buttons,
+    #quoteWizard {
+        pointer-events: auto;
     }
 
     .pricing-breakdown .price-box {
