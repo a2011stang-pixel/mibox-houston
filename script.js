@@ -357,6 +357,10 @@ function setButtonLoading(button, loading) {
 function handleBookingSubmit(e) {
     console.log('handleBookingSubmit called');
 
+    // DEBUG: Show visible alert on mobile to confirm button tap works
+    // Remove this line after debugging is complete
+    alert('Button tapped! Processing submission...');
+
     if (e) {
         e.preventDefault();
         e.stopPropagation();
