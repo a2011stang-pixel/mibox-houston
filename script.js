@@ -452,19 +452,39 @@ window.handleBookingSubmit = handleBookingSubmit;
 document.addEventListener('DOMContentLoaded', function() {
     // Set minimum delivery date to tomorrow
     var deliveryDateInput = document.getElementById('deliveryDate');
-    var tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    var minDate = tomorrow.toISOString().split('T')[0];
 
-    // Set min attribute
-    deliveryDateInput.min = minDate;
-    deliveryDateInput.setAttribute('min', minDate);
+    function getMinDate() {
+        var tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        return tomorrow.toISOString().split('T')[0];
+    }
 
-    // Validate date on change (for mobile browsers that ignore min)
+    function setMinDate() {
+        var minDate = getMinDate();
+        deliveryDateInput.min = minDate;
+        deliveryDateInput.setAttribute('min', minDate);
+        return minDate;
+    }
+
+    // Set min attribute immediately
+    var minDate = setMinDate();
+
+    // Also set on focus (ensures it's set before picker opens on mobile)
+    deliveryDateInput.addEventListener('focus', function() {
+        setMinDate();
+    });
+
+    // And on touchstart for iOS Safari
+    deliveryDateInput.addEventListener('touchstart', function() {
+        setMinDate();
+    });
+
+    // Validate date on change (fallback for browsers that ignore min)
     deliveryDateInput.addEventListener('change', function() {
+        var currentMin = getMinDate();
         var selectedDate = this.value;
-        if (selectedDate && selectedDate < minDate) {
-            this.value = minDate;
+        if (selectedDate && selectedDate < currentMin) {
+            this.value = currentMin;
             alert('Please select a date starting from tomorrow.');
         }
     });
