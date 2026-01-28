@@ -122,6 +122,22 @@ function formatDate(dateString) {
     return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+// Scroll to the top of the quote form card
+function scrollToForm() {
+    var formCard = document.querySelector('.quote-card');
+    if (formCard) {
+        // Use smooth scroll with a small offset for better visibility
+        var headerOffset = 20;
+        var elementPosition = formCard.getBoundingClientRect().top;
+        var offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+        window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+        });
+    }
+}
+
 // Navigate to step
 function goToStep(step) {
     // Update progress indicators
@@ -155,6 +171,9 @@ function goToStep(step) {
     if (step === 4) {
         document.getElementById('deliveryZipConfirm').value = document.getElementById('deliveryZip').value;
     }
+
+    // Scroll to top of form so user sees the new step
+    scrollToForm();
 }
 
 // Display quote summary on step 3
@@ -403,6 +422,9 @@ function handleBookingSubmit(e) {
         });
         var successPanel = document.getElementById('stepSuccess');
         if (successPanel) successPanel.classList.add('active');
+
+        // Scroll to top of form so user sees success message
+        scrollToForm();
     }, 1000);
 
     return false;

@@ -5,6 +5,11 @@
     --mibox-gray: #f8f9fa;
 }
 
+/* Smooth scrolling for anchor links */
+html {
+    scroll-behavior: smooth;
+}
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
     color: var(--mibox-dark);
