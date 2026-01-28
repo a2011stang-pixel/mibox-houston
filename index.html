@@ -7,19 +7,25 @@
     <meta name="description" content="MI-BOX Houston offers portable storage containers for moving and storage. Month-to-month rentals starting at $119/mo. Same-day delivery available. Get an instant quote online.">
     <meta name="keywords" content="portable storage Houston, moving containers Houston, PODS alternative, storage containers, MI-BOX Houston">
     <link rel="canonical" href="https://miboxhouston.com">
-    
+
     <!-- Open Graph -->
     <meta property="og:title" content="MI-BOX Houston | Portable Storage Starting at $119/mo">
     <meta property="og:description" content="Portable storage containers delivered to your door. Month-to-month rentals, same-day delivery. Locally owned in Houston.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://miboxhouston.com">
-    <meta property="og:image" content="hero-houston.jpg">
-    
+    <meta property="og:image" content="https://miboxhouston.com/hero-houston.jpg">
+
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+
     <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-    
-    <!-- Schema.org Structured Data -->
+
+    <!-- Custom Styles -->
+    <link href="style.css" rel="stylesheet">
+
+    <!-- Schema.org Structured Data - LocalBusiness -->
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
@@ -49,378 +55,56 @@
         }
     }
     </script>
-    
-    <style>
-        :root {
-            --mibox-yellow: #FFDD00;
-            --mibox-dark: #333333;
-            --mibox-blue: #007ABD;
-            --mibox-gray: #f8f9fa;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            color: var(--mibox-dark);
-        }
-        
-        /* Top Bar */
-        .top-bar {
-            background: var(--mibox-dark);
-            color: white;
-            font-size: 0.9rem;
-            padding: 8px 0;
-        }
-        .top-bar a {
-            color: var(--mibox-yellow);
-            text-decoration: none;
-        }
-        .top-bar a:hover {
-            text-decoration: underline;
-        }
-        
-        /* Navbar */
-        .navbar {
-            background: white;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .navbar-brand img {
-            max-height: 50px;
-        }
-        .nav-link {
-            color: var(--mibox-dark) !important;
-            font-weight: 500;
-        }
-        .nav-link:hover {
-            color: var(--mibox-blue) !important;
-        }
-        .btn-mibox {
-            background: var(--mibox-yellow);
-            color: var(--mibox-dark);
-            font-weight: 600;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 6px;
-        }
-        .btn-mibox:hover {
-            background: #e6c700;
-            color: var(--mibox-dark);
-        }
-        .btn-mibox-outline {
-            border: 2px solid var(--mibox-yellow);
-            color: var(--mibox-dark);
-            font-weight: 600;
-            padding: 10px 24px;
-            border-radius: 6px;
-            background: transparent;
-        }
-        .btn-mibox-outline:hover {
-            background: var(--mibox-yellow);
-            color: var(--mibox-dark);
-        }
-        
-        /* Hero Section */
-        .hero-section {
-            background: linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url('hero-houston.jpg');
-            background-size: cover;
-            background-position: center;
-            min-height: 90vh;
-            display: flex;
-            align-items: flex-start;
-            padding-top: 60px;
-            color: white;
-            padding-bottom: 40px;
-        }
-        .hero-section .row {
-            align-items: flex-start !important;
-        }
-        .hero-section h1 {
-            font-size: 3rem;
-            font-weight: 700;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-        .hero-section .lead {
-            font-size: 1.3rem;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-        }
-        .hero-badges .badge {
-            background: rgba(255,255,255,0.15);
-            color: white;
-            font-weight: 500;
-            padding: 8px 14px;
-            margin: 4px;
-            font-size: 0.9rem;
-        }
-        
-        /* Quote Calculator */
-        .quote-card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            padding: 30px;
-        }
-        .quote-card h3 {
-            color: var(--mibox-dark);
-            font-weight: 700;
-            margin-bottom: 20px;
-        }
-        .form-label {
-            display: block;
-            font-weight: 600;
-            color: var(--mibox-dark);
-            margin-bottom: 8px;
-            font-size: 0.95rem;
-        }
-        .form-control, .form-select {
-            border: 2px solid #e0e0e0;
-            padding: 12px;
-            border-radius: 8px;
-        }
-        .form-control:focus, .form-select:focus {
-            border-color: var(--mibox-yellow);
-            box-shadow: 0 0 0 0.2rem rgba(255,221,0,0.25);
-        }
-        
-        /* Quote Results */
-        .quote-results {
-            display: none;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 2px solid #eee;
-        }
-        .quote-results.show {
-            display: block;
-        }
-        .price-box {
-            background: var(--mibox-gray);
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 10px;
-        }
-        .price-box.highlight {
-            background: var(--mibox-yellow);
-        }
-        .price-box h4 {
-            font-size: 0.9rem;
-            color: #666;
-            margin-bottom: 5px;
-        }
-        .price-box .price {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--mibox-dark);
-        }
-        .price-box .breakdown {
-            border-top: 1px solid rgba(0,0,0,0.1);
-            padding-top: 10px;
-            margin-top: 10px;
-            color: #555;
-        }
-        .price-box.highlight .breakdown {
-            border-top-color: rgba(0,0,0,0.15);
-        }
-        .price-box .breakdown div {
-            padding: 2px 0;
-        }
-        
-        /* Booking Form */
-        .booking-form {
-            display: none;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 2px solid var(--mibox-yellow);
-        }
-        .booking-form.show {
-            display: block;
-        }
-        
-        /* Features Section */
-        .features-section {
-            padding: 80px 0;
-            background: var(--mibox-gray);
-        }
-        .feature-card {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            height: 100%;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            transition: transform 0.3s ease;
-        }
-        .feature-card:hover {
-            transform: translateY(-5px);
-        }
-        .feature-card i {
-            font-size: 2.5rem;
-            color: var(--mibox-yellow);
-            margin-bottom: 15px;
-        }
-        .feature-card h4 {
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-        
-        /* Photo Feature Section */
-        .photo-features {
-            padding: 80px 0;
-        }
-        .photo-feature-img {
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            width: 100%;
-            height: 300px;
-            object-fit: cover;
-        }
-        
-        /* Testimonial */
-        .testimonial-section {
-            background: var(--mibox-dark);
-            color: white;
-            padding: 60px 0;
-        }
-        .testimonial-section .stars {
-            color: var(--mibox-yellow);
-            font-size: 1.5rem;
-            margin-bottom: 15px;
-        }
-        .testimonial-section blockquote {
-            font-size: 1.4rem;
-            font-style: italic;
-            margin-bottom: 20px;
-        }
-        
-        /* How It Works */
-        .how-it-works {
-            padding: 80px 0;
-        }
-        .step-card {
-            text-align: center;
-            padding: 30px;
-        }
-        .step-number {
-            width: 60px;
-            height: 60px;
-            background: var(--mibox-yellow);
-            color: var(--mibox-dark);
-            font-size: 1.8rem;
-            font-weight: 700;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-        }
-        .step-img {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-            border-radius: 12px;
-            margin-bottom: 20px;
-        }
-        
-        /* Why Rent With Us */
-        .why-section {
-            padding: 80px 0;
-            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('yard-overhead.jpg');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            color: white;
-        }
-        .why-card {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 12px;
-            padding: 30px;
-            height: 100%;
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-        .why-card i {
-            font-size: 2.5rem;
-            color: var(--mibox-yellow);
-            margin-bottom: 15px;
-        }
-        
-        /* CTA Section */
-        .cta-section {
-            padding: 60px 0;
-            background: var(--mibox-yellow);
-        }
-        .cta-section h2 {
-            color: var(--mibox-dark);
-            font-weight: 700;
-        }
-        .btn-dark-mibox {
-            background: var(--mibox-dark);
-            color: white;
-            font-weight: 600;
-            padding: 14px 30px;
-            border-radius: 6px;
-            text-decoration: none;
-        }
-        .btn-dark-mibox:hover {
-            background: #222;
-            color: white;
-        }
-        
-        /* FAQ Section */
-        .faq-section {
-            padding: 80px 0;
-        }
-        .accordion-button:not(.collapsed) {
-            background: var(--mibox-yellow);
-            color: var(--mibox-dark);
-        }
-        .accordion-button:focus {
-            box-shadow: 0 0 0 0.25rem rgba(255,221,0,0.25);
-        }
-        
-        /* Footer */
-        footer {
-            background: var(--mibox-dark);
-            color: white;
-            padding: 50px 0 20px;
-        }
-        footer h5 {
-            color: var(--mibox-yellow);
-            font-weight: 600;
-            margin-bottom: 20px;
-        }
-        footer a {
-            color: #ccc;
-            text-decoration: none;
-        }
-        footer a:hover {
-            color: var(--mibox-yellow);
-        }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            .hero-section {
-                min-height: auto;
-                padding: 30px 0;
+
+    <!-- Schema.org Structured Data - FAQPage -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": "How much does it cost to rent a MI-BOX storage unit?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Starting at $119 for the first month plus delivery fee based on your location. Use our online quote calculator for exact pricing. Ongoing monthly rates start at $189/month for 16' and $229/month for 20'."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "Do you offer storage at your facility?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Yes! We offer both inside climate-controlled storage and outside storage at our secure facility. We deliver a container to you for loading, pick it up FREE, store it, and deliver it back when you're ready."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "How long can I keep the box?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "As long as you need! Our rentals are month-to-month with no long-term contracts. Keep it for a week or a year—it's totally up to you."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "Can I access my container at your facility?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Yes! If your container is stored at our facility, you can schedule access during business hours. Just give us a call to arrange a time."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "What areas do you serve?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "We serve the Greater Houston area including Katy, Sugar Land, The Woodlands, Cypress, Spring, Pearland, Jersey Village, Tomball, Humble, and surrounding communities. Use our quote calculator to check if we deliver to your ZIP code."
+                }
             }
-            .hero-section h1 {
-                font-size: 2rem;
-            }
-            .quote-card {
-                padding: 20px;
-            }
-        }
-        
-        /* Success message */
-        .booking-success {
-            display: none;
-            background: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 20px;
-        }
-        .booking-success.show {
-            display: block;
-        }
-    </style>
+        ]
+    }
+    </script>
 </head>
 <body>
     <!-- Top Bar -->
@@ -428,24 +112,22 @@
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-6">
-                    <a href="sms:7139296051"><i class="bi bi-chat-dots me-1"></i> Text Us Anytime</a>
+                    <a href="tel:7139296051" aria-label="Call MI-BOX Houston"><i class="bi bi-telephone me-1"></i> (713) 929-6051</a>
                 </div>
                 <div class="col-6 text-end">
-                    <a href="tel:7139296051"><i class="bi bi-telephone me-1"></i> (713) 929-6051</a>
-                    <span class="mx-2">|</span>
-                    <a href="sms:7139296051">Text Us</a>
+                    <a href="sms:7139296051" aria-label="Text MI-BOX Houston"><i class="bi bi-chat-dots me-1"></i> Text Us</a>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container">
             <a class="navbar-brand" href="#">
-                <img src="logo.png" alt="MI-BOX Moving & Mobile Storage Houston - Portable Storage Containers">
+                <img src="logo.png" alt="MI-BOX Houston Logo">
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
@@ -455,13 +137,13 @@
                     <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
                     <li class="nav-item"><a class="nav-link" href="#faq">FAQ</a></li>
                 </ul>
-                <a href="tel:7139296051" class="btn btn-mibox d-none d-lg-inline-block">
+                <a href="tel:7139296051" class="btn btn-mibox d-none d-lg-inline-block" aria-label="Call MI-BOX Houston">
                     <i class="bi bi-telephone me-1"></i> (713) 929-6051
                 </a>
             </div>
         </div>
     </nav>
-    
+
     <!-- Hero Section -->
     <section class="hero-section" id="quote">
         <div class="container">
@@ -481,10 +163,10 @@
                 <div class="col-lg-6">
                     <div class="quote-card" id="quoteForm">
                         <h3><i class="bi bi-calculator me-2"></i>Get Your Instant Quote</h3>
-                        
+
                         <form id="quoteCalculator">
                             <div class="mb-3">
-                                <label class="form-label">What do you need?</label>
+                                <label class="form-label" for="serviceType">What do you need?</label>
                                 <select class="form-select" id="serviceType" required>
                                     <option value="">-- Select Service --</option>
                                     <option value="onsite">Store at My Property</option>
@@ -494,55 +176,55 @@
                                     <option value="moving-facility">Moving (via MI-BOX Facility)</option>
                                 </select>
                             </div>
-                            
+
                             <div class="mb-3">
-                                <label class="form-label">Container Size</label>
+                                <label class="form-label" for="containerSize">Container Size</label>
                                 <select class="form-select" id="containerSize" required>
                                     <option value="16">8' x 16' (Most Popular)</option>
                                     <option value="20">8' x 20' (Largest)</option>
                                 </select>
                             </div>
-                            
+
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Delivery ZIP Code</label>
-                                    <input type="text" class="form-control" id="deliveryZip" maxlength="5" pattern="[0-9]{5}" required>
+                                    <label class="form-label" for="deliveryZip">Delivery ZIP Code</label>
+                                    <input type="text" class="form-control" id="deliveryZip" maxlength="5" pattern="[0-9]{5}" autocomplete="postal-code" required>
                                 </div>
                                 <div class="col-md-6 mb-3" id="destinationZipGroup" style="display:none;">
-                                    <label class="form-label">Destination ZIP Code</label>
-                                    <input type="text" class="form-control" id="destinationZip" maxlength="5" pattern="[0-9]{5}">
+                                    <label class="form-label" for="destinationZip">Destination ZIP Code</label>
+                                    <input type="text" class="form-control" id="destinationZip" maxlength="5" pattern="[0-9]{5}" autocomplete="postal-code">
                                 </div>
                             </div>
-                            
+
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">First Name *</label>
-                                    <input type="text" class="form-control" id="firstName" required>
+                                    <label class="form-label" for="firstName">First Name *</label>
+                                    <input type="text" class="form-control" id="firstName" autocomplete="given-name" required>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Last Name</label>
-                                    <input type="text" class="form-control" id="lastName">
+                                    <label class="form-label" for="lastName">Last Name</label>
+                                    <input type="text" class="form-control" id="lastName" autocomplete="family-name">
                                 </div>
                             </div>
-                            
+
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Email *</label>
-                                    <input type="email" class="form-control" id="email" required>
+                                    <label class="form-label" for="email">Email *</label>
+                                    <input type="email" class="form-control" id="email" autocomplete="email" required>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Phone *</label>
-                                    <input type="tel" class="form-control" id="phone" required>
+                                    <label class="form-label" for="phone">Phone *</label>
+                                    <input type="tel" class="form-control" id="phone" autocomplete="tel" required>
                                 </div>
                             </div>
-                            
+
                             <button type="submit" class="btn btn-mibox w-100 btn-lg">
                                 <i class="bi bi-calculator me-2"></i>Get Instant Quote
                             </button>
                         </form>
-                        
+
                         <!-- Quote Results -->
-                        <div class="quote-results" id="quoteResults">
+                        <div class="quote-results" id="quoteResults" aria-live="polite">
                             <div class="price-box highlight">
                                 <h4><i class="bi bi-calendar-event me-1"></i> Due Today</h4>
                                 <div class="price" id="dueToday">$0.00</div>
@@ -568,27 +250,27 @@
                                     <div class="d-flex justify-content-between"><span>Tax (8.25%):</span><span id="taxPickupDisplay">$0.00</span></div>
                                 </div>
                             </div>
-                            
+
                             <!-- Booking Form -->
                             <div class="booking-form" id="bookingForm">
                                 <div class="cta-banner text-center py-3 mb-3" style="background: var(--mibox-yellow); margin: 0 -30px; padding-left: 30px; padding-right: 30px; border-radius: 8px; color: #333;">
                                     <h4 class="mb-1 fw-bold" style="color: #333;"><i class="bi bi-check-circle-fill me-2"></i>READY TO BOOK?</h4>
                                     <p class="mb-0 small" style="color: #333;">Complete the form below to reserve your container</p>
                                 </div>
-                                
+
                                 <div class="mb-3">
-                                    <label class="form-label">Company (Optional)</label>
-                                    <input type="text" class="form-control" id="company">
+                                    <label class="form-label" for="company">Company (Optional)</label>
+                                    <input type="text" class="form-control" id="company" autocomplete="organization">
                                 </div>
-                                
+
                                 <div class="mb-3">
-                                    <label class="form-label">Delivery Address *</label>
-                                    <input type="text" class="form-control" id="deliveryAddress" required>
+                                    <label class="form-label" for="deliveryAddress">Delivery Address *</label>
+                                    <input type="text" class="form-control" id="deliveryAddress" autocomplete="street-address" required>
                                 </div>
-                                
+
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label">Container Placement *</label>
+                                        <label class="form-label" for="containerPlacement">Container Placement *</label>
                                         <select class="form-select" id="containerPlacement" required>
                                             <option value="">-- Select --</option>
                                             <option value="driveway">Driveway</option>
@@ -598,11 +280,11 @@
                                         </select>
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label">Preferred Delivery Date *</label>
+                                        <label class="form-label" for="deliveryDate">Preferred Delivery Date *</label>
                                         <input type="date" class="form-control" id="deliveryDate" required>
                                     </div>
                                 </div>
-                                
+
                                 <div class="mb-3">
                                     <label class="form-label">Which way should the door face?</label>
                                     <div class="form-check">
@@ -618,14 +300,14 @@
                                         <label class="form-check-label" for="doorGarage">Toward Garage</label>
                                     </div>
                                 </div>
-                                
+
                                 <div class="mb-3">
-                                    <label class="form-label">Gate Code / Access Instructions</label>
+                                    <label class="form-label" for="gateCode">Gate Code / Access Instructions</label>
                                     <input type="text" class="form-control" id="gateCode">
                                 </div>
-                                
+
                                 <div class="mb-3">
-                                    <label class="form-label">How did you hear about us? *</label>
+                                    <label class="form-label" for="howHeard">How did you hear about us? *</label>
                                     <select class="form-select" id="howHeard" required>
                                         <option value="">-- Select --</option>
                                         <option value="google">Google Search</option>
@@ -639,18 +321,18 @@
                                         <option value="other">Other</option>
                                     </select>
                                 </div>
-                                
+
                                 <div class="mb-3">
-                                    <label class="form-label">Additional Notes</label>
+                                    <label class="form-label" for="notes">Additional Notes</label>
                                     <textarea class="form-control" id="notes" rows="3"></textarea>
                                 </div>
-                                
+
                                 <button type="button" class="btn btn-mibox w-100 btn-lg" id="submitBooking">
                                     <i class="bi bi-send me-2"></i>Request Delivery
                                 </button>
                             </div>
-                            
-                            <div class="booking-success" id="bookingSuccess">
+
+                            <div class="booking-success" id="bookingSuccess" role="alert">
                                 <i class="bi bi-check-circle-fill me-2"></i>
                                 <strong>Your delivery request has been submitted!</strong> We'll contact you shortly to confirm.
                             </div>
@@ -660,20 +342,20 @@
             </div>
         </div>
     </section>
-    
+
     <!-- Pricing Banner -->
     <section class="py-3 bg-dark text-white text-center">
         <div class="container">
             <h2 class="h5 mb-0">Delivering Everyday Low Prices. Call for Details. <a href="tel:7139296051" class="text-warning">(713) 929-6051</a></h2>
         </div>
     </section>
-    
+
     <!-- Features Section -->
     <section class="features-section" id="features">
         <div class="container">
             <h2 class="text-center mb-2">Why Choose MI-BOX Houston?</h2>
             <p class="text-center text-muted mb-5">Quality containers, flexible terms, and local service you can trust</p>
-            
+
             <div class="row g-4">
                 <div class="col-md-6 col-lg-3">
                     <div class="feature-card">
@@ -706,13 +388,13 @@
             </div>
         </div>
     </section>
-    
+
     <!-- Photo Feature - Container Interior -->
     <section class="photo-features">
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-lg-6 mb-4 mb-lg-0">
-                    <img src="container-interior.jpg" alt="Inside a MI-BOX storage container - clean steel interior with tie-down rails" class="photo-feature-img">
+                    <img src="container-interior.jpg" alt="Inside a MI-BOX storage container - clean steel interior with tie-down rails" class="photo-feature-img" loading="lazy">
                 </div>
                 <div class="col-lg-6">
                     <h2>Spacious & Secure Interior</h2>
@@ -727,7 +409,7 @@
             </div>
         </div>
     </section>
-    
+
     <!-- Testimonial -->
     <section class="testimonial-section">
         <div class="container text-center">
@@ -742,18 +424,18 @@
             <p class="mb-0">— <strong>Jonathan Prifan</strong>, Google Review</p>
         </div>
     </section>
-    
+
     <!-- How It Works -->
     <section class="how-it-works" id="how-it-works">
         <div class="container">
             <h2 class="text-center mb-2">How It Works</h2>
             <p class="text-center text-muted mb-5">Simple, convenient, and stress-free</p>
-            
+
             <div class="row">
                 <div class="col-md-4">
                     <div class="step-card">
                         <div class="step-number">1</div>
-                        <img src="residential-delivery.jpg" alt="MI-BOX container delivered to residential home in Houston" class="step-img">
+                        <img src="residential-delivery.jpg" alt="MI-BOX container delivered to residential home in Houston" class="step-img" loading="lazy">
                         <h4>Get a Quote</h4>
                         <p>Use our instant quote calculator or call us. We'll provide transparent pricing with no hidden fees.</p>
                     </div>
@@ -761,7 +443,7 @@
                 <div class="col-md-4">
                     <div class="step-card">
                         <div class="step-number">2</div>
-                        <img src="truck-warehouse.jpg" alt="MI-BOX delivery truck with patented Level-Lift system" class="step-img">
+                        <img src="truck-warehouse.jpg" alt="MI-BOX delivery truck with patented Level-Lift system" class="step-img" loading="lazy">
                         <h4>We Deliver</h4>
                         <p>We bring the container to your location using our Level-Lift system. Take your time loading—no rush.</p>
                     </div>
@@ -769,7 +451,7 @@
                 <div class="col-md-4">
                     <div class="step-card">
                         <div class="step-number">3</div>
-                        <img src="yard-overhead.jpg" alt="MI-BOX Houston storage yard with containers" class="step-img">
+                        <img src="yard-overhead.jpg" alt="MI-BOX Houston storage yard with containers" class="step-img" loading="lazy">
                         <h4>Store or Move</h4>
                         <p>Keep it on-site, store at our secure facility, or we'll move it to your new location. Your choice!</p>
                     </div>
@@ -777,7 +459,7 @@
             </div>
         </div>
     </section>
-    
+
     <!-- Second Testimonial -->
     <section class="py-5 bg-light">
         <div class="container">
@@ -796,7 +478,7 @@
             </div>
         </div>
     </section>
-    
+
     <!-- Why Rent With Us -->
     <section class="why-section">
         <div class="container">
@@ -826,7 +508,7 @@
             </div>
         </div>
     </section>
-    
+
     <!-- CTA Section -->
     <section class="cta-section">
         <div class="container">
@@ -848,18 +530,18 @@
             </div>
         </div>
     </section>
-    
+
     <!-- FAQ Section -->
     <section class="faq-section" id="faq">
         <div class="container">
             <h2 class="text-center mb-5">Frequently Asked Questions</h2>
-            
+
             <div class="row justify-content-center">
                 <div class="col-lg-8">
                     <div class="accordion" id="faqAccordion">
                         <div class="accordion-item">
                             <h2 class="accordion-header">
-                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" aria-expanded="true" aria-controls="faq1">
                                     How much does it cost to rent a MI-BOX storage unit?
                                 </button>
                             </h2>
@@ -871,7 +553,7 @@
                         </div>
                         <div class="accordion-item">
                             <h2 class="accordion-header">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2" aria-expanded="false" aria-controls="faq2">
                                     Do you offer storage at your facility?
                                 </button>
                             </h2>
@@ -883,7 +565,7 @@
                         </div>
                         <div class="accordion-item">
                             <h2 class="accordion-header">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3" aria-expanded="false" aria-controls="faq3">
                                     How long can I keep the box?
                                 </button>
                             </h2>
@@ -895,7 +577,7 @@
                         </div>
                         <div class="accordion-item">
                             <h2 class="accordion-header">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4" aria-expanded="false" aria-controls="faq4">
                                     Can I access my container at your facility?
                                 </button>
                             </h2>
@@ -907,7 +589,7 @@
                         </div>
                         <div class="accordion-item">
                             <h2 class="accordion-header">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5" aria-expanded="false" aria-controls="faq5">
                                     What areas do you serve?
                                 </button>
                             </h2>
@@ -922,7 +604,7 @@
             </div>
         </div>
     </section>
-    
+
     <!-- Footer -->
     <footer>
         <div class="container">
@@ -931,8 +613,8 @@
                     <h5>MI-BOX Houston</h5>
                     <p>MI-BOX Moving & Mobile Storage of Houston<br>Serving the Greater Houston Area</p>
                     <p>
-                        <a href="tel:7139296051"><i class="bi bi-telephone me-2"></i>(713) 929-6051</a><br>
-                        <a href="sms:7139296051"><i class="bi bi-chat-dots me-2"></i>Text Us</a>
+                        <a href="tel:7139296051" aria-label="Call MI-BOX Houston"><i class="bi bi-telephone me-2"></i>(713) 929-6051</a><br>
+                        <a href="sms:7139296051" aria-label="Text MI-BOX Houston"><i class="bi bi-chat-dots me-2"></i>Text Us</a>
                     </p>
                 </div>
                 <div class="col-lg-4 mb-4">
@@ -951,267 +633,15 @@
             </div>
             <hr class="my-4" style="border-color: #444;">
             <div class="text-center">
-                <p class="mb-0">&copy; 2026 MI-BOX Moving & Mobile Storage of Houston. All rights reserved.</p>
+                <p class="mb-0">&copy; <script>document.write(new Date().getFullYear())</script> MI-BOX Moving & Mobile Storage of Houston. All rights reserved.</p>
             </div>
         </div>
     </footer>
-    
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <!-- Quote Calculator JavaScript -->
-    <script>
-        // Pricing Configuration
-        const PRICING = {
-            delivery: {
-                zone1: { fee: 79, zips: ['77002','77003','77004','77005','77006','77007','77008','77009','77010','77011','77012','77013','77014','77015','77016','77017','77018','77019','77020','77021','77022','77023','77024','77025','77026','77027','77028','77029','77030','77031','77032','77033','77034','77035','77036','77037','77038','77039','77040','77041','77042','77043','77044','77045','77046','77047','77048','77049','77050','77051','77053','77054','77055','77056','77057','77058','77059','77060','77061','77062','77063','77064','77065','77066','77067','77068','77069','77070','77071','77072','77073','77074','77075','77076','77077','77078','77079','77080','77081','77082','77083','77084','77085','77086','77087','77088','77089','77090','77091','77092','77093','77094','77095','77096','77098','77099','77201','77336','77338','77339','77345','77346','77357','77373','77375','77377','77379','77380','77381','77382','77383','77384','77385','77386','77388','77389','77396','77401','77406','77407','77429','77433','77447','77449','77450','77477','77478','77479','77489','77493','77494','77498','77502','77503','77504','77505','77506','77520','77521','77530','77536','77546','77547','77571','77581','77584','77586','77587','77598'] },
-                zone2: { fee: 99, zips: ['77301','77302','77303','77304','77306','77316','77318','77354','77356','77362','77365','77372','77378','77423','77441','77445','77446','77461','77464','77469','77471','77474','77476','77484','77485','77545','77573','77574','77578','77583','77588'] },
-                zone3: { fee: 129, zips: ['77327','77328','77331','77355','77363','77368','77369','77514','77523','77532','77533','77535','77562','77565','77575','77577','77590','77591','77592','77597','77414','77415','77417','77418','77420','77422','77426','77430','77432','77435','77436','77437','77440','77442','77443','77444','77448','77451','77453','77454','77455','77456','77457','77458','77459','77463','77465','77466','77467','77468','77470','77473','77475','77480','77481','77482','77483','77486','77487','77488'] }
-            },
-            monthly: {
-                '16': { onsite: 189, facilityInside: 249, facilityOutside: 199 },
-                '20': { onsite: 229, facilityInside: 299, facilityOutside: 249 }
-            },
-            firstMonth: {
-                '16': 119,
-                '20': 149
-            },
-            pickup: {
-                zone1: 79,
-                zone2: 99,
-                zone3: 129
-            },
-            taxRate: 0.0825
-        };
-        
-        // Current quote data for webhook
-        let currentQuoteData = {};
-        
-        // Get delivery zone from ZIP
-        function getDeliveryZone(zip) {
-            if (PRICING.delivery.zone1.zips.includes(zip)) return 'zone1';
-            if (PRICING.delivery.zone2.zips.includes(zip)) return 'zone2';
-            if (PRICING.delivery.zone3.zips.includes(zip)) return 'zone3';
-            return null;
-        }
-        
-        // Calculate quote
-        function calculateQuote() {
-            const serviceType = document.getElementById('serviceType').value;
-            const containerSize = document.getElementById('containerSize').value;
-            const deliveryZip = document.getElementById('deliveryZip').value;
-            const destinationZip = document.getElementById('destinationZip').value;
-            
-            if (!serviceType || !deliveryZip) return null;
-            
-            const zone = getDeliveryZone(deliveryZip);
-            if (!zone) {
-                alert('Sorry, we do not currently serve that ZIP code. Please call us at (713) 929-6051 to discuss options.');
-                return null;
-            }
-            
-            let deliveryFee = PRICING.delivery[zone].fee;
-            let firstMonthRent = PRICING.firstMonth[containerSize];
-            let monthlyRent = 0;
-            let pickupFee = 0;
-            
-            // Determine monthly rate based on service type
-            if (serviceType === 'onsite') {
-                monthlyRent = PRICING.monthly[containerSize].onsite;
-                pickupFee = PRICING.pickup[zone];
-            } else if (serviceType === 'facility-inside') {
-                monthlyRent = PRICING.monthly[containerSize].facilityInside;
-                pickupFee = 0; // Free pickup for facility storage
-            } else if (serviceType === 'facility-outside') {
-                monthlyRent = PRICING.monthly[containerSize].facilityOutside;
-                pickupFee = 0; // Free pickup for facility storage
-            } else if (serviceType === 'moving-direct') {
-                monthlyRent = PRICING.monthly[containerSize].onsite;
-                const destZone = getDeliveryZone(destinationZip);
-                if (destZone) {
-                    pickupFee = PRICING.delivery[destZone].fee; // Destination delivery fee
-                }
-            } else if (serviceType === 'moving-facility') {
-                monthlyRent = PRICING.monthly[containerSize].facilityInside;
-                const destZone = getDeliveryZone(destinationZip);
-                if (destZone) {
-                    pickupFee = PRICING.delivery[destZone].fee;
-                }
-            }
-            
-            // Calculate totals
-            const subtotalToday = deliveryFee + firstMonthRent;
-            const taxToday = subtotalToday * PRICING.taxRate;
-            const dueToday = subtotalToday + taxToday;
-            
-            const taxMonthly = monthlyRent * PRICING.taxRate;
-            const ongoingMonthly = monthlyRent + taxMonthly;
-            
-            const taxPickup = pickupFee * PRICING.taxRate;
-            const dueWhenDone = pickupFee + taxPickup;
-            
-            return {
-                deliveryFee,
-                firstMonthRent,
-                monthlyRent,
-                pickupFee,
-                taxToday,
-                taxMonthly,
-                taxPickup,
-                dueToday,
-                ongoingMonthly,
-                dueWhenDone,
-                zone
-            };
-        }
-        
-        // Format currency
-        function formatCurrency(amount) {
-            return '$' + amount.toFixed(2);
-        }
-        
-        // Show/hide destination ZIP based on service type
-        document.getElementById('serviceType').addEventListener('change', function() {
-            const destGroup = document.getElementById('destinationZipGroup');
-            if (this.value.includes('moving')) {
-                destGroup.style.display = 'block';
-                document.getElementById('destinationZip').required = true;
-            } else {
-                destGroup.style.display = 'none';
-                document.getElementById('destinationZip').required = false;
-            }
-        });
-        
-        // Quote form submission
-        document.getElementById('quoteCalculator').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const quote = calculateQuote();
-            if (!quote) return;
-            
-            // Update display - totals
-            document.getElementById('dueToday').textContent = formatCurrency(quote.dueToday);
-            document.getElementById('ongoingMonthly').textContent = formatCurrency(quote.ongoingMonthly);
-            document.getElementById('dueWhenDone').textContent = formatCurrency(quote.dueWhenDone);
-            
-            // Update display - itemized breakdown
-            document.getElementById('deliveryFeeDisplay').textContent = formatCurrency(quote.deliveryFee);
-            document.getElementById('firstMonthDisplay').textContent = formatCurrency(quote.firstMonthRent);
-            document.getElementById('taxTodayDisplay').textContent = formatCurrency(quote.taxToday);
-            document.getElementById('monthlyRentDisplay').textContent = formatCurrency(quote.monthlyRent);
-            document.getElementById('taxMonthlyDisplay').textContent = formatCurrency(quote.taxMonthly);
-            document.getElementById('pickupFeeDisplay').textContent = formatCurrency(quote.pickupFee);
-            document.getElementById('taxPickupDisplay').textContent = formatCurrency(quote.taxPickup);
-            
-            // Store quote data for webhook
-            currentQuoteData = {
-                serviceType: document.getElementById('serviceType').value,
-                containerSize: document.getElementById('containerSize').value,
-                deliveryZip: document.getElementById('deliveryZip').value,
-                destinationZip: document.getElementById('destinationZip').value,
-                firstName: document.getElementById('firstName').value,
-                lastName: document.getElementById('lastName').value,
-                email: document.getElementById('email').value,
-                phone: document.getElementById('phone').value,
-                deliveryFee: quote.deliveryFee,
-                firstMonthRent: quote.firstMonthRent,
-                monthlyRent: quote.monthlyRent,
-                pickupFee: quote.pickupFee,
-                taxToday: quote.taxToday,
-                dueToday: quote.dueToday,
-                ongoingMonthly: quote.ongoingMonthly,
-                dueWhenDone: quote.dueWhenDone
-            };
-            
-            // Show results and booking form
-            document.getElementById('quoteResults').classList.add('show');
-            document.getElementById('bookingForm').classList.add('show');
-            
-            // Scroll to quote results so user sees full quote and "Ready to Book" CTA
-            setTimeout(function() {
-                document.getElementById('quoteResults').scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 100);
-            
-            // Set minimum delivery date to tomorrow
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            document.getElementById('deliveryDate').min = tomorrow.toISOString().split('T')[0];
-            
-            // Send quote to Zapier webhook
-            sendToWebhook('quote');
-        });
-        
-        // Booking submission
-        document.getElementById('submitBooking').addEventListener('click', function() {
-            const form = document.getElementById('bookingForm');
-            const requiredFields = form.querySelectorAll('[required]');
-            let valid = true;
-            
-            requiredFields.forEach(field => {
-                if (!field.value) {
-                    field.classList.add('is-invalid');
-                    valid = false;
-                } else {
-                    field.classList.remove('is-invalid');
-                }
-            });
-            
-            if (!valid) {
-                alert('Please fill in all required fields.');
-                return;
-            }
-            
-            // Add booking data
-            currentQuoteData.company = document.getElementById('company').value;
-            currentQuoteData.deliveryAddress = document.getElementById('deliveryAddress').value;
-            currentQuoteData.containerPlacement = document.getElementById('containerPlacement').value;
-            currentQuoteData.deliveryDate = document.getElementById('deliveryDate').value;
-            currentQuoteData.doorFacing = document.querySelector('input[name="doorFacing"]:checked').value;
-            currentQuoteData.gateCode = document.getElementById('gateCode').value;
-            currentQuoteData.howHeard = document.getElementById('howHeard').value;
-            currentQuoteData.notes = document.getElementById('notes').value;
-            currentQuoteData.bookingSubmitted = true;
-            
-            // Send to webhook
-            sendToWebhook('booking');
-            
-            // Show success message
-            document.getElementById('bookingForm').classList.remove('show');
-            document.getElementById('bookingSuccess').classList.add('show');
-        });
-        
-        // Send data to Zapier and Stella webhooks
-        function sendToWebhook(type) {
-            const zapierUrl = 'https://hooks.zapier.com/hooks/catch/21414077/2axrkxs/';
-            const stellaUrl = 'https://api.runstella.com/webhook/16216eb0';
-            
-            const data = {
-                ...currentQuoteData,
-                formType: type,
-                timestamp: new Date().toISOString(),
-                source: 'miboxhouston.com'
-            };
-            
-            // Send to Zapier
-            fetch(zapierUrl, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            }).catch(err => console.log('Zapier webhook error:', err));
-            
-            // Send to Stella
-            fetch(stellaUrl, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            }).catch(err => console.log('Stella webhook error:', err));
-        }
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>

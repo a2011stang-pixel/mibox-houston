@@ -1,0 +1,393 @@
+:root {
+    --mibox-yellow: #FFDD00;
+    --mibox-dark: #333333;
+    --mibox-blue: #007ABD;
+    --mibox-gray: #f8f9fa;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    color: var(--mibox-dark);
+}
+
+/* Top Bar */
+.top-bar {
+    background: var(--mibox-dark);
+    color: white;
+    font-size: 0.9rem;
+    padding: 8px 0;
+}
+.top-bar a {
+    color: var(--mibox-yellow);
+    text-decoration: none;
+}
+.top-bar a:hover {
+    text-decoration: underline;
+}
+
+/* Navbar */
+.navbar {
+    background: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+.navbar-brand img {
+    max-height: 50px;
+}
+.nav-link {
+    color: var(--mibox-dark) !important;
+    font-weight: 500;
+}
+.nav-link:hover {
+    color: var(--mibox-blue) !important;
+}
+.btn-mibox {
+    background: var(--mibox-yellow);
+    color: var(--mibox-dark);
+    font-weight: 600;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 6px;
+}
+.btn-mibox:hover {
+    background: #e6c700;
+    color: var(--mibox-dark);
+}
+.btn-mibox:disabled {
+    background: #ccc;
+    color: #666;
+    cursor: not-allowed;
+}
+.btn-mibox-outline {
+    border: 2px solid var(--mibox-yellow);
+    color: var(--mibox-dark);
+    font-weight: 600;
+    padding: 10px 24px;
+    border-radius: 6px;
+    background: transparent;
+}
+.btn-mibox-outline:hover {
+    background: var(--mibox-yellow);
+    color: var(--mibox-dark);
+}
+
+/* Hero Section */
+.hero-section {
+    background: linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url('hero-houston.jpg');
+    background-size: cover;
+    background-position: center;
+    min-height: 90vh;
+    display: flex;
+    align-items: flex-start;
+    padding-top: 60px;
+    color: white;
+    padding-bottom: 40px;
+}
+.hero-section .row {
+    align-items: flex-start !important;
+}
+.hero-section h1 {
+    font-size: 3rem;
+    font-weight: 700;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+.hero-section .lead {
+    font-size: 1.3rem;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+.hero-badges .badge {
+    background: rgba(255,255,255,0.15);
+    color: white;
+    font-weight: 500;
+    padding: 8px 14px;
+    margin: 4px;
+    font-size: 0.9rem;
+}
+
+/* Quote Calculator */
+.quote-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    padding: 30px;
+}
+.quote-card h3 {
+    color: var(--mibox-dark);
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+.form-label {
+    display: block;
+    font-weight: 600;
+    color: var(--mibox-dark);
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+}
+.form-control, .form-select {
+    border: 2px solid #e0e0e0;
+    padding: 12px;
+    border-radius: 8px;
+}
+.form-control:focus, .form-select:focus {
+    border-color: var(--mibox-yellow);
+    box-shadow: 0 0 0 0.2rem rgba(255,221,0,0.25);
+}
+
+/* Quote Results */
+.quote-results {
+    display: none;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 2px solid #eee;
+}
+.quote-results.show {
+    display: block;
+}
+.price-box {
+    background: var(--mibox-gray);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 10px;
+}
+.price-box.highlight {
+    background: var(--mibox-yellow);
+}
+.price-box h4 {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 5px;
+}
+.price-box .price {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--mibox-dark);
+}
+.price-box .breakdown {
+    border-top: 1px solid rgba(0,0,0,0.1);
+    padding-top: 10px;
+    margin-top: 10px;
+    color: #555;
+}
+.price-box.highlight .breakdown {
+    border-top-color: rgba(0,0,0,0.15);
+}
+.price-box .breakdown div {
+    padding: 2px 0;
+}
+
+/* Booking Form */
+.booking-form {
+    display: none;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 2px solid var(--mibox-yellow);
+}
+.booking-form.show {
+    display: block;
+}
+
+/* Features Section */
+.features-section {
+    padding: 80px 0;
+    background: var(--mibox-gray);
+}
+.feature-card {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    height: 100%;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease;
+}
+.feature-card:hover {
+    transform: translateY(-5px);
+}
+.feature-card i {
+    font-size: 2.5rem;
+    color: var(--mibox-yellow);
+    margin-bottom: 15px;
+}
+.feature-card h4 {
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+/* Photo Feature Section */
+.photo-features {
+    padding: 80px 0;
+}
+.photo-feature-img {
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+}
+
+/* Testimonial */
+.testimonial-section {
+    background: var(--mibox-dark);
+    color: white;
+    padding: 60px 0;
+}
+.testimonial-section .stars {
+    color: var(--mibox-yellow);
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+}
+.testimonial-section blockquote {
+    font-size: 1.4rem;
+    font-style: italic;
+    margin-bottom: 20px;
+}
+
+/* How It Works */
+.how-it-works {
+    padding: 80px 0;
+}
+.step-card {
+    text-align: center;
+    padding: 30px;
+}
+.step-number {
+    width: 60px;
+    height: 60px;
+    background: var(--mibox-yellow);
+    color: var(--mibox-dark);
+    font-size: 1.8rem;
+    font-weight: 700;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+}
+.step-img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+/* Why Rent With Us */
+.why-section {
+    padding: 80px 0;
+    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('yard-overhead.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    color: white;
+}
+.why-card {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 30px;
+    height: 100%;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+.why-card i {
+    font-size: 2.5rem;
+    color: var(--mibox-yellow);
+    margin-bottom: 15px;
+}
+
+/* CTA Section */
+.cta-section {
+    padding: 60px 0;
+    background: var(--mibox-yellow);
+}
+.cta-section h2 {
+    color: var(--mibox-dark);
+    font-weight: 700;
+}
+.btn-dark-mibox {
+    background: var(--mibox-dark);
+    color: white;
+    font-weight: 600;
+    padding: 14px 30px;
+    border-radius: 6px;
+    text-decoration: none;
+}
+.btn-dark-mibox:hover {
+    background: #222;
+    color: white;
+}
+
+/* FAQ Section */
+.faq-section {
+    padding: 80px 0;
+}
+.accordion-button:not(.collapsed) {
+    background: var(--mibox-yellow);
+    color: var(--mibox-dark);
+}
+.accordion-button:focus {
+    box-shadow: 0 0 0 0.25rem rgba(255,221,0,0.25);
+}
+
+/* Footer */
+footer {
+    background: var(--mibox-dark);
+    color: white;
+    padding: 50px 0 20px;
+}
+footer h5 {
+    color: var(--mibox-yellow);
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+footer a {
+    color: #ccc;
+    text-decoration: none;
+}
+footer a:hover {
+    color: var(--mibox-yellow);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hero-section {
+        min-height: auto;
+        padding: 30px 0;
+    }
+    .hero-section h1 {
+        font-size: 2rem;
+    }
+    .quote-card {
+        padding: 20px;
+    }
+}
+
+/* Success message */
+.booking-success {
+    display: none;
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+.booking-success.show {
+    display: block;
+}
+
+/* Loading spinner */
+.btn-spinner {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spinner 0.75s linear infinite;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+@keyframes spinner {
+    to {
+        transform: rotate(360deg);
+    }
+}
