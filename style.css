@@ -57,6 +57,25 @@ body {
     color: #666;
     cursor: not-allowed;
 }
+
+/* Mobile touch improvements */
+.btn-mibox {
+    -webkit-tap-highlight-color: rgba(255, 221, 0, 0.3);
+    touch-action: manipulation;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+/* Ensure adequate touch target on mobile */
+@media (max-width: 768px) {
+    .btn-mibox.btn-lg,
+    #submitBooking {
+        min-height: 50px;
+        padding: 14px 24px;
+        font-size: 1.1rem;
+    }
+}
 .btn-mibox-outline {
     border: 2px solid var(--mibox-yellow);
     color: var(--mibox-dark);
@@ -701,6 +720,18 @@ footer a:hover {
 
     .wizard-buttons .btn {
         width: 100%;
+        min-height: 48px;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Ensure submit button is always tappable on mobile */
+    #submitBooking {
+        position: relative;
+        z-index: 10;
+        cursor: pointer;
+        user-select: none;
+        -webkit-user-select: none;
     }
 
     .pricing-breakdown .price-box {

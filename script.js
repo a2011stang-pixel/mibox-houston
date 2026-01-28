@@ -341,13 +341,72 @@ function sendToWebhook(type) {
 // Set button loading state
 function setButtonLoading(button, loading) {
     if (loading) {
-        button.disabled = true;
         button.dataset.originalText = button.innerHTML;
         button.innerHTML = '<span class="btn-spinner"></span>Submitting...';
+        // Delay disabling to allow click/touch to complete on mobile
+        setTimeout(function() {
+            button.disabled = true;
+        }, 50);
     } else {
         button.disabled = false;
         button.innerHTML = button.dataset.originalText;
     }
+}
+
+// Handle final form submission (Step 4)
+function handleBookingSubmit(e) {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    // Prevent double submission
+    const submitBtn = document.getElementById('submitBooking');
+    if (submitBtn.dataset.submitting === 'true') {
+        return false;
+    }
+    submitBtn.dataset.submitting = 'true';
+
+    // Validate Step 4 fields
+    if (!validateStep(4)) {
+        submitBtn.dataset.submitting = 'false';
+        return false;
+    }
+
+    setButtonLoading(submitBtn, true);
+
+    // Add booking details to quote data
+    quoteData.deliveryAddress = document.getElementById('deliveryAddress').value;
+    quoteData.deliveryCity = document.getElementById('deliveryCity').value;
+    quoteData.deliveryState = document.getElementById('deliveryState').value;
+    quoteData.placementLocation = document.getElementById('placementLocation').value;
+    quoteData.surfaceType = document.getElementById('surfaceType').value;
+
+    const doorFacing = document.querySelector('input[name="doorFacing"]:checked');
+    quoteData.doorFacing = doorFacing ? doorFacing.value : 'street';
+
+    quoteData.gateCode = document.getElementById('gateCode').value;
+    quoteData.specialNotes = document.getElementById('specialNotes').value;
+
+    // Send booking to webhooks
+    sendToWebhook('booking');
+
+    // Show success state after brief delay
+    setTimeout(function() {
+        setButtonLoading(submitBtn, false);
+        submitBtn.dataset.submitting = 'false';
+
+        // Hide progress indicator
+        document.querySelector('.wizard-progress').style.display = 'none';
+
+        // Show success panel
+        document.querySelectorAll('.wizard-panel').forEach(panel => {
+            panel.classList.remove('active');
+        });
+        document.getElementById('stepSuccess').classList.add('active');
+    }, 1000);
+
+    return false;
 }
 
 // Initialize on DOM ready
@@ -412,44 +471,32 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Form submission - Reserve Container (from Step 4)
-    document.getElementById('quoteWizard').addEventListener('submit', function(e) {
-        e.preventDefault();
+    // Use both form submit AND direct button handlers for mobile compatibility
+    const quoteForm = document.getElementById('quoteWizard');
+    const submitBtn = document.getElementById('submitBooking');
 
-        // Validate Step 4 fields
-        if (!validateStep(4)) {
-            return;
+    // Standard form submit handler
+    quoteForm.addEventListener('submit', handleBookingSubmit, { passive: false });
+
+    // Direct click handler for the submit button (helps with iOS)
+    submitBtn.addEventListener('click', function(e) {
+        // Only handle if we're on step 4
+        if (currentStep === 4) {
+            handleBookingSubmit(e);
         }
+    }, { passive: false });
 
-        const submitBtn = document.getElementById('submitBooking');
-        setButtonLoading(submitBtn, true);
-
-        // Add booking details to quote data
-        quoteData.deliveryAddress = document.getElementById('deliveryAddress').value;
-        quoteData.deliveryCity = document.getElementById('deliveryCity').value;
-        quoteData.deliveryState = document.getElementById('deliveryState').value;
-        quoteData.placementLocation = document.getElementById('placementLocation').value;
-        quoteData.surfaceType = document.getElementById('surfaceType').value;
-        quoteData.doorFacing = document.querySelector('input[name="doorFacing"]:checked').value;
-        quoteData.gateCode = document.getElementById('gateCode').value;
-        quoteData.specialNotes = document.getElementById('specialNotes').value;
-
-        // Send booking to webhooks
-        sendToWebhook('booking');
-
-        // Show success state after brief delay
-        setTimeout(function() {
-            setButtonLoading(submitBtn, false);
-
-            // Hide progress indicator
-            document.querySelector('.wizard-progress').style.display = 'none';
-
-            // Show success panel
-            document.querySelectorAll('.wizard-panel').forEach(panel => {
-                panel.classList.remove('active');
-            });
-            document.getElementById('stepSuccess').classList.add('active');
-        }, 1000);
-    });
+    // Touch handler for mobile devices (iOS Safari fix)
+    submitBtn.addEventListener('touchend', function(e) {
+        // Only handle if we're on step 4
+        if (currentStep === 4) {
+            e.preventDefault();
+            // Small delay to ensure touch is complete
+            setTimeout(function() {
+                handleBookingSubmit(null);
+            }, 10);
+        }
+    }, { passive: false });
 
     // Clear validation styling on input
     document.querySelectorAll('.form-control, .form-select').forEach(field => {
