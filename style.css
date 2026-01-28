@@ -725,28 +725,13 @@ footer a:hover {
         -webkit-tap-highlight-color: transparent;
     }
 
-    /* Ensure submit button is always tappable on mobile */
+    /* Ensure submit button is tappable on mobile */
     #submitBooking {
-        position: relative;
-        z-index: 9999 !important;
+        display: inline-block;
+        text-align: center;
+        text-decoration: none;
         cursor: pointer;
-        user-select: none;
-        -webkit-user-select: none;
-        pointer-events: auto !important;
-    }
-
-    /* Ensure wizard buttons container doesn't block taps */
-    .wizard-buttons {
-        position: relative;
-        z-index: 100;
-        pointer-events: auto;
-    }
-
-    /* Ensure form and panels don't block button */
-    #step4,
-    #step4 .wizard-buttons,
-    #quoteWizard {
-        pointer-events: auto;
+        -webkit-tap-highlight-color: rgba(255, 221, 0, 0.5);
     }
 
     .pricing-breakdown .price-box {

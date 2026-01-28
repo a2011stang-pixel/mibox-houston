@@ -353,40 +353,25 @@ function setButtonLoading(button, loading) {
     }
 }
 
-// Handle final form submission (Step 4) - Global function for onclick
+// Handle final form submission (Step 4)
 function handleBookingSubmit(e) {
-    console.log('handleBookingSubmit called');
-
-    // DEBUG: Show visible alert on mobile to confirm button tap works
-    // Remove this line after debugging is complete
-    alert('SUCCESS! Button tap registered. Step: ' + currentStep);
-
     if (e) {
         e.preventDefault();
         e.stopPropagation();
     }
 
-    // Prevent double submission
-    const submitBtn = document.getElementById('submitBooking');
-    if (!submitBtn) {
-        console.error('Submit button not found');
-        return false;
-    }
-
-    if (submitBtn.dataset.submitting === 'true') {
-        console.log('Already submitting, ignoring');
+    var submitBtn = document.getElementById('submitBooking');
+    if (!submitBtn || submitBtn.dataset.submitting === 'true') {
         return false;
     }
     submitBtn.dataset.submitting = 'true';
 
     // Validate Step 4 fields
     if (!validateStep(4)) {
-        console.log('Validation failed');
         submitBtn.dataset.submitting = 'false';
         return false;
     }
 
-    console.log('Validation passed, submitting...');
     setButtonLoading(submitBtn, true);
 
     // Add booking details to quote data
@@ -396,7 +381,7 @@ function handleBookingSubmit(e) {
     quoteData.placementLocation = document.getElementById('placementLocation').value;
     quoteData.surfaceType = document.getElementById('surfaceType').value;
 
-    const doorFacing = document.querySelector('input[name="doorFacing"]:checked');
+    var doorFacing = document.querySelector('input[name="doorFacing"]:checked');
     quoteData.doorFacing = doorFacing ? doorFacing.value : 'street';
 
     quoteData.gateCode = document.getElementById('gateCode').value;
@@ -407,15 +392,12 @@ function handleBookingSubmit(e) {
 
     // Show success state after brief delay
     setTimeout(function() {
-        console.log('Showing success state');
         setButtonLoading(submitBtn, false);
         submitBtn.dataset.submitting = 'false';
 
-        // Hide progress indicator
         var progressEl = document.querySelector('.wizard-progress');
         if (progressEl) progressEl.style.display = 'none';
 
-        // Show success panel
         document.querySelectorAll('.wizard-panel').forEach(function(panel) {
             panel.classList.remove('active');
         });
@@ -426,47 +408,8 @@ function handleBookingSubmit(e) {
     return false;
 }
 
-// Make function available globally
+// Make function available globally for onclick
 window.handleBookingSubmit = handleBookingSubmit;
-
-// Fallback: Window-level click/touch handler to catch button taps
-// This catches events even if something else is intercepting them
-document.addEventListener('click', function(e) {
-    var target = e.target;
-    // Check if clicked element or its parent is the submit button
-    while (target && target !== document) {
-        if (target.id === 'submitBooking') {
-            e.preventDefault();
-            e.stopPropagation();
-            handleBookingSubmit(e);
-            return;
-        }
-        target = target.parentElement;
-    }
-}, true); // Use capture phase
-
-// Also listen for touchstart as backup for mobile
-document.addEventListener('touchstart', function(e) {
-    var touch = e.touches[0];
-    var target = document.elementFromPoint(touch.clientX, touch.clientY);
-    while (target && target !== document) {
-        if (target.id === 'submitBooking') {
-            // Mark that we're handling via touch
-            target.dataset.touchStarted = 'true';
-            return;
-        }
-        target = target.parentElement;
-    }
-}, true);
-
-document.addEventListener('touchend', function(e) {
-    var submitBtn = document.getElementById('submitBooking');
-    if (submitBtn && submitBtn.dataset.touchStarted === 'true') {
-        submitBtn.dataset.touchStarted = 'false';
-        e.preventDefault();
-        handleBookingSubmit(e);
-    }
-}, true);
 
 // Initialize on DOM ready
 document.addEventListener('DOMContentLoaded', function() {
@@ -529,12 +472,35 @@ document.addEventListener('DOMContentLoaded', function() {
         goToStep(3);
     });
 
-    // Form submission is handled via onclick="handleBookingSubmit(event)" on the button
-    // Prevent default form submission just in case
+    // Prevent default form submission
     document.getElementById('quoteWizard').addEventListener('submit', function(e) {
         e.preventDefault();
         return false;
     });
+
+    // Submit booking button - use multiple event types for mobile compatibility
+    var submitBtn = document.getElementById('submitBooking');
+    if (submitBtn) {
+        // Standard click event
+        submitBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            handleBookingSubmit(e);
+        });
+
+        // Touchend for iOS - fires after touch is released
+        submitBtn.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            // Small delay to prevent double-firing with click
+            var self = this;
+            if (!self.dataset.touchFired) {
+                self.dataset.touchFired = 'true';
+                handleBookingSubmit(e);
+                setTimeout(function() {
+                    self.dataset.touchFired = 'false';
+                }, 300);
+            }
+        });
+    }
 
     // Clear validation styling on input
     document.querySelectorAll('.form-control, .form-select').forEach(field => {
