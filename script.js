@@ -353,8 +353,10 @@ function setButtonLoading(button, loading) {
     }
 }
 
-// Handle final form submission (Step 4)
+// Handle final form submission (Step 4) - Global function for onclick
 function handleBookingSubmit(e) {
+    console.log('handleBookingSubmit called');
+
     if (e) {
         e.preventDefault();
         e.stopPropagation();
@@ -362,17 +364,25 @@ function handleBookingSubmit(e) {
 
     // Prevent double submission
     const submitBtn = document.getElementById('submitBooking');
+    if (!submitBtn) {
+        console.error('Submit button not found');
+        return false;
+    }
+
     if (submitBtn.dataset.submitting === 'true') {
+        console.log('Already submitting, ignoring');
         return false;
     }
     submitBtn.dataset.submitting = 'true';
 
     // Validate Step 4 fields
     if (!validateStep(4)) {
+        console.log('Validation failed');
         submitBtn.dataset.submitting = 'false';
         return false;
     }
 
+    console.log('Validation passed, submitting...');
     setButtonLoading(submitBtn, true);
 
     // Add booking details to quote data
@@ -393,21 +403,27 @@ function handleBookingSubmit(e) {
 
     // Show success state after brief delay
     setTimeout(function() {
+        console.log('Showing success state');
         setButtonLoading(submitBtn, false);
         submitBtn.dataset.submitting = 'false';
 
         // Hide progress indicator
-        document.querySelector('.wizard-progress').style.display = 'none';
+        var progressEl = document.querySelector('.wizard-progress');
+        if (progressEl) progressEl.style.display = 'none';
 
         // Show success panel
-        document.querySelectorAll('.wizard-panel').forEach(panel => {
+        document.querySelectorAll('.wizard-panel').forEach(function(panel) {
             panel.classList.remove('active');
         });
-        document.getElementById('stepSuccess').classList.add('active');
+        var successPanel = document.getElementById('stepSuccess');
+        if (successPanel) successPanel.classList.add('active');
     }, 1000);
 
     return false;
 }
+
+// Make function available globally
+window.handleBookingSubmit = handleBookingSubmit;
 
 // Initialize on DOM ready
 document.addEventListener('DOMContentLoaded', function() {
@@ -470,33 +486,12 @@ document.addEventListener('DOMContentLoaded', function() {
         goToStep(3);
     });
 
-    // Form submission - Reserve Container (from Step 4)
-    // Use both form submit AND direct button handlers for mobile compatibility
-    const quoteForm = document.getElementById('quoteWizard');
-    const submitBtn = document.getElementById('submitBooking');
-
-    // Standard form submit handler
-    quoteForm.addEventListener('submit', handleBookingSubmit, { passive: false });
-
-    // Direct click handler for the submit button (helps with iOS)
-    submitBtn.addEventListener('click', function(e) {
-        // Only handle if we're on step 4
-        if (currentStep === 4) {
-            handleBookingSubmit(e);
-        }
-    }, { passive: false });
-
-    // Touch handler for mobile devices (iOS Safari fix)
-    submitBtn.addEventListener('touchend', function(e) {
-        // Only handle if we're on step 4
-        if (currentStep === 4) {
-            e.preventDefault();
-            // Small delay to ensure touch is complete
-            setTimeout(function() {
-                handleBookingSubmit(null);
-            }, 10);
-        }
-    }, { passive: false });
+    // Form submission is handled via onclick="handleBookingSubmit(event)" on the button
+    // Prevent default form submission just in case
+    document.getElementById('quoteWizard').addEventListener('submit', function(e) {
+        e.preventDefault();
+        return false;
+    });
 
     // Clear validation styling on input
     document.querySelectorAll('.form-control, .form-select').forEach(field => {
