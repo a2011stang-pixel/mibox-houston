@@ -268,6 +268,21 @@ function validateStep(step) {
             }
         }
 
+        // Validate delivery date is not in the past
+        const deliveryDateField = document.getElementById('deliveryDate');
+        const selectedDate = deliveryDateField.value;
+        if (selectedDate) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const selected = new Date(selectedDate + 'T00:00:00');
+            if (selected <= today) {
+                deliveryDateField.classList.add('is-invalid');
+                alert('Please select a delivery date starting from tomorrow.');
+                isValid = false;
+                if (!firstInvalid) firstInvalid = deliveryDateField;
+            }
+        }
+
     } else if (step === 2) {
         const fields = ['firstName', 'email', 'phone'];
 
@@ -436,9 +451,23 @@ window.handleBookingSubmit = handleBookingSubmit;
 // Initialize on DOM ready
 document.addEventListener('DOMContentLoaded', function() {
     // Set minimum delivery date to tomorrow
-    const tomorrow = new Date();
+    var deliveryDateInput = document.getElementById('deliveryDate');
+    var tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    document.getElementById('deliveryDate').min = tomorrow.toISOString().split('T')[0];
+    var minDate = tomorrow.toISOString().split('T')[0];
+
+    // Set min attribute
+    deliveryDateInput.min = minDate;
+    deliveryDateInput.setAttribute('min', minDate);
+
+    // Validate date on change (for mobile browsers that ignore min)
+    deliveryDateInput.addEventListener('change', function() {
+        var selectedDate = this.value;
+        if (selectedDate && selectedDate < minDate) {
+            this.value = minDate;
+            alert('Please select a date starting from tomorrow.');
+        }
+    });
 
     // Show/hide destination ZIP based on service type
     document.getElementById('serviceType').addEventListener('change', function() {
