@@ -221,6 +221,8 @@ function displayQuoteSummary() {
         email: document.getElementById('email').value,
         phone: document.getElementById('phone').value,
         howHeard: document.getElementById('howHeard').value,
+        sms_consent: document.getElementById('smsConsent') ? document.getElementById('smsConsent').checked : false,
+        sms_consent_timestamp: document.getElementById('smsConsent') && document.getElementById('smsConsent').checked ? new Date().toISOString() : null,
         ...quote
     };
 }
@@ -303,6 +305,21 @@ function validateStep(step) {
             email.classList.add('is-invalid');
             isValid = false;
             if (!firstInvalid) firstInvalid = email;
+        }
+
+        // Validate SMS consent - required if phone number is entered
+        const phoneField = document.getElementById('phone');
+        const smsConsent = document.getElementById('smsConsent');
+        const smsConsentError = document.getElementById('smsConsentError');
+
+        if (phoneField && phoneField.value && smsConsent && !smsConsent.checked) {
+            smsConsent.classList.add('is-invalid');
+            if (smsConsentError) smsConsentError.style.display = 'block';
+            isValid = false;
+            if (!firstInvalid) firstInvalid = smsConsent;
+        } else if (smsConsent) {
+            smsConsent.classList.remove('is-invalid');
+            if (smsConsentError) smsConsentError.style.display = 'none';
         }
     } else if (step === 4) {
         const fields = ['deliveryAddress', 'deliveryCity', 'placementLocation', 'surfaceType'];
