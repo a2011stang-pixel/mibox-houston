@@ -337,10 +337,34 @@ function isLocalDevelopment() {
 function onTurnstileSuccess(token) {
     turnstileToken = token;
     document.getElementById('turnstileToken').value = token;
+    // Hide any error message
+    var errorEl = document.getElementById('turnstileError');
+    if (errorEl) errorEl.style.display = 'none';
 }
 
-// Make callback available globally
+// Turnstile error callback
+function onTurnstileError(error) {
+    console.error('Turnstile error:', error);
+    // Show error message to user
+    var container = document.getElementById('turnstileContainer');
+    if (container) {
+        var errorEl = document.getElementById('turnstileError');
+        if (!errorEl) {
+            errorEl = document.createElement('div');
+            errorEl.id = 'turnstileError';
+            errorEl.style.cssText = 'color: #856404; background: #fff3cd; padding: 10px; border-radius: 5px; margin-top: 10px; font-size: 14px;';
+            errorEl.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i> Security check unavailable. You can still proceed.';
+            container.appendChild(errorEl);
+        }
+        errorEl.style.display = 'block';
+    }
+    // Allow form to proceed without Turnstile
+    turnstileToken = 'error-fallback';
+}
+
+// Make callbacks available globally
 window.onTurnstileSuccess = onTurnstileSuccess;
+window.onTurnstileError = onTurnstileError;
 
 // Send data to webhooks
 function sendToWebhook(type) {
