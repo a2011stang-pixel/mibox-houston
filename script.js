@@ -17,8 +17,7 @@ const PRICING = {
         zone1: 79,
         zone2: 99,
         zone3: 129
-    },
-    taxRate: 0.0825
+    }
 };
 
 // Service type display names
@@ -85,24 +84,15 @@ function calculateQuote() {
     }
 
     // Calculate totals
-    const subtotalToday = deliveryFee + firstMonthRent;
-    const taxToday = subtotalToday * PRICING.taxRate;
-    const dueToday = subtotalToday + taxToday;
-
-    const taxMonthly = monthlyRent * PRICING.taxRate;
-    const ongoingMonthly = monthlyRent + taxMonthly;
-
-    const taxPickup = pickupFee * PRICING.taxRate;
-    const dueWhenDone = pickupFee + taxPickup;
+    const dueToday = deliveryFee + firstMonthRent;
+    const ongoingMonthly = monthlyRent;
+    const dueWhenDone = pickupFee;
 
     return {
         deliveryFee,
         firstMonthRent,
         monthlyRent,
         pickupFee,
-        taxToday,
-        taxMonthly,
-        taxPickup,
         dueToday,
         ongoingMonthly,
         dueWhenDone,
@@ -196,17 +186,14 @@ function displayQuoteSummary() {
     // Update Due Today box
     document.getElementById('tableDeliveryFee').textContent = formatCurrency(quote.deliveryFee);
     document.getElementById('tableFirstMonth').textContent = formatCurrency(quote.firstMonthRent);
-    document.getElementById('tableTaxToday').textContent = formatCurrency(quote.taxToday);
     document.getElementById('tableDueToday').textContent = formatCurrency(quote.dueToday);
 
     // Update Ongoing Monthly box
     document.getElementById('tableMonthlyRent').textContent = formatCurrency(quote.monthlyRent);
-    document.getElementById('tableMonthlyTax').textContent = formatCurrency(quote.taxMonthly);
     document.getElementById('tableMonthlyTotal').textContent = formatCurrency(quote.ongoingMonthly);
 
     // Update When Finished box
     document.getElementById('tablePickupFee').textContent = quote.pickupFee > 0 ? formatCurrency(quote.pickupFee) : 'FREE';
-    document.getElementById('tablePickupTax').textContent = quote.pickupFee > 0 ? formatCurrency(quote.taxPickup) : '$0.00';
     document.getElementById('tablePickupTotal').textContent = quote.pickupFee > 0 ? formatCurrency(quote.dueWhenDone) : 'FREE';
 
     // Store quote data
