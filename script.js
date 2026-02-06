@@ -11,12 +11,7 @@ const PRICING = {
     },
     firstMonth: {
         '16': 119,
-        '20': 149
-    },
-    pickup: {
-        zone1: 79,
-        zone2: 99,
-        zone3: 129
+        '20': 179
     }
 };
 
@@ -62,7 +57,7 @@ function calculateQuote() {
     // Determine monthly rate based on service type
     if (serviceType === 'onsite') {
         monthlyRent = PRICING.monthly[containerSize].onsite;
-        pickupFee = PRICING.pickup[zone];
+        pickupFee = PRICING.delivery[zone].fee;
     } else if (serviceType === 'facility-inside') {
         monthlyRent = PRICING.monthly[containerSize].facilityInside;
         pickupFee = 0;
@@ -448,6 +443,19 @@ function handleBookingSubmit(e) {
 
     quoteData.gateCode = document.getElementById('gateCode').value;
     quoteData.specialNotes = document.getElementById('specialNotes').value;
+
+    // Recalculate quote to ensure pricing values are fresh before sending
+    var freshQuote = calculateQuote();
+    if (freshQuote) {
+        quoteData.deliveryFee = freshQuote.deliveryFee;
+        quoteData.firstMonthRent = freshQuote.firstMonthRent;
+        quoteData.monthlyRent = freshQuote.monthlyRent;
+        quoteData.pickupFee = freshQuote.pickupFee;
+        quoteData.dueToday = freshQuote.dueToday;
+        quoteData.ongoingMonthly = freshQuote.ongoingMonthly;
+        quoteData.dueWhenDone = freshQuote.dueWhenDone;
+        quoteData.zone = freshQuote.zone;
+    }
 
     // Send booking to webhooks
     sendToWebhook('booking');
