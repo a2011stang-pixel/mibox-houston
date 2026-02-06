@@ -369,6 +369,12 @@ function onTurnstileError(error) {
 window.onTurnstileSuccess = onTurnstileSuccess;
 window.onTurnstileError = onTurnstileError;
 
+// Format number as dollar amount (e.g., "$258.00")
+function formatDollar(amount) {
+    if (typeof amount !== 'number') return amount;
+    return '$' + amount.toFixed(2);
+}
+
 // Send data to webhooks
 function sendToWebhook(type) {
     const zapierUrl = 'https://hooks.zapier.com/hooks/catch/12186485/ugs5oqz/';
@@ -376,6 +382,14 @@ function sendToWebhook(type) {
 
     const data = {
         ...quoteData,
+        // Format pricing fields as dollar amounts
+        deliveryFee: formatDollar(quoteData.deliveryFee),
+        firstMonthRent: formatDollar(quoteData.firstMonthRent),
+        monthlyRent: formatDollar(quoteData.monthlyRent),
+        pickupFee: formatDollar(quoteData.pickupFee),
+        dueToday: formatDollar(quoteData.dueToday),
+        ongoingMonthly: formatDollar(quoteData.ongoingMonthly),
+        dueWhenDone: formatDollar(quoteData.dueWhenDone),
         formType: type,
         timestamp: new Date().toISOString(),
         source: 'miboxhouston.com',
