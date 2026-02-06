@@ -367,7 +367,7 @@ window.onTurnstileError = onTurnstileError;
 
 // Send data to webhooks
 function sendToWebhook(type) {
-    const zapierUrl = 'https://hooks.zapier.com/hooks/catch/21414077/2axrkxs/';
+    const zapierUrl = 'https://hooks.zapier.com/hooks/catch/12186485/ugs5oqz/';
     const stellaUrl = 'https://api.runstella.com/webhook/16216eb0';
 
     const data = {
