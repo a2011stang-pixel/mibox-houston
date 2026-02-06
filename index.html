@@ -214,15 +214,25 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                                 <h4 class="wizard-title">Select Your Service</h4>
 
                                 <div class="mb-3">
-                                    <label class="form-label" for="serviceType">What do you need?</label>
-                                    <select class="form-select" id="serviceType" required>
-                                        <option value="">-- Select Service --</option>
-                                        <option value="onsite">Store at My Property</option>
-                                        <option value="facility-inside">Store at MI-BOX (Inside Climate Controlled)</option>
-                                        <option value="facility-outside">Store at MI-BOX (Outside)</option>
-                                        <option value="moving-direct">Moving (Property to Property)</option>
-                                        <option value="moving-facility">Moving (via MI-BOX Facility)</option>
-                                    </select>
+                                    <label class="form-label">What do you need?</label>
+                                    <input type="hidden" id="serviceType" required>
+                                    <div class="service-cards">
+                                        <div class="service-card" data-service="onsite">
+                                            <div class="service-card-icon">📦</div>
+                                            <div class="service-card-label">Storage</div>
+                                            <div class="service-card-subtitle">Keep it at your property</div>
+                                        </div>
+                                        <div class="service-card" data-service="moving">
+                                            <div class="service-card-icon">🏠➡️🏠</div>
+                                            <div class="service-card-label">Moving</div>
+                                            <div class="service-card-subtitle">Move to a new location</div>
+                                        </div>
+                                        <div class="service-card" data-service="both">
+                                            <div class="service-card-icon">📦+🏠</div>
+                                            <div class="service-card-label">Both</div>
+                                            <div class="service-card-subtitle">Store now, move later</div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div class="row">

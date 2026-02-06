@@ -17,11 +17,9 @@ const PRICING = {
 
 // Service type display names
 const SERVICE_NAMES = {
-    'onsite': 'Store at My Property',
-    'facility-inside': 'Store at MI-BOX (Climate Controlled)',
-    'facility-outside': 'Store at MI-BOX (Outside)',
-    'moving-direct': 'Moving (Property to Property)',
-    'moving-facility': 'Moving (via MI-BOX Facility)'
+    'onsite': 'Storage (At Your Property)',
+    'moving': 'Moving (To New Location)',
+    'both': 'Storage + Moving'
 };
 
 // Current wizard state
@@ -56,21 +54,18 @@ function calculateQuote() {
 
     // Determine monthly rate based on service type
     if (serviceType === 'onsite') {
+        // Storage only - keep at property
         monthlyRent = PRICING.monthly[containerSize].onsite;
         pickupFee = PRICING.delivery[zone].fee;
-    } else if (serviceType === 'facility-inside') {
-        monthlyRent = PRICING.monthly[containerSize].facilityInside;
-        pickupFee = 0;
-    } else if (serviceType === 'facility-outside') {
-        monthlyRent = PRICING.monthly[containerSize].facilityOutside;
-        pickupFee = 0;
-    } else if (serviceType === 'moving-direct') {
+    } else if (serviceType === 'moving') {
+        // Moving - property to property
         monthlyRent = PRICING.monthly[containerSize].onsite;
         const destZone = getDeliveryZone(destinationZip);
         if (destZone) {
             pickupFee = PRICING.delivery[destZone].fee;
         }
-    } else if (serviceType === 'moving-facility') {
+    } else if (serviceType === 'both') {
+        // Store now, move later - via facility
         monthlyRent = PRICING.monthly[containerSize].facilityInside;
         const destZone = getDeliveryZone(destinationZip);
         if (destZone) {
@@ -218,13 +213,22 @@ function validateStep(step) {
         const fields = ['serviceType', 'deliveryZip', 'containerSize', 'deliveryDate'];
         const serviceType = document.getElementById('serviceType').value;
 
-        // Add destination ZIP if moving
-        if (serviceType.includes('moving')) {
+        // Add destination ZIP if moving or both
+        if (serviceType === 'moving' || serviceType === 'both') {
             fields.push('destinationZip');
+        }
+
+        // Check service card selection
+        if (!serviceType) {
+            document.querySelector('.service-cards').classList.add('is-invalid');
+            isValid = false;
+        } else {
+            document.querySelector('.service-cards').classList.remove('is-invalid');
         }
 
         fields.forEach(fieldId => {
             const field = document.getElementById(fieldId);
+            if (fieldId === 'serviceType') return; // Skip hidden input, handled above
             if (!field.value) {
                 field.classList.add('is-invalid');
                 isValid = false;
@@ -242,8 +246,8 @@ function validateStep(step) {
             isValid = false;
         }
 
-        // Validate destination ZIP if moving
-        if (serviceType.includes('moving')) {
+        // Validate destination ZIP if moving or both
+        if (serviceType === 'moving' || serviceType === 'both') {
             const destZip = document.getElementById('destinationZip').value;
             if (destZip && !getDeliveryZone(destZip)) {
                 document.getElementById('destinationZip').classList.add('is-invalid');
@@ -525,19 +529,34 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Show/hide destination ZIP based on service type
-    document.getElementById('serviceType').addEventListener('change', function() {
-        const destGroup = document.getElementById('destinationZipGroup');
-        const destInput = document.getElementById('destinationZip');
+    // Service card selection
+    document.querySelectorAll('.service-card').forEach(function(card) {
+        card.addEventListener('click', function() {
+            // Remove selected class from all cards
+            document.querySelectorAll('.service-card').forEach(function(c) {
+                c.classList.remove('selected');
+            });
+            // Add selected class to clicked card
+            this.classList.add('selected');
+            // Set hidden input value
+            var serviceType = this.getAttribute('data-service');
+            document.getElementById('serviceType').value = serviceType;
+            // Remove invalid state if present
+            document.querySelector('.service-cards').classList.remove('is-invalid');
 
-        if (this.value.includes('moving')) {
-            destGroup.style.display = 'block';
-            destInput.required = true;
-        } else {
-            destGroup.style.display = 'none';
-            destInput.required = false;
-            destInput.value = '';
-        }
+            // Show/hide destination ZIP based on service type
+            var destGroup = document.getElementById('destinationZipGroup');
+            var destInput = document.getElementById('destinationZip');
+
+            if (serviceType === 'moving' || serviceType === 'both') {
+                destGroup.style.display = 'block';
+                destInput.required = true;
+            } else {
+                destGroup.style.display = 'none';
+                destInput.required = false;
+                destInput.value = '';
+            }
+        });
     });
 
     // Step 1 -> Step 2
