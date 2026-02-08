@@ -148,8 +148,8 @@ export function calculateDistance(zip1, zip2) {
     return Math.round(distance * 10) / 10; // Round to 1 decimal place
 }
 
-// Calculate relocation fee: $4/mile or $40 minimum
-export function calculateRelocationFee(deliveryZip, destinationZip) {
+// Calculate mileage charge: $4/mile or $40 minimum
+export function calculateMileageCharge(deliveryZip, destinationZip) {
     const distance = calculateDistance(deliveryZip, destinationZip);
 
     // If we can't calculate distance, use $40 flat fee
@@ -157,6 +157,19 @@ export function calculateRelocationFee(deliveryZip, destinationZip) {
 
     const calculatedFee = distance * 4;
     return Math.max(calculatedFee, 40);
+}
+
+// Calculate relocation fee: destination delivery fee + mileage charge
+export function calculateRelocationFee(deliveryZip, destinationZip) {
+    // Get destination zone's delivery fee
+    const destZone = getDeliveryZone(destinationZip);
+    const destDeliveryFee = destZone ? PRICING.delivery[destZone].fee : 0;
+
+    // Calculate mileage charge
+    const mileageCharge = calculateMileageCharge(deliveryZip, destinationZip);
+
+    // Relocation fee = destination delivery fee + mileage charge
+    return destDeliveryFee + mileageCharge;
 }
 
 // Format currency

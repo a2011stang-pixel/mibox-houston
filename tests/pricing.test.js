@@ -4,6 +4,7 @@ import {
   getDeliveryZone,
   calculateQuoteFromData,
   calculateDistance,
+  calculateMileageCharge,
   calculateRelocationFee,
   formatCurrency,
   formatDollar,
@@ -335,28 +336,60 @@ describe('calculateDistance', () => {
   });
 });
 
-describe('calculateRelocationFee', () => {
+describe('calculateMileageCharge', () => {
   it('returns $40 minimum for short distances', () => {
-    // Two nearby ZIPs - fee should be $40 minimum
-    const fee = calculateRelocationFee('77002', '77003');
+    // Two nearby ZIPs - mileage should be $40 minimum
+    const fee = calculateMileageCharge('77002', '77003');
     expect(fee).toBe(40);
   });
 
   it('returns $4/mile for longer distances', () => {
     // Downtown to The Woodlands - ~30+ miles at $4/mile = $120+
-    const fee = calculateRelocationFee('77002', '77380');
+    const fee = calculateMileageCharge('77002', '77380');
     expect(fee).toBeGreaterThan(100);
   });
 
   it('returns $40 for unknown ZIP (fallback)', () => {
-    const fee = calculateRelocationFee('77002', '90210');
+    const fee = calculateMileageCharge('77002', '90210');
     expect(fee).toBe(40);
   });
 
   it('is at least $40 regardless of calculation', () => {
     // Same ZIP would be 0 distance, but fee should still be $40
-    const fee = calculateRelocationFee('77002', '77002');
+    const fee = calculateMileageCharge('77002', '77002');
     expect(fee).toBe(40);
+  });
+});
+
+describe('calculateRelocationFee', () => {
+  it('includes destination delivery fee plus mileage charge', () => {
+    // Zone1 to Zone1: $79 delivery fee + $40 minimum mileage = $119
+    const fee = calculateRelocationFee('77002', '77003');
+    expect(fee).toBe(79 + 40); // $119
+  });
+
+  it('uses zone2 delivery fee for zone2 destination', () => {
+    // Zone1 to Zone2: $99 delivery fee + mileage
+    const fee = calculateRelocationFee('77002', '77301');
+    expect(fee).toBeGreaterThan(99 + 40); // Zone2 fee + mileage (>$40 for this distance)
+  });
+
+  it('uses zone3 delivery fee for zone3 destination', () => {
+    // Zone1 to Zone3: $129 delivery fee + mileage
+    const fee = calculateRelocationFee('77002', '77327');
+    expect(fee).toBeGreaterThanOrEqual(129 + 40); // Zone3 fee + minimum mileage
+  });
+
+  it('returns only mileage charge when destination ZIP is unknown', () => {
+    // Unknown destination: $0 delivery fee + $40 minimum mileage
+    const fee = calculateRelocationFee('77002', '90210');
+    expect(fee).toBe(40);
+  });
+
+  it('calculates correctly for same ZIP (minimum mileage)', () => {
+    // Same ZIP in Zone1: $79 delivery fee + $40 minimum mileage = $119
+    const fee = calculateRelocationFee('77002', '77002');
+    expect(fee).toBe(79 + 40); // $119
   });
 });
 
