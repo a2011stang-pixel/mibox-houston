@@ -193,6 +193,7 @@ function displayQuoteSummary() {
         deliveryZip,
         destinationZip: document.getElementById('destinationZip').value,
         deliveryDate,
+        storageDuration: document.getElementById('storageDuration').value,
         firstName: document.getElementById('firstName').value,
         lastName: document.getElementById('lastName').value,
         email: document.getElementById('email').value,
@@ -210,7 +211,7 @@ function validateStep(step) {
     let firstInvalid = null;
 
     if (step === 1) {
-        const fields = ['serviceType', 'deliveryZip', 'containerSize', 'deliveryDate'];
+        const fields = ['serviceType', 'deliveryZip', 'containerSize', 'storageDuration', 'deliveryDate'];
         const serviceType = document.getElementById('serviceType').value;
 
         // Add destination ZIP if moving or both
