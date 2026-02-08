@@ -228,7 +228,7 @@ async function refreshZips() {
     try {
         const data = await api.getZips({
             search: search || undefined,
-            zone: zone || undefined,
+            zone_id: zone || undefined,
             limit: zipLimit,
             offset: zipPage * zipLimit,
         });
