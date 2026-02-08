@@ -96,7 +96,7 @@
                 "name": "How much does portable storage cost in Houston?",
                 "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "MI-BOX Houston offers competitive portable storage pricing. Our 16-foot container starts at $119/month and our 20-foot container starts at $179/month. Delivery fees vary by location. Get an instant quote online for exact pricing for your area."
+                    "text": "MI-BOX Houston offers competitive portable storage pricing starting at $119/month for your first month, plus delivery. We offer both 16-foot and 20-foot containers. Delivery fees vary by location. Get an instant quote online for exact pricing for your area."
                 }
             },
             {
@@ -818,7 +818,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             </h2>
                             <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                                 <div class="accordion-body">
-                                    MI-BOX Houston offers competitive portable storage pricing. Our 16-foot container starts at <span class="dynamic-price" data-price="16-first_month">$119</span>/month and our 20-foot container starts at <span class="dynamic-price" data-price="20-first_month">$179</span>/month. Delivery fees vary by location. Get an instant quote online for exact pricing for your area.
+                                    MI-BOX Houston offers competitive portable storage pricing starting at <span class="dynamic-price" data-price="16-first_month">$119</span>/month for your first month, plus delivery. We offer both 16-foot and 20-foot containers. Delivery fees vary by location. Get an instant quote online for exact pricing for your area.
                                 </div>
                             </div>
                         </div>
@@ -913,40 +913,31 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 if (!response.ok) throw new Error('Failed to fetch pricing');
                 const data = await response.json();
                 
-                // Map display sizes to database sizes
-                // DB uses 12/16, display uses 16/20 (both represent 16ft and 20ft containers)
-                const sizeMap = { '16': '12', '20': '16' };
+                // Only show 16ft first-month pricing on public site
+                const price16FirstMonth = data.first_month && data.first_month['16'];
                 
-                // Update all elements with data-price attributes
-                document.querySelectorAll('[data-price]').forEach(el => {
-                    const priceKey = el.getAttribute('data-price');
-                    const [displaySize, type] = priceKey.split('-');
-                    const dbSize = sizeMap[displaySize] || displaySize;
-                    
-                    let price = null;
-                    
-                    // Check first_month pricing
-                    if (type === 'first_month' && data.first_month && data.first_month[dbSize]) {
-                        price = data.first_month[dbSize];
-                    }
-                    // Check monthly pricing (may have different rate types)
-                    else if (data.monthly && data.monthly[dbSize]) {
-                        if (data.monthly[dbSize][type]) {
-                            price = data.monthly[dbSize][type];
-                        } else if (type === 'first_month' && data.monthly[dbSize]['monthly']) {
-                            // Fallback: use monthly rate if first_month not set
-                            // (first month promo might be handled differently)
-                        }
-                    }
-                    
-                    if (price !== null) {
-                        el.textContent = '$' + Math.round(price);
-                    }
-                    // Keep static fallback value if price not found
-                });
+                if (price16FirstMonth) {
+                    document.querySelectorAll('[data-price="16-first_month"]').forEach(el => {
+                        el.textContent = '$' + Math.round(price16FirstMonth);
+                    });
+                } else {
+                    throw new Error('16ft first-month pricing not available');
+                }
             } catch (error) {
                 console.warn('Could not load dynamic pricing:', error);
-                // Keep static fallback values in HTML
+                // Show fallback text
+                document.querySelectorAll('[data-price]').forEach(el => {
+                    const wrapper = el.closest('.price-wrapper');
+                    if (wrapper) {
+                        wrapper.innerHTML = 'Starting at affordable rates.';
+                    } else {
+                        // For inline price displays, replace the whole pricing text
+                        const parent = el.parentElement;
+                        if (parent && parent.textContent.includes('Starting at')) {
+                            parent.textContent = 'Starting at affordable rates.';
+                        }
+                    }
+                });
             }
         }
         
