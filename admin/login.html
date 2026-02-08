@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - MiBox Houston</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/admin.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container">
+        <div class="row justify-content-center min-vh-100 align-items-center">
+            <div class="col-md-5 col-lg-4">
+                <div class="card shadow">
+                    <div class="card-body p-4">
+                        <div class="text-center mb-4">
+                            <h4 class="mb-1">MiBox Houston</h4>
+                            <p class="text-muted">Admin Dashboard</p>
+                        </div>
+
+                        <!-- Login Form -->
+                        <form id="loginForm">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="password" required>
+                            </div>
+                            <div id="loginError" class="alert alert-danger d-none"></div>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                                Sign In
+                            </button>
+                        </form>
+
+                        <!-- TOTP Verification Form -->
+                        <form id="totpForm" class="d-none">
+                            <div class="text-center mb-3">
+                                <i class="bi bi-shield-lock fs-1 text-primary"></i>
+                                <p class="mt-2">Enter the 6-digit code from your authenticator app</p>
+                            </div>
+                            <div class="mb-3">
+                                <input type="text" class="form-control form-control-lg text-center" 
+                                       id="totpCode" maxlength="6" pattern="[0-9]{6}" 
+                                       placeholder="000000" required autocomplete="one-time-code">
+                            </div>
+                            <div id="totpError" class="alert alert-danger d-none"></div>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                                Verify
+                            </button>
+                        </form>
+
+                        <!-- MFA Setup Form -->
+                        <div id="mfaSetup" class="d-none">
+                            <div class="text-center mb-3">
+                                <i class="bi bi-qr-code fs-1 text-primary"></i>
+                                <h5 class="mt-2">Set Up Two-Factor Authentication</h5>
+                                <p class="text-muted small">Scan this QR code with Google Authenticator or Authy</p>
+                            </div>
+                            <div class="text-center mb-3">
+                                <div id="qrCode" class="d-inline-block p-3 bg-white border rounded"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Or enter this code manually:</label>
+                                <code id="totpSecret" class="d-block p-2 bg-light rounded text-center"></code>
+                            </div>
+                            <form id="mfaConfirmForm">
+                                <div class="mb-3">
+                                    <label for="mfaCode" class="form-label">Enter code to verify setup</label>
+                                    <input type="text" class="form-control text-center" 
+                                           id="mfaCode" maxlength="6" pattern="[0-9]{6}" required>
+                                </div>
+                                <div id="mfaError" class="alert alert-danger d-none"></div>
+                                <button type="submit" class="btn btn-success w-100">
+                                    <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                                    Enable Two-Factor Auth
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="js/auth.js"></script>
+</body>
+</html>
