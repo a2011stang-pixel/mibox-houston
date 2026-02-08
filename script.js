@@ -22,6 +22,12 @@ const SERVICE_NAMES = {
     'both': 'Storage + Moving'
 };
 
+// Storage location display names (only shown when serviceType is 'onsite')
+const STORAGE_LOCATION_NAMES = {
+    'customer_property': 'At My Property',
+    'secured_facility': 'At Our Secured Facility (Outside Storage Only)'
+};
+
 // Current wizard state
 let currentStep = 1;
 let quoteData = {};
@@ -41,6 +47,7 @@ function calculateQuote() {
     const containerSize = document.getElementById('containerSize').value;
     const deliveryZip = document.getElementById('deliveryZip').value;
     const destinationZip = document.getElementById('destinationZip').value;
+    const storageLocation = document.getElementById('storageLocation') ? document.getElementById('storageLocation').value : '';
 
     if (!serviceType || !deliveryZip) return null;
 
@@ -54,8 +61,14 @@ function calculateQuote() {
 
     // Determine monthly rate based on service type
     if (serviceType === 'onsite') {
-        // Storage only - keep at property
-        monthlyRent = PRICING.monthly[containerSize].onsite;
+        // Storage only - rate depends on storage location
+        if (storageLocation === 'secured_facility') {
+            // Stored at our facility - outside storage rate
+            monthlyRent = PRICING.monthly[containerSize].facilityOutside;
+        } else {
+            // Stored at customer property (default behavior)
+            monthlyRent = PRICING.monthly[containerSize].onsite;
+        }
         pickupFee = PRICING.delivery[zone].fee;
     } else if (serviceType === 'moving') {
         // Moving - property to property
@@ -192,6 +205,7 @@ function displayQuoteSummary() {
         containerSize,
         deliveryZip,
         destinationZip: document.getElementById('destinationZip').value,
+        storageLocation: document.getElementById('storageLocation') ? document.getElementById('storageLocation').value : '',
         deliveryDate,
         storageDuration: document.getElementById('storageDuration').value,
         firstName: document.getElementById('firstName').value,
@@ -225,6 +239,19 @@ function validateStep(step) {
             isValid = false;
         } else {
             document.querySelector('.service-cards').classList.remove('is-invalid');
+        }
+
+        // Check storage location selection if onsite service
+        if (serviceType === 'onsite') {
+            const storageLocation = document.getElementById('storageLocation').value;
+            const storageLocationCards = document.querySelector('.storage-location-cards');
+            if (!storageLocation) {
+                if (storageLocationCards) storageLocationCards.classList.add('is-invalid');
+                isValid = false;
+                if (!firstInvalid) firstInvalid = storageLocationCards;
+            } else {
+                if (storageLocationCards) storageLocationCards.classList.remove('is-invalid');
+            }
         }
 
         fields.forEach(fieldId => {
@@ -570,6 +597,53 @@ document.addEventListener('DOMContentLoaded', function() {
                 destGroup.style.display = 'none';
                 destInput.required = false;
                 destInput.value = '';
+            }
+
+            // Show/hide storage location based on service type
+            var storageLocationGroup = document.getElementById('storageLocationGroup');
+            var storageLocationInput = document.getElementById('storageLocation');
+            var storageLocationCards = document.querySelector('.storage-location-cards');
+            var facilityNote = document.getElementById('facilityStorageNote');
+
+            if (serviceType === 'onsite') {
+                storageLocationGroup.style.display = 'block';
+                storageLocationInput.required = true;
+            } else {
+                storageLocationGroup.style.display = 'none';
+                storageLocationInput.required = false;
+                storageLocationInput.value = '';
+                // Clear selection
+                document.querySelectorAll('.storage-location-card').forEach(function(c) {
+                    c.classList.remove('selected');
+                });
+                if (storageLocationCards) storageLocationCards.classList.remove('is-invalid');
+                if (facilityNote) facilityNote.style.display = 'none';
+            }
+        });
+    });
+
+    // Storage location card selection
+    document.querySelectorAll('.storage-location-card').forEach(function(card) {
+        card.addEventListener('click', function() {
+            // Remove selected class from all storage location cards
+            document.querySelectorAll('.storage-location-card').forEach(function(c) {
+                c.classList.remove('selected');
+            });
+            // Add selected class to clicked card
+            this.classList.add('selected');
+            // Set hidden input value
+            var storageLocation = this.getAttribute('data-location');
+            document.getElementById('storageLocation').value = storageLocation;
+            // Remove invalid state if present
+            var storageLocationCards = document.querySelector('.storage-location-cards');
+            if (storageLocationCards) storageLocationCards.classList.remove('is-invalid');
+
+            // Show/hide facility storage note
+            var facilityNote = document.getElementById('facilityStorageNote');
+            if (storageLocation === 'secured_facility') {
+                if (facilityNote) facilityNote.style.display = 'block';
+            } else {
+                if (facilityNote) facilityNote.style.display = 'none';
             }
         });
     });
