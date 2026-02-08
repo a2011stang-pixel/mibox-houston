@@ -913,28 +913,40 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 if (!response.ok) throw new Error('Failed to fetch pricing');
                 const data = await response.json();
                 
+                // Map display sizes to database sizes
+                // DB uses 12/16, display uses 16/20 (both represent 16ft and 20ft containers)
+                const sizeMap = { '16': '12', '20': '16' };
+                
                 // Update all elements with data-price attributes
                 document.querySelectorAll('[data-price]').forEach(el => {
                     const priceKey = el.getAttribute('data-price');
-                    const [size, type] = priceKey.split('-');
+                    const [displaySize, type] = priceKey.split('-');
+                    const dbSize = sizeMap[displaySize] || displaySize;
                     
                     let price = null;
-                    if (type === 'first_month' && data.first_month && data.first_month[size]) {
-                        price = data.first_month[size];
-                    } else if (data.monthly && data.monthly[size] && data.monthly[size][type]) {
-                        price = data.monthly[size][type];
+                    
+                    // Check first_month pricing
+                    if (type === 'first_month' && data.first_month && data.first_month[dbSize]) {
+                        price = data.first_month[dbSize];
+                    }
+                    // Check monthly pricing (may have different rate types)
+                    else if (data.monthly && data.monthly[dbSize]) {
+                        if (data.monthly[dbSize][type]) {
+                            price = data.monthly[dbSize][type];
+                        } else if (type === 'first_month' && data.monthly[dbSize]['monthly']) {
+                            // Fallback: use monthly rate if first_month not set
+                            // (first month promo might be handled differently)
+                        }
                     }
                     
                     if (price !== null) {
                         el.textContent = '$' + Math.round(price);
                     }
+                    // Keep static fallback value if price not found
                 });
             } catch (error) {
                 console.warn('Could not load dynamic pricing:', error);
-                // On error, replace with fallback text for elements that need it
-                document.querySelectorAll('[data-price-fallback]').forEach(el => {
-                    el.textContent = el.getAttribute('data-price-fallback');
-                });
+                // Keep static fallback values in HTML
             }
         }
         
