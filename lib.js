@@ -126,7 +126,7 @@ export function buildWebhookPayload(quoteData, formType, turnstileToken = null) 
 }
 
 // Validate step 1 fields
-export function validateStep1Fields({ serviceType, deliveryZip, containerSize, deliveryDate, destinationZip }) {
+export function validateStep1Fields({ serviceType, deliveryZip, containerSize, storageDuration, deliveryDate, destinationZip }) {
     const errors = [];
 
     if (!serviceType) {
@@ -141,6 +141,10 @@ export function validateStep1Fields({ serviceType, deliveryZip, containerSize, d
 
     if (!containerSize) {
         errors.push({ field: 'containerSize', message: 'Please select a container size' });
+    }
+
+    if (!storageDuration) {
+        errors.push({ field: 'storageDuration', message: 'Please select how long you need storage' });
     }
 
     if (!deliveryDate) {

@@ -367,6 +367,7 @@ describe('Security Tests', () => {
         serviceType: 'onsite',
         deliveryZip: '77002',
         containerSize: '16',
+        storageDuration: '3',
         deliveryDate: '2030-12-01',
         destinationZip: '',
       };

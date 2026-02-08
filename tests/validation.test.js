@@ -62,6 +62,7 @@ describe('validateStep1Fields', () => {
     serviceType: 'onsite',
     deliveryZip: '77002',
     containerSize: '16',
+    storageDuration: '3',
     deliveryDate: '2030-12-01',
     destinationZip: '',
   };
@@ -99,6 +100,13 @@ describe('validateStep1Fields', () => {
     const errors = validateStep1Fields({ ...validStep1Data, containerSize: '' });
     expect(errors).toContainEqual(
       expect.objectContaining({ field: 'containerSize' })
+    );
+  });
+
+  it('returns error when storage duration is missing', () => {
+    const errors = validateStep1Fields({ ...validStep1Data, storageDuration: '' });
+    expect(errors).toContainEqual(
+      expect.objectContaining({ field: 'storageDuration' })
     );
   });
 
