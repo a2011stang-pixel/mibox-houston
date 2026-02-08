@@ -22,6 +22,12 @@ export const SERVICE_NAMES = {
     'both': 'Storage + Moving'
 };
 
+// Storage location display names (only shown when serviceType is 'onsite')
+export const STORAGE_LOCATION_NAMES = {
+    'customer_property': 'At My Property',
+    'secured_facility': 'At Our Secured Facility (Outside Storage Only)'
+};
+
 // Get delivery zone from ZIP
 export function getDeliveryZone(zip) {
     if (PRICING.delivery.zone1.zips.includes(zip)) return 'zone1';
@@ -49,7 +55,7 @@ export function formatDate(dateString) {
 }
 
 // Calculate quote based on form data
-export function calculateQuoteFromData({ serviceType, containerSize, deliveryZip, destinationZip }) {
+export function calculateQuoteFromData({ serviceType, containerSize, deliveryZip, destinationZip, storageLocation }) {
     if (!serviceType || !deliveryZip) return null;
 
     const zone = getDeliveryZone(deliveryZip);
@@ -61,7 +67,14 @@ export function calculateQuoteFromData({ serviceType, containerSize, deliveryZip
     let pickupFee = 0;
 
     if (serviceType === 'onsite') {
-        monthlyRent = PRICING.monthly[containerSize].onsite;
+        // Storage only - rate depends on storage location
+        if (storageLocation === 'secured_facility') {
+            // Stored at our facility - outside storage rate
+            monthlyRent = PRICING.monthly[containerSize].facilityOutside;
+        } else {
+            // Stored at customer property (default behavior)
+            monthlyRent = PRICING.monthly[containerSize].onsite;
+        }
         pickupFee = PRICING.delivery[zone].fee;
     } else if (serviceType === 'moving') {
         monthlyRent = PRICING.monthly[containerSize].onsite;
@@ -126,7 +139,7 @@ export function buildWebhookPayload(quoteData, formType, turnstileToken = null) 
 }
 
 // Validate step 1 fields
-export function validateStep1Fields({ serviceType, deliveryZip, containerSize, storageDuration, deliveryDate, destinationZip }) {
+export function validateStep1Fields({ serviceType, deliveryZip, containerSize, storageDuration, deliveryDate, destinationZip, storageLocation }) {
     const errors = [];
 
     if (!serviceType) {
@@ -151,6 +164,13 @@ export function validateStep1Fields({ serviceType, deliveryZip, containerSize, s
         errors.push({ field: 'deliveryDate', message: 'Please select a delivery date' });
     } else if (isDateInPast(deliveryDate)) {
         errors.push({ field: 'deliveryDate', message: 'Please select a delivery date starting from tomorrow' });
+    }
+
+    // Validate storage location if storage only service
+    if (serviceType === 'onsite') {
+        if (!storageLocation) {
+            errors.push({ field: 'storageLocation', message: 'Please select where you would like to store' });
+        }
     }
 
     if (serviceType === 'moving' || serviceType === 'both') {

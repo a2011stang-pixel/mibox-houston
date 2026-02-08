@@ -370,6 +370,7 @@ describe('Security Tests', () => {
         storageDuration: '3',
         deliveryDate: '2030-12-01',
         destinationZip: '',
+        storageLocation: 'customer_property',
       };
 
       const results = [];

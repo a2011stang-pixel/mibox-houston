@@ -34,13 +34,14 @@ describe('getDeliveryZone', () => {
 });
 
 describe('calculateQuoteFromData', () => {
-  describe('onsite storage service', () => {
+  describe('onsite storage service - at customer property', () => {
     it('calculates quote for 16ft container in zone1', () => {
       const quote = calculateQuoteFromData({
         serviceType: 'onsite',
         containerSize: '16',
         deliveryZip: '77002',
         destinationZip: '',
+        storageLocation: 'customer_property',
       });
 
       expect(quote).not.toBeNull();
@@ -58,6 +59,7 @@ describe('calculateQuoteFromData', () => {
         containerSize: '20',
         deliveryZip: '77301',
         destinationZip: '',
+        storageLocation: 'customer_property',
       });
 
       expect(quote).not.toBeNull();
@@ -75,6 +77,7 @@ describe('calculateQuoteFromData', () => {
         containerSize: '16',
         deliveryZip: '77327',
         destinationZip: '',
+        storageLocation: 'customer_property',
       });
 
       expect(quote).not.toBeNull();
@@ -84,6 +87,56 @@ describe('calculateQuoteFromData', () => {
       expect(quote.pickupFee).toBe(129);
       expect(quote.dueToday).toBe(248);
       expect(quote.zone).toBe('zone3');
+    });
+
+    it('uses onsite rate when storageLocation is not provided (backwards compatible)', () => {
+      const quote = calculateQuoteFromData({
+        serviceType: 'onsite',
+        containerSize: '16',
+        deliveryZip: '77002',
+        destinationZip: '',
+      });
+
+      expect(quote).not.toBeNull();
+      expect(quote.monthlyRent).toBe(189);
+    });
+  });
+
+  describe('onsite storage service - at secured facility', () => {
+    it('uses facilityOutside rate for 16ft container', () => {
+      const quote = calculateQuoteFromData({
+        serviceType: 'onsite',
+        containerSize: '16',
+        deliveryZip: '77002',
+        destinationZip: '',
+        storageLocation: 'secured_facility',
+      });
+
+      expect(quote).not.toBeNull();
+      expect(quote.deliveryFee).toBe(79);
+      expect(quote.firstMonthRent).toBe(119);
+      expect(quote.monthlyRent).toBe(199);
+      expect(quote.pickupFee).toBe(79);
+      expect(quote.dueToday).toBe(198);
+      expect(quote.zone).toBe('zone1');
+    });
+
+    it('uses facilityOutside rate for 20ft container', () => {
+      const quote = calculateQuoteFromData({
+        serviceType: 'onsite',
+        containerSize: '20',
+        deliveryZip: '77301',
+        destinationZip: '',
+        storageLocation: 'secured_facility',
+      });
+
+      expect(quote).not.toBeNull();
+      expect(quote.deliveryFee).toBe(99);
+      expect(quote.firstMonthRent).toBe(179);
+      expect(quote.monthlyRent).toBe(249);
+      expect(quote.pickupFee).toBe(99);
+      expect(quote.dueToday).toBe(278);
+      expect(quote.zone).toBe('zone2');
     });
   });
 

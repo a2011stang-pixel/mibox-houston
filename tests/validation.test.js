@@ -65,6 +65,7 @@ describe('validateStep1Fields', () => {
     storageDuration: '3',
     deliveryDate: '2030-12-01',
     destinationZip: '',
+    storageLocation: 'customer_property',
   };
 
   it('returns no errors for valid onsite service data', () => {
@@ -187,6 +188,61 @@ describe('validateStep1Fields', () => {
         destinationZip: '77002',
       });
       expect(errors).toHaveLength(0);
+    });
+  });
+
+  describe('storage location validation', () => {
+    it('requires storage location for onsite service', () => {
+      const errors = validateStep1Fields({
+        ...validStep1Data,
+        serviceType: 'onsite',
+        storageLocation: '',
+      });
+      expect(errors).toContainEqual(
+        expect.objectContaining({ field: 'storageLocation' })
+      );
+    });
+
+    it('accepts customer_property storage location for onsite service', () => {
+      const errors = validateStep1Fields({
+        ...validStep1Data,
+        serviceType: 'onsite',
+        storageLocation: 'customer_property',
+      });
+      expect(errors).toHaveLength(0);
+    });
+
+    it('accepts secured_facility storage location for onsite service', () => {
+      const errors = validateStep1Fields({
+        ...validStep1Data,
+        serviceType: 'onsite',
+        storageLocation: 'secured_facility',
+      });
+      expect(errors).toHaveLength(0);
+    });
+
+    it('does not require storage location for moving service', () => {
+      const errors = validateStep1Fields({
+        ...validStep1Data,
+        serviceType: 'moving',
+        destinationZip: '77301',
+        storageLocation: '',
+      });
+      expect(errors).not.toContainEqual(
+        expect.objectContaining({ field: 'storageLocation' })
+      );
+    });
+
+    it('does not require storage location for both service', () => {
+      const errors = validateStep1Fields({
+        ...validStep1Data,
+        serviceType: 'both',
+        destinationZip: '77301',
+        storageLocation: '',
+      });
+      expect(errors).not.toContainEqual(
+        expect.objectContaining({ field: 'storageLocation' })
+      );
     });
   });
 });

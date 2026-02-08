@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { buildWebhookPayload, SERVICE_NAMES } from '../lib.js';
+import { buildWebhookPayload, SERVICE_NAMES, STORAGE_LOCATION_NAMES } from '../lib.js';
 
 describe('buildWebhookPayload', () => {
   const sampleQuoteData = {
@@ -7,6 +7,7 @@ describe('buildWebhookPayload', () => {
     containerSize: '16',
     deliveryZip: '77002',
     destinationZip: '',
+    storageLocation: 'customer_property',
     deliveryDate: '2025-02-15',
     firstName: 'John',
     lastName: 'Doe',
@@ -40,10 +41,20 @@ describe('buildWebhookPayload', () => {
     expect(payload.serviceType).toBe('onsite');
     expect(payload.containerSize).toBe('16');
     expect(payload.deliveryZip).toBe('77002');
+    expect(payload.storageLocation).toBe('customer_property');
     expect(payload.firstName).toBe('John');
     expect(payload.lastName).toBe('Doe');
     expect(payload.email).toBe('john@example.com');
     expect(payload.phone).toBe('713-555-1234');
+  });
+
+  it('includes storage location for onsite service', () => {
+    const payload = buildWebhookPayload({
+      ...sampleQuoteData,
+      storageLocation: 'secured_facility',
+    }, 'quote');
+
+    expect(payload.storageLocation).toBe('secured_facility');
   });
 
   it('formats pricing fields as dollar amounts', () => {
@@ -152,5 +163,15 @@ describe('SERVICE_NAMES', () => {
 
   it('has correct display name for both service', () => {
     expect(SERVICE_NAMES.both).toBe('Storage + Moving');
+  });
+});
+
+describe('STORAGE_LOCATION_NAMES', () => {
+  it('has correct display name for customer property storage', () => {
+    expect(STORAGE_LOCATION_NAMES.customer_property).toBe('At My Property');
+  });
+
+  it('has correct display name for secured facility storage', () => {
+    expect(STORAGE_LOCATION_NAMES.secured_facility).toBe('At Our Secured Facility (Outside Storage Only)');
   });
 });
