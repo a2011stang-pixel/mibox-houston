@@ -10,19 +10,19 @@ class AdminAPI {
         const headers = {
             'Content-Type': 'application/json',
         };
-        
+
         if (this.token) {
             headers['Authorization'] = 'Bearer ' + this.token;
         }
 
         const options = { method, headers };
-        
+
         if (data) {
             options.body = JSON.stringify(data);
         }
 
         const response = await fetch(API_BASE + endpoint, options);
-        
+
         if (response.status === 401) {
             localStorage.removeItem('admin_token');
             localStorage.removeItem('admin_token_expires');
@@ -31,7 +31,7 @@ class AdminAPI {
         }
 
         const result = await response.json();
-        
+
         if (!response.ok) {
             throw new Error(result.error || 'Request failed');
         }
@@ -39,15 +39,42 @@ class AdminAPI {
         return result;
     }
 
+    setToken(token, expiresAt) {
+        this.token = token;
+        localStorage.setItem('admin_token', token);
+        localStorage.setItem('admin_token_expires', expiresAt.toString());
+    }
+
+    clearToken() {
+        this.token = null;
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_token_expires');
+    }
+
     // Auth
+    async login(email, password) {
+        return this.request('POST', '/auth/login', { email, password });
+    }
+
+    async verifyTotp(code) {
+        return this.request('POST', '/auth/verify-totp', { code });
+    }
+
+    async setupTotp() {
+        return this.request('POST', '/auth/setup-totp');
+    }
+
+    async enableTotp(code) {
+        return this.request('POST', '/auth/enable-totp', { code });
+    }
+
     async getMe() {
         return this.request('GET', '/auth/me');
     }
 
     async logout() {
         await this.request('POST', '/auth/logout');
-        localStorage.removeItem('admin_token');
-        localStorage.removeItem('admin_token_expires');
+        this.clearToken();
     }
 
     // Zones
