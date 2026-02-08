@@ -1,0 +1,16 @@
+{
+  "name": "mibox-houston",
+  "version": "1.0.0",
+  "description": "MiBox Houston website",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^2.1.9",
+    "jsdom": "^24.0.0",
+    "vitest": "^2.0.0"
+  }
+}
