@@ -1,5 +1,5 @@
 // Admin Authentication Handler
-const API_BASE = '/api';
+const API_BASE = 'https://mibox-houston-api.cmykprnt.workers.dev/api';
 
 let tempToken = null;
 
