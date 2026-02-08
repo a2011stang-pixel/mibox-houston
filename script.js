@@ -603,7 +603,6 @@ document.addEventListener('DOMContentLoaded', function() {
             var storageLocationGroup = document.getElementById('storageLocationGroup');
             var storageLocationInput = document.getElementById('storageLocation');
             var storageLocationCards = document.querySelector('.storage-location-cards');
-            var facilityNote = document.getElementById('facilityStorageNote');
 
             if (serviceType === 'onsite') {
                 storageLocationGroup.style.display = 'block';
@@ -617,7 +616,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     c.classList.remove('selected');
                 });
                 if (storageLocationCards) storageLocationCards.classList.remove('is-invalid');
-                if (facilityNote) facilityNote.style.display = 'none';
             }
         });
     });
@@ -637,14 +635,6 @@ document.addEventListener('DOMContentLoaded', function() {
             // Remove invalid state if present
             var storageLocationCards = document.querySelector('.storage-location-cards');
             if (storageLocationCards) storageLocationCards.classList.remove('is-invalid');
-
-            // Show/hide facility storage note
-            var facilityNote = document.getElementById('facilityStorageNote');
-            if (storageLocation === 'secured_facility') {
-                if (facilityNote) facilityNote.style.display = 'block';
-            } else {
-                if (facilityNote) facilityNote.style.display = 'none';
-            }
         });
     });
 
