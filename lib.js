@@ -235,9 +235,9 @@ export function calculateQuoteFromData({ serviceType, containerSize, deliveryZip
         }
     }
 
-    const dueToday = deliveryFee + relocationFee + firstMonthRent;
+    const dueToday = deliveryFee + firstMonthRent;
     const ongoingMonthly = monthlyRent;
-    const dueWhenDone = pickupFee;
+    const dueWhenDone = relocationFee + pickupFee;
 
     return {
         deliveryFee,

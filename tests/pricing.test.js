@@ -264,7 +264,7 @@ describe('calculateQuoteFromData', () => {
   });
 
   describe('relocation fee for moving service', () => {
-    it('includes relocation fee in dueToday for moving service', () => {
+    it('includes relocation fee in dueWhenDone for moving service', () => {
       const quote = calculateQuoteFromData({
         serviceType: 'moving',
         containerSize: '16',
@@ -274,10 +274,13 @@ describe('calculateQuoteFromData', () => {
 
       expect(quote).not.toBeNull();
       expect(quote.relocationFee).toBeGreaterThanOrEqual(40);
-      expect(quote.dueToday).toBe(quote.deliveryFee + quote.relocationFee + quote.firstMonthRent);
+      // Due Today = Delivery Fee + First Month (no relocation fee)
+      expect(quote.dueToday).toBe(quote.deliveryFee + quote.firstMonthRent);
+      // When Finished = Relocation Fee + Pickup Fee
+      expect(quote.dueWhenDone).toBe(quote.relocationFee + quote.pickupFee);
     });
 
-    it('includes relocation fee in dueToday for both service', () => {
+    it('includes relocation fee in dueWhenDone for both service', () => {
       const quote = calculateQuoteFromData({
         serviceType: 'both',
         containerSize: '16',
@@ -288,7 +291,10 @@ describe('calculateQuoteFromData', () => {
 
       expect(quote).not.toBeNull();
       expect(quote.relocationFee).toBeGreaterThanOrEqual(40);
-      expect(quote.dueToday).toBe(quote.deliveryFee + quote.relocationFee + quote.firstMonthRent);
+      // Due Today = Delivery Fee + First Month (no relocation fee)
+      expect(quote.dueToday).toBe(quote.deliveryFee + quote.firstMonthRent);
+      // When Finished = Relocation Fee + Pickup Fee
+      expect(quote.dueWhenDone).toBe(quote.relocationFee + quote.pickupFee);
     });
 
     it('has zero relocation fee for onsite service', () => {
@@ -302,6 +308,8 @@ describe('calculateQuoteFromData', () => {
 
       expect(quote).not.toBeNull();
       expect(quote.relocationFee).toBe(0);
+      // When Finished = just Pickup Fee (no relocation)
+      expect(quote.dueWhenDone).toBe(quote.pickupFee);
     });
   });
 });

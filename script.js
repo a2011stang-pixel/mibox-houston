@@ -231,9 +231,9 @@ function calculateQuote() {
     }
 
     // Calculate totals
-    const dueToday = deliveryFee + relocationFee + firstMonthRent;
+    const dueToday = deliveryFee + firstMonthRent;
     const ongoingMonthly = monthlyRent;
-    const dueWhenDone = pickupFee;
+    const dueWhenDone = relocationFee + pickupFee;
 
     return {
         deliveryFee,
@@ -333,7 +333,14 @@ function displayQuoteSummary() {
 
     // Update Due Today box
     document.getElementById('tableDeliveryFee').textContent = formatCurrency(quote.deliveryFee);
+    document.getElementById('tableFirstMonth').textContent = formatCurrency(quote.firstMonthRent);
+    document.getElementById('tableDueToday').textContent = formatCurrency(quote.dueToday);
 
+    // Update Ongoing Monthly box
+    document.getElementById('tableMonthlyRent').textContent = formatCurrency(quote.monthlyRent);
+    document.getElementById('tableMonthlyTotal').textContent = formatCurrency(quote.ongoingMonthly);
+
+    // Update When Finished box
     // Show/hide relocation fee row based on service type
     var relocationFeeRow = document.getElementById('relocationFeeRow');
     if (serviceType === 'moving' || serviceType === 'both') {
@@ -344,17 +351,8 @@ function displayQuoteSummary() {
     } else {
         if (relocationFeeRow) relocationFeeRow.style.display = 'none';
     }
-
-    document.getElementById('tableFirstMonth').textContent = formatCurrency(quote.firstMonthRent);
-    document.getElementById('tableDueToday').textContent = formatCurrency(quote.dueToday);
-
-    // Update Ongoing Monthly box
-    document.getElementById('tableMonthlyRent').textContent = formatCurrency(quote.monthlyRent);
-    document.getElementById('tableMonthlyTotal').textContent = formatCurrency(quote.ongoingMonthly);
-
-    // Update When Finished box
     document.getElementById('tablePickupFee').textContent = quote.pickupFee > 0 ? formatCurrency(quote.pickupFee) : 'FREE';
-    document.getElementById('tablePickupTotal').textContent = quote.pickupFee > 0 ? formatCurrency(quote.dueWhenDone) : 'FREE';
+    document.getElementById('tablePickupTotal').textContent = formatCurrency(quote.dueWhenDone);
 
     // Update Estimated Total box (Due Today + When Finished)
     var estimatedTotal = quote.dueToday + quote.dueWhenDone;
