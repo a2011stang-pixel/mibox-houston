@@ -18,7 +18,7 @@ const app = new Hono<{ Bindings: Env }>();
 
 // CORS for admin UI
 app.use('/api/*', cors({
-  origin: ['https://miboxhouston.com', 'http://localhost:8787'],
+  origin: ['https://miboxhouston.com', 'https://houston.miboxhouston.com', 'http://localhost:8787'],
   credentials: true,
 }));
 
