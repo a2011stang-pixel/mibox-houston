@@ -100,7 +100,11 @@ class AdminAPI {
 
     // ZIP Codes
     async getZips(params = {}) {
-        const query = new URLSearchParams(params).toString();
+        // Filter out undefined/null/empty values to prevent "undefined" string in query
+        const filtered = Object.fromEntries(
+            Object.entries(params).filter(([_, v]) => v != null && v !== '')
+        );
+        const query = new URLSearchParams(filtered).toString();
         return this.request('GET', '/zips' + (query ? '?' + query : ''));
     }
 

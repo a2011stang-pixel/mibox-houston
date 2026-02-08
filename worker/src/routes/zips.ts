@@ -12,7 +12,7 @@ interface ZipCode {
 export const zipsRoutes = new Hono<{ Bindings: Env }>();
 
 zipsRoutes.get('/', async (c) => {
-  const zone = c.req.query('zone');
+  const zoneId = c.req.query('zone_id');
   const search = c.req.query('search');
   const limit = parseInt(c.req.query('limit') || '100');
   const offset = parseInt(c.req.query('offset') || '0');
@@ -25,9 +25,12 @@ zipsRoutes.get('/', async (c) => {
   const conditions: string[] = [];
   const params: (string | number)[] = [];
 
-  if (zone) {
-    conditions.push('zc.zone_id = ?');
-    params.push(parseInt(zone));
+  if (zoneId && zoneId !== 'undefined') {
+    const parsedZoneId = parseInt(zoneId);
+    if (!isNaN(parsedZoneId)) {
+      conditions.push('zc.zone_id = ?');
+      params.push(parsedZoneId);
+    }
   }
 
   if (search) {
@@ -45,10 +48,10 @@ zipsRoutes.get('/', async (c) => {
   const zips = await c.env.DB.prepare(query).bind(...params).all();
 
   const countQuery = conditions.length > 0
-    ? 'SELECT COUNT(*) as count FROM zip_codes zc WHERE ' + conditions.slice(0, -2).join(' AND ')
+    ? 'SELECT COUNT(*) as count FROM zip_codes zc WHERE ' + conditions.join(' AND ')
     : 'SELECT COUNT(*) as count FROM zip_codes';
   
-  const countParams = conditions.length > 0 ? params.slice(0, -2) : [];
+  const countParams = params.slice(0, -2);  // Remove limit and offset
   const total = await c.env.DB.prepare(countQuery).bind(...countParams).first<{ count: number }>();
 
   return c.json({ zips: zips.results || [], total: total?.count || 0 });
