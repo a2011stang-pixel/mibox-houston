@@ -5,6 +5,7 @@ account_id = "cf2660465dcfde604b01f34622d9f05a"
 
 [vars]
 JWT_SECRET = "change-in-production"
+JWT_EXPIRES_IN = "8h"
 
 [[d1_databases]]
 binding = "DB"
