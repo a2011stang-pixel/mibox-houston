@@ -78,8 +78,13 @@ function calculateQuote() {
             pickupFee = PRICING.delivery[destZone].fee;
         }
     } else if (serviceType === 'both') {
-        // Store now, move later - via facility
-        monthlyRent = PRICING.monthly[containerSize].facilityInside;
+        // Store now, move later - rate depends on storage location
+        if (storageLocation === 'secured_facility') {
+            monthlyRent = PRICING.monthly[containerSize].facilityOutside;
+        } else {
+            // Default to customer property (onsite rate)
+            monthlyRent = PRICING.monthly[containerSize].onsite;
+        }
         const destZone = getDeliveryZone(destinationZip);
         if (destZone) {
             pickupFee = PRICING.delivery[destZone].fee;
@@ -604,7 +609,7 @@ document.addEventListener('DOMContentLoaded', function() {
             var storageLocationInput = document.getElementById('storageLocation');
             var storageLocationCards = document.querySelector('.storage-location-cards');
 
-            if (serviceType === 'onsite') {
+            if (serviceType === 'onsite' || serviceType === 'both') {
                 storageLocationGroup.style.display = 'block';
                 storageLocationInput.required = true;
             } else {

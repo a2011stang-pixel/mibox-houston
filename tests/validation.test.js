@@ -233,12 +233,24 @@ describe('validateStep1Fields', () => {
       );
     });
 
-    it('does not require storage location for both service', () => {
+    it('requires storage location for both service', () => {
       const errors = validateStep1Fields({
         ...validStep1Data,
         serviceType: 'both',
         destinationZip: '77301',
         storageLocation: '',
+      });
+      expect(errors).toContainEqual(
+        expect.objectContaining({ field: 'storageLocation' })
+      );
+    });
+
+    it('accepts valid storage location for both service', () => {
+      const errors = validateStep1Fields({
+        ...validStep1Data,
+        serviceType: 'both',
+        destinationZip: '77301',
+        storageLocation: 'customer_property',
       });
       expect(errors).not.toContainEqual(
         expect.objectContaining({ field: 'storageLocation' })

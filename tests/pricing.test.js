@@ -170,29 +170,58 @@ describe('calculateQuoteFromData', () => {
   });
 
   describe('storage + moving (both) service', () => {
-    it('uses facility inside rate for monthly rent', () => {
+    it('uses onsite rate for customer_property storage', () => {
       const quote = calculateQuoteFromData({
         serviceType: 'both',
         containerSize: '16',
         deliveryZip: '77002',
         destinationZip: '77301',
+        storageLocation: 'customer_property',
       });
 
       expect(quote).not.toBeNull();
-      expect(quote.monthlyRent).toBe(249);
+      expect(quote.monthlyRent).toBe(189);
       expect(quote.pickupFee).toBe(99);
     });
 
-    it('uses facility inside rate for 20ft container', () => {
+    it('uses facility outside rate for secured_facility storage', () => {
+      const quote = calculateQuoteFromData({
+        serviceType: 'both',
+        containerSize: '16',
+        deliveryZip: '77002',
+        destinationZip: '77301',
+        storageLocation: 'secured_facility',
+      });
+
+      expect(quote).not.toBeNull();
+      expect(quote.monthlyRent).toBe(199);
+      expect(quote.pickupFee).toBe(99);
+    });
+
+    it('uses onsite rate for 20ft container at customer property', () => {
       const quote = calculateQuoteFromData({
         serviceType: 'both',
         containerSize: '20',
         deliveryZip: '77002',
         destinationZip: '77002',
+        storageLocation: 'customer_property',
       });
 
       expect(quote).not.toBeNull();
-      expect(quote.monthlyRent).toBe(299);
+      expect(quote.monthlyRent).toBe(229);
+    });
+
+    it('uses facility outside rate for 20ft container at secured facility', () => {
+      const quote = calculateQuoteFromData({
+        serviceType: 'both',
+        containerSize: '20',
+        deliveryZip: '77002',
+        destinationZip: '77002',
+        storageLocation: 'secured_facility',
+      });
+
+      expect(quote).not.toBeNull();
+      expect(quote.monthlyRent).toBe(249);
     });
   });
 

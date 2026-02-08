@@ -22,7 +22,7 @@ export const SERVICE_NAMES = {
     'both': 'Storage + Moving'
 };
 
-// Storage location display names (only shown when serviceType is 'onsite')
+// Storage location display names (shown when serviceType is 'onsite' or 'both')
 export const STORAGE_LOCATION_NAMES = {
     'customer_property': 'At My Property',
     'secured_facility': 'At Our Secured Facility (Outside Storage Only)'
@@ -83,7 +83,13 @@ export function calculateQuoteFromData({ serviceType, containerSize, deliveryZip
             pickupFee = PRICING.delivery[destZone].fee;
         }
     } else if (serviceType === 'both') {
-        monthlyRent = PRICING.monthly[containerSize].facilityInside;
+        // Store now, move later - rate depends on storage location
+        if (storageLocation === 'secured_facility') {
+            monthlyRent = PRICING.monthly[containerSize].facilityOutside;
+        } else {
+            // Default to customer property (onsite rate)
+            monthlyRent = PRICING.monthly[containerSize].onsite;
+        }
         const destZone = getDeliveryZone(destinationZip);
         if (destZone) {
             pickupFee = PRICING.delivery[destZone].fee;
@@ -166,8 +172,8 @@ export function validateStep1Fields({ serviceType, deliveryZip, containerSize, s
         errors.push({ field: 'deliveryDate', message: 'Please select a delivery date starting from tomorrow' });
     }
 
-    // Validate storage location if storage only service
-    if (serviceType === 'onsite') {
+    // Validate storage location if storage service (onsite or both)
+    if (serviceType === 'onsite' || serviceType === 'both') {
         if (!storageLocation) {
             errors.push({ field: 'storageLocation', message: 'Please select where you would like to store' });
         }
