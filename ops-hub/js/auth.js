@@ -23,17 +23,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await api.login(email, password);
 
             if (result.requiresMfaSetup) {
-                // Need to set up MFA
                 tempToken = result.tempToken;
                 api.token = tempToken;
                 await showMfaSetup();
             } else if (result.requiresMfa) {
-                // Need to verify MFA
                 tempToken = result.tempToken;
                 api.token = tempToken;
                 showTotpForm();
             } else if (result.token) {
-                // Login successful (shouldn't happen without MFA)
                 api.setToken(result.token, result.expiresAt);
                 window.location.href = '/ops-hub/';
             }
@@ -63,11 +60,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // MFA setup form
-    document.getElementById('mfaSetupForm').addEventListener('submit', async (e) => {
+    // MFA setup confirmation form
+    document.getElementById('mfaConfirmForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const code = document.getElementById('setupCode').value;
-        const errorDiv = document.getElementById('mfaSetupError');
+        const code = document.getElementById('mfaCode').value;
+        const errorDiv = document.getElementById('mfaError');
 
         try {
             errorDiv.classList.add('d-none');
@@ -85,9 +82,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function showTotpForm() {
-    document.getElementById('loginCard').classList.add('d-none');
-    document.getElementById('mfaSetupCard').classList.add('d-none');
-    document.getElementById('totpCard').classList.remove('d-none');
+    document.getElementById('loginForm').classList.add('d-none');
+    document.getElementById('mfaSetup').classList.add('d-none');
+    document.getElementById('totpForm').classList.remove('d-none');
     document.getElementById('totpCode').focus();
 }
 
@@ -95,13 +92,17 @@ async function showMfaSetup() {
     try {
         const setup = await api.setupTotp();
 
-        document.getElementById('qrCode').src = setup.qrCodeUrl;
-        document.getElementById('mfaSecret').textContent = setup.secret;
+        // Generate QR code
+        const qrDiv = document.getElementById('qrCode');
+        qrDiv.innerHTML = '';
+        await QRCode.toCanvas(qrDiv.appendChild(document.createElement('canvas')), setup.otpauthUrl, { width: 200 });
 
-        document.getElementById('loginCard').classList.add('d-none');
-        document.getElementById('totpCard').classList.add('d-none');
-        document.getElementById('mfaSetupCard').classList.remove('d-none');
-        document.getElementById('setupCode').focus();
+        document.getElementById('totpSecret').textContent = setup.secret;
+
+        document.getElementById('loginForm').classList.add('d-none');
+        document.getElementById('totpForm').classList.add('d-none');
+        document.getElementById('mfaSetup').classList.remove('d-none');
+        document.getElementById('mfaCode').focus();
     } catch (err) {
         document.getElementById('loginError').textContent = err.message;
         document.getElementById('loginError').classList.remove('d-none');
