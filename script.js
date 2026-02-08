@@ -343,6 +343,11 @@ function displayQuoteSummary() {
     document.getElementById('tablePickupFee').textContent = quote.pickupFee > 0 ? formatCurrency(quote.pickupFee) : 'FREE';
     document.getElementById('tablePickupTotal').textContent = quote.pickupFee > 0 ? formatCurrency(quote.dueWhenDone) : 'FREE';
 
+    // Update Estimated Total box (Due Today + When Finished)
+    var estimatedTotal = quote.dueToday + quote.dueWhenDone;
+    document.getElementById('tableOneTimeCosts').textContent = formatCurrency(estimatedTotal);
+    document.getElementById('tableEstimatedTotal').textContent = formatCurrency(estimatedTotal);
+
     // Store quote data
     quoteData = {
         serviceType,

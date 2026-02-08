@@ -885,6 +885,30 @@ footer a:hover {
     color: var(--mibox-dark);
 }
 
+.price-box.estimated-total {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: white;
+    border: 2px solid var(--mibox-yellow);
+}
+
+.price-box.estimated-total .price-box-header {
+    color: var(--mibox-yellow);
+    font-size: 0.9rem;
+}
+
+.price-box.estimated-total .price-box-total {
+    color: white;
+    font-size: 1.6rem;
+}
+
+.price-box.estimated-total .price-box-details {
+    border-top-color: rgba(255, 255, 255, 0.2);
+}
+
+.price-box.estimated-total .detail-row {
+    color: rgba(255, 255, 255, 0.8);
+}
+
 /* Turnstile Wrapper */
 .turnstile-wrapper {
     display: flex;
