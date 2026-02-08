@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const expires = localStorage.getItem('admin_token_expires');
     
     if (!token || (expires && Date.now() > parseInt(expires))) {
-        window.location.href = '/admin/login.html';
+        window.location.href = '/ops-hub/login.html';
         return;
     }
 
@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('userEmail').textContent = user.email;
         await loadDashboard();
     } catch (err) {
-        window.location.href = '/admin/login.html';
+        window.location.href = '/ops-hub/login.html';
     }
 });
 
@@ -52,7 +52,7 @@ async function navigateTo(page) {
 document.getElementById('logoutBtn').addEventListener('click', async (e) => {
     e.preventDefault();
     await api.logout();
-    window.location.href = '/admin/login.html';
+    window.location.href = '/ops-hub/login.html';
 });
 
 // Toast notifications

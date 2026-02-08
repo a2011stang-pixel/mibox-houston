@@ -1,20 +1,12 @@
 name = "mibox-houston-api"
 main = "src/index.ts"
 compatibility_date = "2024-01-01"
+account_id = "cf2660465dcfde604b01f34622d9f05a"
 
 [vars]
-JWT_SECRET = "change-this-in-production"
-JWT_EXPIRES_IN = "8h"
+JWT_SECRET = "change-in-production"
 
 [[d1_databases]]
 binding = "DB"
 database_name = "mibox-houston"
-database_id = "local-dev-id"
-
-[env.production]
-vars = { ENVIRONMENT = "production" }
-
-[env.production.d1_databases]
-binding = "DB"
-database_name = "mibox-houston"
-database_id = "your-production-db-id"
+database_id = "63933c0b-04fb-424c-8e50-adb0516c3cfc"

@@ -7,7 +7,7 @@ let tempToken = null;
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('admin_token');
     if (token) {
-        window.location.href = '/admin/';
+        window.location.href = '/ops-hub/';
     }
 });
 
@@ -82,7 +82,7 @@ document.getElementById('totpForm').addEventListener('submit', async (e) => {
         
         localStorage.setItem('admin_token', data.access_token);
         localStorage.setItem('admin_token_expires', Date.now() + (data.expires_in * 1000));
-        window.location.href = '/admin/';
+        window.location.href = '/ops-hub/';
     } catch (err) {
         errorDiv.textContent = err.message;
         errorDiv.classList.remove('d-none');
@@ -121,7 +121,7 @@ document.getElementById('mfaConfirmForm').addEventListener('submit', async (e) =
         
         localStorage.setItem('admin_token', data.access_token);
         localStorage.setItem('admin_token_expires', Date.now() + (data.expires_in * 1000));
-        window.location.href = '/admin/';
+        window.location.href = '/ops-hub/';
     } catch (err) {
         errorDiv.textContent = err.message;
         errorDiv.classList.remove('d-none');

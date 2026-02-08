@@ -1,5 +1,5 @@
 // Admin API Client
-const API_BASE = '/api';
+const API_BASE = 'https://mibox-houston-api.cmykprnt.workers.dev/api';
 
 class AdminAPI {
     constructor() {
@@ -26,7 +26,7 @@ class AdminAPI {
         if (response.status === 401) {
             localStorage.removeItem('admin_token');
             localStorage.removeItem('admin_token_expires');
-            window.location.href = '/admin/login.html';
+            window.location.href = '/ops-hub/login.html';
             throw new Error('Session expired');
         }
 
