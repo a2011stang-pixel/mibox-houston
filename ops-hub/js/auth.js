@@ -92,10 +92,10 @@ async function showMfaSetup() {
     try {
         const setup = await api.setupTotp();
 
-        // Generate QR code
+        // Generate QR code using the URI from API
         const qrDiv = document.getElementById('qrCode');
         qrDiv.innerHTML = '';
-        await QRCode.toCanvas(qrDiv.appendChild(document.createElement('canvas')), setup.otpauthUrl, { width: 200 });
+        await QRCode.toCanvas(qrDiv.appendChild(document.createElement('canvas')), setup.uri, { width: 200 });
 
         document.getElementById('totpSecret').textContent = setup.secret;
 
