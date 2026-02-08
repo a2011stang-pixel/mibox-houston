@@ -3,6 +3,8 @@ import {
   PRICING,
   getDeliveryZone,
   calculateQuoteFromData,
+  calculateDistance,
+  calculateRelocationFee,
   formatCurrency,
   formatDollar,
 } from '../lib.js';
@@ -258,6 +260,103 @@ describe('calculateQuoteFromData', () => {
 
       expect(quote).toBeNull();
     });
+  });
+
+  describe('relocation fee for moving service', () => {
+    it('includes relocation fee in dueToday for moving service', () => {
+      const quote = calculateQuoteFromData({
+        serviceType: 'moving',
+        containerSize: '16',
+        deliveryZip: '77002',
+        destinationZip: '77301',
+      });
+
+      expect(quote).not.toBeNull();
+      expect(quote.relocationFee).toBeGreaterThanOrEqual(40);
+      expect(quote.dueToday).toBe(quote.deliveryFee + quote.relocationFee + quote.firstMonthRent);
+    });
+
+    it('includes relocation fee in dueToday for both service', () => {
+      const quote = calculateQuoteFromData({
+        serviceType: 'both',
+        containerSize: '16',
+        deliveryZip: '77002',
+        destinationZip: '77301',
+        storageLocation: 'customer_property',
+      });
+
+      expect(quote).not.toBeNull();
+      expect(quote.relocationFee).toBeGreaterThanOrEqual(40);
+      expect(quote.dueToday).toBe(quote.deliveryFee + quote.relocationFee + quote.firstMonthRent);
+    });
+
+    it('has zero relocation fee for onsite service', () => {
+      const quote = calculateQuoteFromData({
+        serviceType: 'onsite',
+        containerSize: '16',
+        deliveryZip: '77002',
+        destinationZip: '',
+        storageLocation: 'customer_property',
+      });
+
+      expect(quote).not.toBeNull();
+      expect(quote.relocationFee).toBe(0);
+    });
+  });
+});
+
+describe('calculateDistance', () => {
+  it('calculates distance between two Houston ZIPs', () => {
+    // Downtown to The Woodlands - approximately 30+ miles
+    const distance = calculateDistance('77002', '77380');
+    expect(distance).toBeGreaterThan(25);
+    expect(distance).toBeLessThan(50);
+  });
+
+  it('returns small distance for nearby ZIPs', () => {
+    // Two adjacent downtown ZIPs
+    const distance = calculateDistance('77002', '77003');
+    expect(distance).toBeLessThan(5);
+  });
+
+  it('returns null for unknown ZIP', () => {
+    const distance = calculateDistance('77002', '90210');
+    expect(distance).toBeNull();
+  });
+
+  it('returns null when first ZIP is unknown', () => {
+    const distance = calculateDistance('90210', '77002');
+    expect(distance).toBeNull();
+  });
+
+  it('returns zero for same ZIP', () => {
+    const distance = calculateDistance('77002', '77002');
+    expect(distance).toBe(0);
+  });
+});
+
+describe('calculateRelocationFee', () => {
+  it('returns $40 minimum for short distances', () => {
+    // Two nearby ZIPs - fee should be $40 minimum
+    const fee = calculateRelocationFee('77002', '77003');
+    expect(fee).toBe(40);
+  });
+
+  it('returns $4/mile for longer distances', () => {
+    // Downtown to The Woodlands - ~30+ miles at $4/mile = $120+
+    const fee = calculateRelocationFee('77002', '77380');
+    expect(fee).toBeGreaterThan(100);
+  });
+
+  it('returns $40 for unknown ZIP (fallback)', () => {
+    const fee = calculateRelocationFee('77002', '90210');
+    expect(fee).toBe(40);
+  });
+
+  it('is at least $40 regardless of calculation', () => {
+    // Same ZIP would be 0 distance, but fee should still be $40
+    const fee = calculateRelocationFee('77002', '77002');
+    expect(fee).toBe(40);
   });
 });
 
