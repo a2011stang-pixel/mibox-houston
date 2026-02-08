@@ -6,7 +6,7 @@ class AdminAPI {
         this.token = localStorage.getItem('admin_token');
     }
 
-    async request(method, endpoint, data = null) {
+    async request(method, endpoint, data = null, skipAuthRedirect = false) {
         const headers = {
             'Content-Type': 'application/json',
         };
@@ -23,7 +23,7 @@ class AdminAPI {
 
         const response = await fetch(API_BASE + endpoint, options);
 
-        if (response.status === 401) {
+        if (response.status === 401 && !skipAuthRedirect) {
             localStorage.removeItem('admin_token');
             localStorage.removeItem('admin_token_expires');
             window.location.href = '/ops-hub/login.html';
@@ -53,19 +53,19 @@ class AdminAPI {
 
     // Auth
     async login(email, password) {
-        return this.request('POST', '/auth/login', { email, password });
+        return this.request('POST', '/auth/login', { email, password }, true);
     }
 
-    async verifyTotp(code) {
-        return this.request('POST', '/auth/verify-totp', { code });
+    async verifyTotp(tempToken, code) {
+        return this.request('POST', '/auth/verify-totp', { temp_token: tempToken, code }, true);
     }
 
-    async setupTotp() {
-        return this.request('POST', '/auth/setup-totp');
+    async setupTotp(tempToken) {
+        return this.request('POST', '/auth/setup-totp', { temp_token: tempToken }, true);
     }
 
-    async enableTotp(code) {
-        return this.request('POST', '/auth/enable-totp', { code });
+    async enableTotp(tempToken, code) {
+        return this.request('POST', '/auth/enable-totp', { temp_token: tempToken, code }, true);
     }
 
     async getMe() {

@@ -22,16 +22,14 @@ document.addEventListener('DOMContentLoaded', () => {
             errorDiv.classList.add('d-none');
             const result = await api.login(email, password);
 
-            if (result.requiresMfaSetup) {
-                tempToken = result.tempToken;
-                api.token = tempToken;
+            if (result.requires_mfa_setup) {
+                tempToken = result.temp_token;
                 await showMfaSetup();
-            } else if (result.requiresMfa) {
-                tempToken = result.tempToken;
-                api.token = tempToken;
+            } else if (result.requires_totp) {
+                tempToken = result.temp_token;
                 showTotpForm();
-            } else if (result.token) {
-                api.setToken(result.token, result.expiresAt);
+            } else if (result.access_token) {
+                api.setToken(result.access_token, Date.now() + (result.expires_in * 1000));
                 window.location.href = '/ops-hub/';
             }
         } catch (err) {
@@ -48,10 +46,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             errorDiv.classList.add('d-none');
-            const result = await api.verifyTotp(code);
+            const result = await api.verifyTotp(tempToken, code);
 
-            if (result.token) {
-                api.setToken(result.token, result.expiresAt);
+            if (result.access_token) {
+                api.setToken(result.access_token, Date.now() + (result.expires_in * 1000));
                 window.location.href = '/ops-hub/';
             }
         } catch (err) {
@@ -68,10 +66,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             errorDiv.classList.add('d-none');
-            const result = await api.enableTotp(code);
+            const result = await api.enableTotp(tempToken, code);
 
-            if (result.token) {
-                api.setToken(result.token, result.expiresAt);
+            if (result.access_token) {
+                api.setToken(result.access_token, Date.now() + (result.expires_in * 1000));
                 window.location.href = '/ops-hub/';
             }
         } catch (err) {
@@ -90,10 +88,11 @@ function showTotpForm() {
 
 async function showMfaSetup() {
     try {
-        const setup = await api.setupTotp();
+        const setup = await api.setupTotp(tempToken);
 
-        // Use the QR code URL from the API
-        document.getElementById('qrCode').src = setup.qrCodeUrl;
+        // Generate QR code URL from otpauth URI
+        const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(setup.otpauth_uri);
+        document.getElementById('qrCode').src = qrUrl;
         document.getElementById('totpSecret').textContent = setup.secret;
 
         document.getElementById('loginForm').classList.add('d-none');
