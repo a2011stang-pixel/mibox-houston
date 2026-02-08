@@ -753,6 +753,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (serviceType === 'moving' || serviceType === 'both') {
                 destGroup.style.display = 'block';
                 destInput.required = true;
+                destInput.value = ''; // Clear any auto-filled value
             } else {
                 destGroup.style.display = 'none';
                 destInput.required = false;
