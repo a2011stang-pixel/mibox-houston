@@ -340,7 +340,7 @@ function displayQuoteSummary() {
     document.getElementById('tableMonthlyRent').textContent = formatCurrency(quote.monthlyRent);
     document.getElementById('tableMonthlyTotal').textContent = formatCurrency(quote.ongoingMonthly);
 
-    // Update When Finished box
+    // Update Future Transportation Fees box
     // Show/hide relocation fee row based on service type
     var relocationFeeRow = document.getElementById('relocationFeeRow');
     if (serviceType === 'moving' || serviceType === 'both') {
@@ -354,7 +354,7 @@ function displayQuoteSummary() {
     document.getElementById('tablePickupFee').textContent = quote.pickupFee > 0 ? formatCurrency(quote.pickupFee) : 'FREE';
     document.getElementById('tablePickupTotal').textContent = formatCurrency(quote.dueWhenDone);
 
-    // Update Estimated Total box (Due Today + When Finished)
+    // Update Estimated Total box (Due Today + Future Transportation Fees)
     var estimatedTotal = quote.dueToday + quote.dueWhenDone;
     document.getElementById('tableOneTimeCosts').textContent = formatCurrency(estimatedTotal);
     document.getElementById('tableEstimatedTotal').textContent = formatCurrency(estimatedTotal);
