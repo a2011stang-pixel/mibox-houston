@@ -3,6 +3,31 @@ import type { Env } from '../index';
 
 export const publicRoutes = new Hono<{ Bindings: Env }>();
 
+publicRoutes.get('/pricing', async (c) => {
+  const pricing = await c.env.DB
+    .prepare('SELECT container_size, rate_type, amount FROM pricing')
+    .all<{ container_size: string; rate_type: string; amount: number }>();
+
+  const monthly: Record<string, Record<string, number>> = {};
+  const firstMonth: Record<string, number> = {};
+
+  for (const p of pricing.results || []) {
+    if (p.rate_type === 'first_month') {
+      firstMonth[p.container_size] = p.amount / 100;
+    } else {
+      if (!monthly[p.container_size]) {
+        monthly[p.container_size] = {};
+      }
+      monthly[p.container_size][p.rate_type] = p.amount / 100;
+    }
+  }
+
+  return c.json({
+    monthly,
+    first_month: firstMonth,
+  });
+});
+
 publicRoutes.get('/pricing/:zip', async (c) => {
   const zip = c.req.param('zip');
 
