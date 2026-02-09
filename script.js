@@ -372,6 +372,7 @@ function displayQuoteSummary() {
         lastName: document.getElementById('lastName').value,
         email: document.getElementById('email').value,
         phone: document.getElementById('phone').value,
+        company: document.getElementById('company') ? document.getElementById('company').value : '',
         howHeard: document.getElementById('howHeard').value,
         sms_consent: document.getElementById('smsConsent') ? document.getElementById('smsConsent').checked : false,
         sms_consent_timestamp: document.getElementById('smsConsent') && document.getElementById('smsConsent').checked ? new Date().toISOString() : null,
@@ -570,6 +571,16 @@ function sendToWebhook(type) {
 
     const data = {
         ...quoteData,
+        // Quote step fields with explicit names
+        customer_name: quoteData.firstName || '',
+        customer_last_name: quoteData.lastName || '',
+        customer_email: quoteData.email || '',
+        customer_phone: quoteData.phone || '',
+        company: quoteData.company || '',
+        service_type: SERVICE_NAMES[quoteData.serviceType] || quoteData.serviceType || '',
+        container_size: quoteData.containerSize === '16' ? '8x16' : quoteData.containerSize === '20' ? '8x20' : '',
+        delivery_zip: quoteData.deliveryZip || '',
+        delivery_date: quoteData.deliveryDate || '',
         // Format pricing fields as dollar amounts
         deliveryFee: formatDollar(quoteData.deliveryFee),
         firstMonthRent: formatDollar(quoteData.firstMonthRent),

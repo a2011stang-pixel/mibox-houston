@@ -48,6 +48,40 @@ describe('buildWebhookPayload', () => {
     expect(payload.phone).toBe('713-555-1234');
   });
 
+  it('includes explicitly named quote step fields', () => {
+    const payload = buildWebhookPayload(sampleQuoteData, 'quote');
+
+    expect(payload.customer_name).toBe('John');
+    expect(payload.customer_last_name).toBe('Doe');
+    expect(payload.customer_email).toBe('john@example.com');
+    expect(payload.customer_phone).toBe('713-555-1234');
+    expect(payload.service_type).toBe('Storage (At Your Property)');
+    expect(payload.container_size).toBe('8x16');
+    expect(payload.delivery_zip).toBe('77002');
+    expect(payload.delivery_date).toBe('2025-02-15');
+  });
+
+  it('maps container_size to 8x20 for 20ft containers', () => {
+    const payload = buildWebhookPayload({ ...sampleQuoteData, containerSize: '20' }, 'quote');
+    expect(payload.container_size).toBe('8x20');
+  });
+
+  it('maps service_type to human-readable names', () => {
+    const movingPayload = buildWebhookPayload({ ...sampleQuoteData, serviceType: 'moving' }, 'quote');
+    expect(movingPayload.service_type).toBe('Moving (To New Location)');
+
+    const bothPayload = buildWebhookPayload({ ...sampleQuoteData, serviceType: 'both' }, 'quote');
+    expect(bothPayload.service_type).toBe('Storage + Moving');
+  });
+
+  it('includes company field defaulting to empty string', () => {
+    const payload = buildWebhookPayload(sampleQuoteData, 'quote');
+    expect(payload.company).toBe('');
+
+    const withCompany = buildWebhookPayload({ ...sampleQuoteData, company: 'Acme Corp' }, 'quote');
+    expect(withCompany.company).toBe('Acme Corp');
+  });
+
   it('includes storage location for onsite service', () => {
     const payload = buildWebhookPayload({
       ...sampleQuoteData,
