@@ -266,11 +266,10 @@ export function isDateInPast(dateString) {
     return selected <= today;
 }
 
-// Build webhook payload from quote data
-export function buildWebhookPayload(quoteData, formType, turnstileToken = null) {
+// Build quote webhook payload
+export function buildQuotePayload(quoteData, turnstileToken = null) {
     return {
-        ...quoteData,
-        // Quote step fields with explicit names
+        event_type: 'quote',
         customer_name: quoteData.firstName || '',
         customer_last_name: quoteData.lastName || '',
         customer_email: quoteData.email || '',
@@ -279,20 +278,33 @@ export function buildWebhookPayload(quoteData, formType, turnstileToken = null) 
         service_type: SERVICE_NAMES[quoteData.serviceType] || quoteData.serviceType || '',
         container_size: quoteData.containerSize === '16' ? '8x16' : quoteData.containerSize === '20' ? '8x20' : '',
         delivery_zip: quoteData.deliveryZip || '',
-        delivery_date: quoteData.deliveryDate || '',
-        // Format pricing fields as dollar amounts
-        deliveryFee: formatDollar(quoteData.deliveryFee),
-        relocationFee: formatDollar(quoteData.relocationFee),
-        firstMonthRent: formatDollar(quoteData.firstMonthRent),
-        monthlyRent: formatDollar(quoteData.monthlyRent),
-        pickupFee: formatDollar(quoteData.pickupFee),
-        dueToday: formatDollar(quoteData.dueToday),
-        ongoingMonthly: formatDollar(quoteData.ongoingMonthly),
-        dueWhenDone: formatDollar(quoteData.dueWhenDone),
-        formType,
+        delivery_fee: formatDollar(quoteData.deliveryFee),
+        first_month_rent: formatDollar(quoteData.firstMonthRent),
+        due_today: formatDollar(quoteData.dueToday),
+        monthly_rent: formatDollar(quoteData.monthlyRent),
+        ongoing_monthly: formatDollar(quoteData.ongoingMonthly),
+        pickup_fee: formatDollar(quoteData.pickupFee),
+        due_when_done: formatDollar(quoteData.dueWhenDone),
         timestamp: new Date().toISOString(),
         source: 'miboxhouston.com',
         turnstileToken
+    };
+}
+
+// Build booking webhook payload (quote fields + booking details)
+export function buildBookingPayload(quoteData, turnstileToken = null) {
+    return {
+        ...buildQuotePayload(quoteData, turnstileToken),
+        event_type: 'booking',
+        delivery_address: quoteData.deliveryAddress || '',
+        delivery_city: quoteData.deliveryCity || '',
+        delivery_state: quoteData.deliveryState || '',
+        delivery_date: quoteData.deliveryDate || '',
+        placement_location: quoteData.placementLocation || '',
+        surface_type: quoteData.surfaceType || '',
+        door_facing: quoteData.doorFacing || '',
+        gate_code: quoteData.gateCode || '',
+        special_notes: quoteData.specialNotes || ''
     };
 }
 

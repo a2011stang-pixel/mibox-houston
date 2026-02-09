@@ -5,7 +5,8 @@ import {
   validateStep1Fields,
   validateStep2Fields,
   validateStep4Fields,
-  buildWebhookPayload,
+  buildQuotePayload,
+  buildBookingPayload,
   isValidEmail,
   formatDollar,
 } from '../lib.js';
@@ -80,13 +81,13 @@ describe('Security Tests', () => {
           dueWhenDone: 79,
         };
 
-        const payload = buildWebhookPayload(maliciousData, 'booking');
+        const payload = buildBookingPayload(maliciousData);
 
         // Payload should contain the raw strings (server-side should sanitize)
-        expect(payload.firstName).toBe('<script>alert("xss")</script>');
-        expect(payload.lastName).toBe('<img src=x onerror=alert("xss")>');
-        expect(typeof payload.firstName).toBe('string');
-        expect(typeof payload.lastName).toBe('string');
+        expect(payload.customer_name).toBe('<script>alert("xss")</script>');
+        expect(payload.customer_last_name).toBe('<img src=x onerror=alert("xss")>');
+        expect(typeof payload.customer_name).toBe('string');
+        expect(typeof payload.customer_last_name).toBe('string');
       });
 
       it('properly escapes special characters in JSON serialization', () => {
@@ -102,13 +103,13 @@ describe('Security Tests', () => {
           dueWhenDone: 79,
         };
 
-        const payload = buildWebhookPayload(maliciousData, 'booking');
+        const payload = buildBookingPayload(maliciousData);
         const jsonString = JSON.stringify(payload);
 
         // Should be valid JSON without breaking structure
         expect(() => JSON.parse(jsonString)).not.toThrow();
         const parsed = JSON.parse(jsonString);
-        expect(parsed.firstName).toBe('{"injected": "json"}');
+        expect(parsed.customer_name).toBe('{"injected": "json"}');
       });
     });
   });
@@ -223,11 +224,11 @@ describe('Security Tests', () => {
         dueWhenDone: -10,
       };
 
-      const payload = buildWebhookPayload(tamperedData, 'booking');
+      const payload = buildBookingPayload(tamperedData);
 
       // formatDollar will format negative numbers - server should validate
-      expect(payload.deliveryFee).toBe('$-100.00');
-      expect(payload.dueToday).toBe('$-150.00');
+      expect(payload.delivery_fee).toBe('$-100.00');
+      expect(payload.due_today).toBe('$-150.00');
     });
 
     it('handles extremely large price values', () => {
@@ -241,10 +242,10 @@ describe('Security Tests', () => {
         dueWhenDone: 79,
       };
 
-      const payload = buildWebhookPayload(tamperedData, 'booking');
+      const payload = buildBookingPayload(tamperedData);
 
-      expect(typeof payload.deliveryFee).toBe('string');
-      expect(payload.deliveryFee).toContain('$');
+      expect(typeof payload.delivery_fee).toBe('string');
+      expect(payload.delivery_fee).toContain('$');
     });
 
     it('handles NaN and Infinity values', () => {
@@ -258,12 +259,12 @@ describe('Security Tests', () => {
         dueWhenDone: 79,
       };
 
-      const payload = buildWebhookPayload(tamperedData, 'booking');
+      const payload = buildBookingPayload(tamperedData);
 
       // NaN.toFixed(2) returns "NaN", Infinity.toFixed(2) returns "Infinity"
-      expect(payload.deliveryFee).toBe('$NaN');
-      expect(payload.firstMonthRent).toBe('$Infinity');
-      expect(payload.monthlyRent).toBe('$-Infinity');
+      expect(payload.delivery_fee).toBe('$NaN');
+      expect(payload.first_month_rent).toBe('$Infinity');
+      expect(payload.monthly_rent).toBe('$-Infinity');
     });
 
     it('preserves data integrity - spread creates isolated copy', () => {
@@ -278,15 +279,15 @@ describe('Security Tests', () => {
         dueWhenDone: 79,
       };
 
-      const payload = buildWebhookPayload(originalData, 'booking');
-      
+      const payload = buildBookingPayload(originalData);
+
       // Modify original after payload creation
       originalData.firstName = 'HACKED';
       originalData.deliveryFee = 0;
 
-      // Payload should retain original values (spread creates shallow copy)
-      expect(payload.firstName).toBe('John');
-      expect(payload.deliveryFee).toBe('$79.00');
+      // Payload should retain original values (values are copied at build time)
+      expect(payload.customer_name).toBe('John');
+      expect(payload.delivery_fee).toBe('$79.00');
     });
 
     it('always includes server-controlled fields', () => {
@@ -300,12 +301,12 @@ describe('Security Tests', () => {
         dueWhenDone: 79,
       };
 
-      const payload = buildWebhookPayload(minimalData, 'booking', 'token123');
+      const payload = buildBookingPayload(minimalData, 'token123');
 
       // These fields are set by the server, not user input
       expect(payload.timestamp).toBe('2025-01-15T12:00:00.000Z');
       expect(payload.source).toBe('miboxhouston.com');
-      expect(payload.formType).toBe('booking');
+      expect(payload.event_type).toBe('booking');
       expect(payload.turnstileToken).toBe('token123');
     });
 
@@ -313,7 +314,7 @@ describe('Security Tests', () => {
       const tamperedData = {
         timestamp: '1999-01-01T00:00:00.000Z',
         source: 'malicious-site.com',
-        formType: 'admin-override',
+        event_type: 'admin-override',
         turnstileToken: 'fake-token',
         deliveryFee: 79,
         firstMonthRent: 119,
@@ -324,12 +325,12 @@ describe('Security Tests', () => {
         dueWhenDone: 79,
       };
 
-      const payload = buildWebhookPayload(tamperedData, 'booking', 'real-token');
+      const payload = buildBookingPayload(tamperedData, 'real-token');
 
-      // Server-controlled fields should override any user-supplied values
+      // Server-controlled fields cannot be overridden via input data
       expect(payload.timestamp).toBe('2025-01-15T12:00:00.000Z');
       expect(payload.source).toBe('miboxhouston.com');
-      expect(payload.formType).toBe('booking');
+      expect(payload.event_type).toBe('booking');
       expect(payload.turnstileToken).toBe('real-token');
     });
   });
@@ -338,7 +339,7 @@ describe('Security Tests', () => {
     // Note: Actual rate limiting should be implemented server-side
     // These tests document expected behavior for rapid submissions
 
-    it('buildWebhookPayload can be called rapidly without state corruption', () => {
+    it('buildQuotePayload can be called rapidly without state corruption', () => {
       const baseData = {
         firstName: 'John',
         deliveryFee: 79,
@@ -352,13 +353,13 @@ describe('Security Tests', () => {
 
       const payloads = [];
       for (let i = 0; i < 100; i++) {
-        payloads.push(buildWebhookPayload({ ...baseData, firstName: `User${i}` }, 'quote'));
+        payloads.push(buildQuotePayload({ ...baseData, firstName: `User${i}` }));
       }
 
       // Each payload should be independent
-      expect(payloads[0].firstName).toBe('User0');
-      expect(payloads[50].firstName).toBe('User50');
-      expect(payloads[99].firstName).toBe('User99');
+      expect(payloads[0].customer_name).toBe('User0');
+      expect(payloads[50].customer_name).toBe('User50');
+      expect(payloads[99].customer_name).toBe('User99');
       expect(payloads).toHaveLength(100);
     });
 

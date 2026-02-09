@@ -378,6 +378,9 @@ function displayQuoteSummary() {
         sms_consent_timestamp: document.getElementById('smsConsent') && document.getElementById('smsConsent').checked ? new Date().toISOString() : null,
         ...quote
     };
+
+    // Fire quote webhook when pricing is displayed
+    sendQuoteWebhook();
 }
 
 // Validate step fields
@@ -564,14 +567,10 @@ function formatDollar(amount) {
     return '$' + amount.toFixed(2);
 }
 
-// Send data to webhooks
-function sendToWebhook(type) {
-    const zapierUrl = 'https://hooks.zapier.com/hooks/catch/12186485/ugs5oqz/';
-    const stellaUrl = 'https://api.runstella.com/webhook/16216eb0';
-
-    const data = {
-        ...quoteData,
-        // Quote step fields with explicit names
+// Build base quote payload fields
+function buildQuoteData() {
+    return {
+        event_type: 'quote',
         customer_name: quoteData.firstName || '',
         customer_last_name: quoteData.lastName || '',
         customer_email: quoteData.email || '',
@@ -580,36 +579,73 @@ function sendToWebhook(type) {
         service_type: SERVICE_NAMES[quoteData.serviceType] || quoteData.serviceType || '',
         container_size: quoteData.containerSize === '16' ? '8x16' : quoteData.containerSize === '20' ? '8x20' : '',
         delivery_zip: quoteData.deliveryZip || '',
-        delivery_date: quoteData.deliveryDate || '',
-        // Format pricing fields as dollar amounts
-        deliveryFee: formatDollar(quoteData.deliveryFee),
-        firstMonthRent: formatDollar(quoteData.firstMonthRent),
-        monthlyRent: formatDollar(quoteData.monthlyRent),
-        pickupFee: formatDollar(quoteData.pickupFee),
-        dueToday: formatDollar(quoteData.dueToday),
-        ongoingMonthly: formatDollar(quoteData.ongoingMonthly),
-        dueWhenDone: formatDollar(quoteData.dueWhenDone),
-        formType: type,
+        delivery_fee: formatDollar(quoteData.deliveryFee),
+        first_month_rent: formatDollar(quoteData.firstMonthRent),
+        due_today: formatDollar(quoteData.dueToday),
+        monthly_rent: formatDollar(quoteData.monthlyRent),
+        ongoing_monthly: formatDollar(quoteData.ongoingMonthly),
+        pickup_fee: formatDollar(quoteData.pickupFee),
+        due_when_done: formatDollar(quoteData.dueWhenDone),
         timestamp: new Date().toISOString(),
         source: 'miboxhouston.com',
         turnstileToken: turnstileToken
     };
+}
 
-    // Send to Zapier
-    fetch(zapierUrl, {
+// Send quote webhook (fires when quote is displayed)
+function sendQuoteWebhook() {
+    const zapierQuoteUrl = 'https://hooks.zapier.com/hooks/catch/12186485/QUOTE_HOOK_ID/';
+    const stellaUrl = 'https://api.runstella.com/webhook/16216eb0';
+
+    const data = buildQuoteData();
+
+    fetch(zapierQuoteUrl, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
-    }).catch(err => console.log('Zapier webhook error:', err));
+    }).catch(err => console.log('Zapier quote webhook error:', err));
 
-    // Send to Stella
     fetch(stellaUrl, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
-    }).catch(err => console.log('Stella webhook error:', err));
+    }).catch(err => console.log('Stella quote webhook error:', err));
+}
+
+// Send booking webhook (fires when booking is submitted)
+function sendBookingWebhook() {
+    const zapierBookingUrl = 'https://hooks.zapier.com/hooks/catch/12186485/ugs5oqz/';
+    const stellaUrl = 'https://api.runstella.com/webhook/16216eb0';
+
+    const data = {
+        ...buildQuoteData(),
+        event_type: 'booking',
+        delivery_address: quoteData.deliveryAddress || '',
+        delivery_city: quoteData.deliveryCity || '',
+        delivery_state: quoteData.deliveryState || '',
+        delivery_date: quoteData.deliveryDate || '',
+        placement_location: quoteData.placementLocation || '',
+        surface_type: quoteData.surfaceType || '',
+        door_facing: quoteData.doorFacing || '',
+        gate_code: quoteData.gateCode || '',
+        special_notes: quoteData.specialNotes || ''
+    };
+
+    fetch(zapierBookingUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    }).catch(err => console.log('Zapier booking webhook error:', err));
+
+    fetch(stellaUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    }).catch(err => console.log('Stella booking webhook error:', err));
 }
 
 // Set button loading state
@@ -675,7 +711,7 @@ function handleBookingSubmit(e) {
     }
 
     // Send booking to webhooks
-    sendToWebhook('booking');
+    sendBookingWebhook();
 
     // Show success state after brief delay
     setTimeout(function() {
