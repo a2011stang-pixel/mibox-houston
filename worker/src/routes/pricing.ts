@@ -37,7 +37,7 @@ pricingRoutes.put('/', async (c) => {
     amount: number;
   }>();
 
-  if (!body.container_size || !body.rate_type || body.amount === undefined) {
+  if (!body.container_size || !body.rate_type || body.amount === undefined || isNaN(body.amount)) {
     return c.json({ error: 'container_size, rate_type, and amount required' }, 400);
   }
 
