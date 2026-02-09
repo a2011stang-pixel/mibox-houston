@@ -350,7 +350,7 @@ async function loadPricing() {
     try {
         const data = await api.getPricing();
         
-        for (const p of data.pricing) {
+        for (const p of data.raw) {
             const id = 'price_' + p.container_size + '_' + p.rate_type;
             const input = document.getElementById(id);
             if (input) {
