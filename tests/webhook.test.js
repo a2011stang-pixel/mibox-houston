@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { buildQuotePayload, buildBookingPayload, SERVICE_NAMES, STORAGE_LOCATION_NAMES } from '../lib.js';
+import { buildQuotePayload, buildBookingPayload, getServiceCode, getServiceDisplay, SERVICE_NAMES, STORAGE_LOCATION_NAMES } from '../lib.js';
 
 const sampleQuoteData = {
   serviceType: 'onsite',
@@ -69,15 +69,38 @@ describe('buildQuotePayload', () => {
     expect(withCompany.company).toBe('Acme Corp');
   });
 
-  it('maps service_needed to human-readable names', () => {
+  it('maps service_needed to Stella CRM codes', () => {
     const onsitePayload = buildQuotePayload(sampleQuoteData);
-    expect(onsitePayload.service_needed).toBe('Storage (At Your Property)');
+    expect(onsitePayload.service_needed).toBe('store_onsite');
+
+    const facilityPayload = buildQuotePayload({ ...sampleQuoteData, storageLocation: 'secured_facility' });
+    expect(facilityPayload.service_needed).toBe('store_facility');
 
     const movingPayload = buildQuotePayload({ ...sampleQuoteData, serviceType: 'moving' });
-    expect(movingPayload.service_needed).toBe('Moving (To New Location)');
+    expect(movingPayload.service_needed).toBe('moving_onsite');
+
+    const bothOnsitePayload = buildQuotePayload({ ...sampleQuoteData, serviceType: 'both' });
+    expect(bothOnsitePayload.service_needed).toBe('store_onsite');
+
+    const bothFacilityPayload = buildQuotePayload({ ...sampleQuoteData, serviceType: 'both', storageLocation: 'secured_facility' });
+    expect(bothFacilityPayload.service_needed).toBe('store_facility');
+  });
+
+  it('includes service_display with human-readable name', () => {
+    const onsitePayload = buildQuotePayload(sampleQuoteData);
+    expect(onsitePayload.service_display).toBe('Storage - At My Property');
+
+    const facilityPayload = buildQuotePayload({ ...sampleQuoteData, storageLocation: 'secured_facility' });
+    expect(facilityPayload.service_display).toBe('Storage - At Our Secured Facility');
+
+    const movingPayload = buildQuotePayload({ ...sampleQuoteData, serviceType: 'moving' });
+    expect(movingPayload.service_display).toBe('Moving - To New Location');
 
     const bothPayload = buildQuotePayload({ ...sampleQuoteData, serviceType: 'both' });
-    expect(bothPayload.service_needed).toBe('Storage + Moving');
+    expect(bothPayload.service_display).toBe('Both - At My Property');
+
+    const bothFacilityPayload = buildQuotePayload({ ...sampleQuoteData, serviceType: 'both', storageLocation: 'secured_facility' });
+    expect(bothFacilityPayload.service_display).toBe('Both - At Our Secured Facility');
   });
 
   it('maps box_size to 8x16 or 8x20', () => {
@@ -177,7 +200,8 @@ describe('buildBookingPayload', () => {
     expect(payload.last_name).toBe('Doe');
     expect(payload.email).toBe('john@example.com');
     expect(payload.phone).toBe('713-555-1234');
-    expect(payload.service_needed).toBe('Storage (At Your Property)');
+    expect(payload.service_needed).toBe('store_onsite');
+    expect(payload.service_display).toBe('Storage - At My Property');
     expect(payload.box_size).toBe('8x16');
     expect(payload.delivery_zip).toBe('77002');
     expect(payload.delivery_price).toBe('$79.00');
@@ -240,6 +264,60 @@ describe('SERVICE_NAMES', () => {
 
   it('has correct display name for both service', () => {
     expect(SERVICE_NAMES.both).toBe('Storage + Moving');
+  });
+});
+
+describe('getServiceCode', () => {
+  it('returns store_onsite for Storage + At My Property', () => {
+    expect(getServiceCode('onsite', 'customer_property')).toBe('store_onsite');
+  });
+
+  it('returns store_facility for Storage + Secured Facility', () => {
+    expect(getServiceCode('onsite', 'secured_facility')).toBe('store_facility');
+  });
+
+  it('returns moving_onsite for Moving', () => {
+    expect(getServiceCode('moving', '')).toBe('moving_onsite');
+  });
+
+  it('returns store_onsite for Both + At My Property', () => {
+    expect(getServiceCode('both', 'customer_property')).toBe('store_onsite');
+  });
+
+  it('returns store_facility for Both + Secured Facility', () => {
+    expect(getServiceCode('both', 'secured_facility')).toBe('store_facility');
+  });
+
+  it('returns empty string for unknown service type', () => {
+    expect(getServiceCode('', '')).toBe('');
+    expect(getServiceCode(undefined, undefined)).toBe('');
+  });
+});
+
+describe('getServiceDisplay', () => {
+  it('returns Storage - At My Property for onsite + customer_property', () => {
+    expect(getServiceDisplay('onsite', 'customer_property')).toBe('Storage - At My Property');
+  });
+
+  it('returns Storage - At Our Secured Facility for onsite + secured_facility', () => {
+    expect(getServiceDisplay('onsite', 'secured_facility')).toBe('Storage - At Our Secured Facility');
+  });
+
+  it('returns Moving - To New Location for moving', () => {
+    expect(getServiceDisplay('moving', '')).toBe('Moving - To New Location');
+  });
+
+  it('returns Both - At My Property for both + customer_property', () => {
+    expect(getServiceDisplay('both', 'customer_property')).toBe('Both - At My Property');
+  });
+
+  it('returns Both - At Our Secured Facility for both + secured_facility', () => {
+    expect(getServiceDisplay('both', 'secured_facility')).toBe('Both - At Our Secured Facility');
+  });
+
+  it('returns empty string for unknown service type', () => {
+    expect(getServiceDisplay('', '')).toBe('');
+    expect(getServiceDisplay(undefined, undefined)).toBe('');
   });
 });
 

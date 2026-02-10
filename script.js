@@ -117,6 +117,24 @@ const STORAGE_LOCATION_NAMES = {
     'secured_facility': 'At Our Secured Facility (Outside Storage Only)'
 };
 
+// Map service type + storage location to Stella CRM code
+function getServiceCode(serviceType, storageLocation) {
+    if (serviceType === 'moving') return 'moving_onsite';
+    if (storageLocation === 'secured_facility') return 'store_facility';
+    if (serviceType === 'onsite' || serviceType === 'both') return 'store_onsite';
+    return '';
+}
+
+// Map service type + storage location to human-readable display name
+function getServiceDisplay(serviceType, storageLocation) {
+    if (serviceType === 'moving') return 'Moving - To New Location';
+    if (serviceType === 'onsite' && storageLocation === 'secured_facility') return 'Storage - At Our Secured Facility';
+    if (serviceType === 'onsite') return 'Storage - At My Property';
+    if (serviceType === 'both' && storageLocation === 'secured_facility') return 'Both - At Our Secured Facility';
+    if (serviceType === 'both') return 'Both - At My Property';
+    return '';
+}
+
 // Current wizard state
 let currentStep = 1;
 let quoteData = {};
@@ -576,7 +594,8 @@ function buildQuoteData() {
         email: quoteData.email || '',
         phone: quoteData.phone || '',
         company: quoteData.company || '',
-        service_needed: SERVICE_NAMES[quoteData.serviceType] || quoteData.serviceType || '',
+        service_needed: getServiceCode(quoteData.serviceType, quoteData.storageLocation),
+        service_display: getServiceDisplay(quoteData.serviceType, quoteData.storageLocation),
         box_size: quoteData.containerSize === '16' ? '8x16' : quoteData.containerSize === '20' ? '8x20' : '',
         delivery_zip: quoteData.deliveryZip || '',
         delivery_price: formatDollar(quoteData.deliveryFee),
