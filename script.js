@@ -571,15 +571,15 @@ function formatDollar(amount) {
 function buildQuoteData() {
     return {
         event_type: 'quote',
-        customer_name: quoteData.firstName || '',
-        customer_last_name: quoteData.lastName || '',
-        customer_email: quoteData.email || '',
-        customer_phone: quoteData.phone || '',
+        first_name: quoteData.firstName || '',
+        last_name: quoteData.lastName || '',
+        email: quoteData.email || '',
+        phone: quoteData.phone || '',
         company: quoteData.company || '',
-        service_type: SERVICE_NAMES[quoteData.serviceType] || quoteData.serviceType || '',
-        container_size: quoteData.containerSize === '16' ? '8x16' : quoteData.containerSize === '20' ? '8x20' : '',
+        service_needed: SERVICE_NAMES[quoteData.serviceType] || quoteData.serviceType || '',
+        box_size: quoteData.containerSize === '16' ? '8x16' : quoteData.containerSize === '20' ? '8x20' : '',
         delivery_zip: quoteData.deliveryZip || '',
-        delivery_fee: formatDollar(quoteData.deliveryFee),
+        delivery_price: formatDollar(quoteData.deliveryFee),
         first_month_rent: formatDollar(quoteData.firstMonthRent),
         due_today: formatDollar(quoteData.dueToday),
         monthly_rent: formatDollar(quoteData.monthlyRent),
@@ -587,7 +587,7 @@ function buildQuoteData() {
         pickup_fee: formatDollar(quoteData.pickupFee),
         due_when_done: formatDollar(quoteData.dueWhenDone),
         timestamp: new Date().toISOString(),
-        source: 'miboxhouston.com',
+        source: 'Website',
         turnstileToken: turnstileToken
     };
 }
@@ -630,7 +630,7 @@ function sendBookingWebhook() {
         surface_type: quoteData.surfaceType || '',
         door_facing: quoteData.doorFacing || '',
         gate_code: quoteData.gateCode || '',
-        special_notes: quoteData.specialNotes || ''
+        notes: quoteData.specialNotes || ''
     };
 
     fetch(zapierBookingUrl, {

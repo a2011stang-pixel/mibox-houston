@@ -55,10 +55,10 @@ describe('buildQuotePayload', () => {
   it('includes customer contact fields', () => {
     const payload = buildQuotePayload(sampleQuoteData);
 
-    expect(payload.customer_name).toBe('John');
-    expect(payload.customer_last_name).toBe('Doe');
-    expect(payload.customer_email).toBe('john@example.com');
-    expect(payload.customer_phone).toBe('713-555-1234');
+    expect(payload.first_name).toBe('John');
+    expect(payload.last_name).toBe('Doe');
+    expect(payload.email).toBe('john@example.com');
+    expect(payload.phone).toBe('713-555-1234');
   });
 
   it('includes company field defaulting to empty string', () => {
@@ -69,23 +69,23 @@ describe('buildQuotePayload', () => {
     expect(withCompany.company).toBe('Acme Corp');
   });
 
-  it('maps service_type to human-readable names', () => {
+  it('maps service_needed to human-readable names', () => {
     const onsitePayload = buildQuotePayload(sampleQuoteData);
-    expect(onsitePayload.service_type).toBe('Storage (At Your Property)');
+    expect(onsitePayload.service_needed).toBe('Storage (At Your Property)');
 
     const movingPayload = buildQuotePayload({ ...sampleQuoteData, serviceType: 'moving' });
-    expect(movingPayload.service_type).toBe('Moving (To New Location)');
+    expect(movingPayload.service_needed).toBe('Moving (To New Location)');
 
     const bothPayload = buildQuotePayload({ ...sampleQuoteData, serviceType: 'both' });
-    expect(bothPayload.service_type).toBe('Storage + Moving');
+    expect(bothPayload.service_needed).toBe('Storage + Moving');
   });
 
-  it('maps container_size to 8x16 or 8x20', () => {
+  it('maps box_size to 8x16 or 8x20', () => {
     const small = buildQuotePayload(sampleQuoteData);
-    expect(small.container_size).toBe('8x16');
+    expect(small.box_size).toBe('8x16');
 
     const large = buildQuotePayload({ ...sampleQuoteData, containerSize: '20' });
-    expect(large.container_size).toBe('8x20');
+    expect(large.box_size).toBe('8x20');
   });
 
   it('includes delivery_zip', () => {
@@ -96,7 +96,7 @@ describe('buildQuotePayload', () => {
   it('formats pricing fields as dollar amounts', () => {
     const payload = buildQuotePayload(sampleQuoteData);
 
-    expect(payload.delivery_fee).toBe('$79.00');
+    expect(payload.delivery_price).toBe('$79.00');
     expect(payload.first_month_rent).toBe('$119.00');
     expect(payload.due_today).toBe('$198.00');
     expect(payload.monthly_rent).toBe('$189.00');
@@ -112,7 +112,7 @@ describe('buildQuotePayload', () => {
 
   it('includes source', () => {
     const payload = buildQuotePayload(sampleQuoteData);
-    expect(payload.source).toBe('miboxhouston.com');
+    expect(payload.source).toBe('Website');
   });
 
   it('includes turnstile token when provided', () => {
@@ -145,13 +145,13 @@ describe('buildQuotePayload', () => {
     };
     const payload = buildQuotePayload(minimal);
 
-    expect(payload.customer_name).toBe('');
-    expect(payload.customer_last_name).toBe('');
-    expect(payload.customer_email).toBe('');
-    expect(payload.customer_phone).toBe('');
+    expect(payload.first_name).toBe('');
+    expect(payload.last_name).toBe('');
+    expect(payload.email).toBe('');
+    expect(payload.phone).toBe('');
     expect(payload.company).toBe('');
     expect(payload.delivery_zip).toBe('');
-    expect(payload.container_size).toBe('');
+    expect(payload.box_size).toBe('');
   });
 });
 
@@ -173,14 +173,14 @@ describe('buildBookingPayload', () => {
   it('includes all quote fields', () => {
     const payload = buildBookingPayload(sampleBookingData);
 
-    expect(payload.customer_name).toBe('John');
-    expect(payload.customer_last_name).toBe('Doe');
-    expect(payload.customer_email).toBe('john@example.com');
-    expect(payload.customer_phone).toBe('713-555-1234');
-    expect(payload.service_type).toBe('Storage (At Your Property)');
-    expect(payload.container_size).toBe('8x16');
+    expect(payload.first_name).toBe('John');
+    expect(payload.last_name).toBe('Doe');
+    expect(payload.email).toBe('john@example.com');
+    expect(payload.phone).toBe('713-555-1234');
+    expect(payload.service_needed).toBe('Storage (At Your Property)');
+    expect(payload.box_size).toBe('8x16');
     expect(payload.delivery_zip).toBe('77002');
-    expect(payload.delivery_fee).toBe('$79.00');
+    expect(payload.delivery_price).toBe('$79.00');
     expect(payload.first_month_rent).toBe('$119.00');
     expect(payload.due_today).toBe('$198.00');
     expect(payload.monthly_rent).toBe('$189.00');
@@ -200,7 +200,7 @@ describe('buildBookingPayload', () => {
     expect(payload.surface_type).toBe('concrete');
     expect(payload.door_facing).toBe('street');
     expect(payload.gate_code).toBe('1234');
-    expect(payload.special_notes).toBe('Please call before delivery');
+    expect(payload.notes).toBe('Please call before delivery');
   });
 
   it('defaults missing booking fields to empty strings', () => {
@@ -214,13 +214,13 @@ describe('buildBookingPayload', () => {
     expect(payload.surface_type).toBe('');
     expect(payload.door_facing).toBe('');
     expect(payload.gate_code).toBe('');
-    expect(payload.special_notes).toBe('');
+    expect(payload.notes).toBe('');
   });
 
   it('includes timestamp and source', () => {
     const payload = buildBookingPayload(sampleBookingData);
     expect(payload.timestamp).toBe('2025-01-15T12:00:00.000Z');
-    expect(payload.source).toBe('miboxhouston.com');
+    expect(payload.source).toBe('Website');
   });
 
   it('includes turnstile token when provided', () => {

@@ -84,10 +84,10 @@ describe('Security Tests', () => {
         const payload = buildBookingPayload(maliciousData);
 
         // Payload should contain the raw strings (server-side should sanitize)
-        expect(payload.customer_name).toBe('<script>alert("xss")</script>');
-        expect(payload.customer_last_name).toBe('<img src=x onerror=alert("xss")>');
-        expect(typeof payload.customer_name).toBe('string');
-        expect(typeof payload.customer_last_name).toBe('string');
+        expect(payload.first_name).toBe('<script>alert("xss")</script>');
+        expect(payload.last_name).toBe('<img src=x onerror=alert("xss")>');
+        expect(typeof payload.first_name).toBe('string');
+        expect(typeof payload.last_name).toBe('string');
       });
 
       it('properly escapes special characters in JSON serialization', () => {
@@ -109,7 +109,7 @@ describe('Security Tests', () => {
         // Should be valid JSON without breaking structure
         expect(() => JSON.parse(jsonString)).not.toThrow();
         const parsed = JSON.parse(jsonString);
-        expect(parsed.customer_name).toBe('{"injected": "json"}');
+        expect(parsed.first_name).toBe('{"injected": "json"}');
       });
     });
   });
@@ -227,7 +227,7 @@ describe('Security Tests', () => {
       const payload = buildBookingPayload(tamperedData);
 
       // formatDollar will format negative numbers - server should validate
-      expect(payload.delivery_fee).toBe('$-100.00');
+      expect(payload.delivery_price).toBe('$-100.00');
       expect(payload.due_today).toBe('$-150.00');
     });
 
@@ -244,8 +244,8 @@ describe('Security Tests', () => {
 
       const payload = buildBookingPayload(tamperedData);
 
-      expect(typeof payload.delivery_fee).toBe('string');
-      expect(payload.delivery_fee).toContain('$');
+      expect(typeof payload.delivery_price).toBe('string');
+      expect(payload.delivery_price).toContain('$');
     });
 
     it('handles NaN and Infinity values', () => {
@@ -262,7 +262,7 @@ describe('Security Tests', () => {
       const payload = buildBookingPayload(tamperedData);
 
       // NaN.toFixed(2) returns "NaN", Infinity.toFixed(2) returns "Infinity"
-      expect(payload.delivery_fee).toBe('$NaN');
+      expect(payload.delivery_price).toBe('$NaN');
       expect(payload.first_month_rent).toBe('$Infinity');
       expect(payload.monthly_rent).toBe('$-Infinity');
     });
@@ -286,8 +286,8 @@ describe('Security Tests', () => {
       originalData.deliveryFee = 0;
 
       // Payload should retain original values (values are copied at build time)
-      expect(payload.customer_name).toBe('John');
-      expect(payload.delivery_fee).toBe('$79.00');
+      expect(payload.first_name).toBe('John');
+      expect(payload.delivery_price).toBe('$79.00');
     });
 
     it('always includes server-controlled fields', () => {
@@ -305,7 +305,7 @@ describe('Security Tests', () => {
 
       // These fields are set by the server, not user input
       expect(payload.timestamp).toBe('2025-01-15T12:00:00.000Z');
-      expect(payload.source).toBe('miboxhouston.com');
+      expect(payload.source).toBe('Website');
       expect(payload.event_type).toBe('booking');
       expect(payload.turnstileToken).toBe('token123');
     });
@@ -329,7 +329,7 @@ describe('Security Tests', () => {
 
       // Server-controlled fields cannot be overridden via input data
       expect(payload.timestamp).toBe('2025-01-15T12:00:00.000Z');
-      expect(payload.source).toBe('miboxhouston.com');
+      expect(payload.source).toBe('Website');
       expect(payload.event_type).toBe('booking');
       expect(payload.turnstileToken).toBe('real-token');
     });
@@ -357,9 +357,9 @@ describe('Security Tests', () => {
       }
 
       // Each payload should be independent
-      expect(payloads[0].customer_name).toBe('User0');
-      expect(payloads[50].customer_name).toBe('User50');
-      expect(payloads[99].customer_name).toBe('User99');
+      expect(payloads[0].first_name).toBe('User0');
+      expect(payloads[50].first_name).toBe('User50');
+      expect(payloads[99].first_name).toBe('User99');
       expect(payloads).toHaveLength(100);
     });
 
