@@ -62,3 +62,21 @@ npm run test:coverage # Run tests with coverage report
   - `webhook.test.js` - Webhook payload construction
   - `formatting.test.js` - Currency and date formatting
   - `security.test.js` - XSS, SQL injection, tampering prevention
+
+## Development Workflow (AI Digital Engineer)
+Follow this structured workflow for all feature development:
+1. Test Plan - Document test cases before implementation
+2. Implementation - Write code following TDD
+3. Unit Tests - Verify all tests pass (npm test)
+4. Commit - Only after tests pass
+5. Push - Triggers CI (GitHub Actions runs tests + Snyk security scan)
+6. Verify CI - Do not consider task complete until CI passes
+
+## Hooks Enforcement
+- PreToolUse hooks block code changes without test plans
+- PreToolUse hooks block commits with failing tests
+- Stop hooks block task completion without CI passing
+- State is tracked in .claude/state/ for resume capability
+
+## Resume Capability
+If resuming work from a previous session, check .claude/state/ for completed steps and continue from where you left off.
