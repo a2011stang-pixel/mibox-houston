@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": ["Bash(.claude/hooks/*)", "mcp__*"]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {"type": "command", "command": ".claude/hooks/check-unit-tests.sh"}
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {"type": "command", "command": ".claude/hooks/check-test-plan.sh"}
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {"type": "command", "command": ".claude/hooks/verify-completion.sh", "timeout": 10}
+        ]
+      }
+    ]
+  }
+}
