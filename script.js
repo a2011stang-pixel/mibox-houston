@@ -594,7 +594,7 @@ function buildQuoteData() {
 
 // Send quote webhook (fires when quote is displayed)
 function sendQuoteWebhook() {
-    const zapierQuoteUrl = 'https://hooks.zapier.com/hooks/catch/12186485/QUOTE_HOOK_ID/';
+    const zapierQuoteUrl = 'https://hooks.zapier.com/hooks/catch/12186485/ue9v8sd/';
     const stellaUrl = 'https://api.runstella.com/webhook/16216eb0';
 
     const data = buildQuoteData();
