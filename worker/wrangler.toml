@@ -11,3 +11,10 @@ JWT_EXPIRES_IN = "8h"
 binding = "DB"
 database_name = "mibox-houston"
 database_id = "63933c0b-04fb-424c-8e50-adb0516c3cfc"
+
+[[r2_buckets]]
+binding = "BACKUPS"
+bucket_name = "mibox-houston-backups"
+
+[triggers]
+crons = ["0 8 * * *"]

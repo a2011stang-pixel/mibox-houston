@@ -6,12 +6,15 @@ import { zipsRoutes } from './routes/zips';
 import { pricingRoutes } from './routes/pricing';
 import { auditRoutes } from './routes/audit';
 import { publicRoutes } from './routes/public';
+import { adminRoutes } from './routes/admin';
 import { authMiddleware } from './middleware/auth';
+import { runBackup } from './services/backup';
 
 export interface Env {
   DB: D1Database;
   JWT_SECRET: string;
   JWT_EXPIRES_IN: string;
+  BACKUPS: R2Bucket;
 }
 
 const app = new Hono<{ Bindings: Env }>();
@@ -31,11 +34,13 @@ app.use('/api/zones/*', authMiddleware);
 app.use('/api/zips/*', authMiddleware);
 app.use('/api/pricing/*', authMiddleware);
 app.use('/api/audit/*', authMiddleware);
+app.use('/api/admin/*', authMiddleware);
 
 app.route('/api/zones', zonesRoutes);
 app.route('/api/zips', zipsRoutes);
 app.route('/api/pricing', pricingRoutes);
 app.route('/api/audit', auditRoutes);
+app.route('/api/admin', adminRoutes);
 
 // Health check
 app.get('/api/health', (c) => c.json({ status: 'ok', timestamp: Date.now() }));
@@ -49,4 +54,13 @@ app.onError((err, c) => {
   return c.json({ error: 'Internal server error' }, 500);
 });
 
-export default app;
+export default {
+  fetch: app.fetch,
+  scheduled: async (
+    _event: ScheduledEvent,
+    env: Env,
+    ctx: ExecutionContext
+  ) => {
+    ctx.waitUntil(runBackup(env));
+  },
+};
