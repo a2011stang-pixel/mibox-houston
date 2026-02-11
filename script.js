@@ -377,7 +377,7 @@ function displayQuoteSummary() {
     document.getElementById('tableOneTimeCosts').textContent = formatCurrency(estimatedTotal);
     document.getElementById('tableEstimatedTotal').textContent = formatCurrency(estimatedTotal);
 
-    // Store quote data
+    // Store quote data with ALL calculated pricing fields
     quoteData = {
         serviceType,
         containerSize,
@@ -394,7 +394,8 @@ function displayQuoteSummary() {
         howHeard: document.getElementById('howHeard') ? document.getElementById('howHeard').value : '',
         sms_consent: document.getElementById('smsConsent') ? document.getElementById('smsConsent').checked : false,
         sms_consent_timestamp: document.getElementById('smsConsent') && document.getElementById('smsConsent').checked ? new Date().toISOString() : null,
-        ...quote
+        ...quote,
+        whenDoneTotal: quote.dueWhenDone
     };
 
     // Fire quote webhook when pricing is displayed
@@ -585,40 +586,44 @@ function formatDollar(amount) {
     return '$' + amount.toFixed(2);
 }
 
-// Build base quote payload fields
-function buildQuoteData() {
+// Build webhook payload with ALL required fields
+function buildQuoteData(formType) {
     return {
-        event_type: 'quote',
-        first_name: quoteData.firstName || '',
-        last_name: quoteData.lastName || '',
+        firstName: quoteData.firstName || '',
+        lastName: quoteData.lastName || '',
         email: quoteData.email || '',
         phone: quoteData.phone || '',
         company: quoteData.company || '',
-        service_needed: getServiceCode(quoteData.serviceType, quoteData.storageLocation),
-        service_display: getServiceDisplay(quoteData.serviceType, quoteData.storageLocation),
-        box_size: quoteData.containerSize === '16' ? '8x16' : quoteData.containerSize === '20' ? '8x20' : '',
-        delivery_zip: quoteData.deliveryZip || '',
-        delivery_price: formatDollar(quoteData.deliveryFee),
-        first_month_rent: formatDollar(quoteData.firstMonthRent),
-        due_today: formatDollar(quoteData.dueToday),
-        monthly_rent: formatDollar(quoteData.monthlyRent),
-        ongoing_monthly: formatDollar(quoteData.ongoingMonthly),
-        pickup_fee: formatDollar(quoteData.pickupFee),
-        due_when_done: formatDollar(quoteData.dueWhenDone),
-        timestamp: new Date().toISOString(),
-        source: 'Website',
-        turnstileToken: turnstileToken
+        serviceDisplay: getServiceDisplay(quoteData.serviceType, quoteData.storageLocation),
+        boxSize: quoteData.containerSize === '16' ? '8x16' : quoteData.containerSize === '20' ? '8x20' : '',
+        deliveryAddress: quoteData.deliveryAddress || '',
+        deliveryZip: quoteData.deliveryZip || '',
+        destinationZip: quoteData.destinationZip || '',
+        deliveryDate: quoteData.deliveryDate || '',
+        placement: quoteData.placementLocation || '',
+        doorFacing: quoteData.doorFacing || '',
+        gateCode: quoteData.gateCode || '',
+        deliveryFee: formatDollar(quoteData.deliveryFee),
+        firstMonthRent: formatDollar(quoteData.firstMonthRent),
+        monthlyRent: formatDollar(quoteData.monthlyRent),
+        dueToday: formatDollar(quoteData.dueToday),
+        ongoingMonthly: formatDollar(quoteData.ongoingMonthly),
+        whenDoneTotal: formatDollar(quoteData.whenDoneTotal || quoteData.dueWhenDone),
+        notes: quoteData.specialNotes || '',
+        leadSource: 'Website',
+        formType: formType || 'quote',
+        timestamp: new Date().toISOString()
     };
 }
 
 // Send quote webhook (fires when quote is displayed)
 function sendQuoteWebhook() {
-    const zapierQuoteUrl = 'https://hooks.zapier.com/hooks/catch/12186485/ue9v8sd/';
+    const zapierUrl = 'https://hooks.zapier.com/hooks/catch/21414077/2axrkxs/';
     const stellaUrl = 'https://api.runstella.com/webhook/16216eb0';
 
-    const data = buildQuoteData();
+    const data = buildQuoteData('quote');
 
-    fetch(zapierQuoteUrl, {
+    fetch(zapierUrl, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },
@@ -635,24 +640,12 @@ function sendQuoteWebhook() {
 
 // Send booking webhook (fires when booking is submitted)
 function sendBookingWebhook() {
-    const zapierBookingUrl = 'https://hooks.zapier.com/hooks/catch/12186485/ugs5oqz/';
+    const zapierUrl = 'https://hooks.zapier.com/hooks/catch/21414077/2axrkxs/';
     const stellaUrl = 'https://api.runstella.com/webhook/16216eb0';
 
-    const data = {
-        ...buildQuoteData(),
-        event_type: 'booking',
-        delivery_address: quoteData.deliveryAddress || '',
-        delivery_city: quoteData.deliveryCity || '',
-        delivery_state: quoteData.deliveryState || '',
-        delivery_date: quoteData.deliveryDate || '',
-        placement_location: quoteData.placementLocation || '',
-        surface_type: quoteData.surfaceType || '',
-        door_facing: quoteData.doorFacing || '',
-        gate_code: quoteData.gateCode || '',
-        notes: quoteData.specialNotes || ''
-    };
+    const data = buildQuoteData('booking');
 
-    fetch(zapierBookingUrl, {
+    fetch(zapierUrl, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },
@@ -716,16 +709,18 @@ function handleBookingSubmit(e) {
     quoteData.gateCode = document.getElementById('gateCode').value;
     quoteData.specialNotes = document.getElementById('specialNotes').value;
 
-    // Recalculate quote to ensure pricing values are fresh before sending
+    // Recalculate quote to ensure ALL pricing values are fresh before sending
     var freshQuote = calculateQuote();
     if (freshQuote) {
         quoteData.deliveryFee = freshQuote.deliveryFee;
         quoteData.firstMonthRent = freshQuote.firstMonthRent;
         quoteData.monthlyRent = freshQuote.monthlyRent;
+        quoteData.relocationFee = freshQuote.relocationFee;
         quoteData.pickupFee = freshQuote.pickupFee;
         quoteData.dueToday = freshQuote.dueToday;
         quoteData.ongoingMonthly = freshQuote.ongoingMonthly;
         quoteData.dueWhenDone = freshQuote.dueWhenDone;
+        quoteData.whenDoneTotal = freshQuote.dueWhenDone;
         quoteData.zone = freshQuote.zone;
     }
 
