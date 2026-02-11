@@ -1,6 +1,7 @@
 export interface Env {
   DB: D1Database;
   JWT_SECRET: string;
+  BACKUPS: R2Bucket;
 }
 
 export interface User {
