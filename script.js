@@ -391,7 +391,7 @@ function displayQuoteSummary() {
         email: document.getElementById('email').value,
         phone: document.getElementById('phone').value,
         company: document.getElementById('company') ? document.getElementById('company').value : '',
-        howHeard: document.getElementById('howHeard').value,
+        howHeard: document.getElementById('howHeard') ? document.getElementById('howHeard').value : '',
         sms_consent: document.getElementById('smsConsent') ? document.getElementById('smsConsent').checked : false,
         sms_consent_timestamp: document.getElementById('smsConsent') && document.getElementById('smsConsent').checked ? new Date().toISOString() : null,
         ...quote
