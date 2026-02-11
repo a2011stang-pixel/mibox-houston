@@ -1,5 +1,88 @@
 # Project Rules for Claude
 
+## AI Digital Engineer Workflow
+
+Follow this 9-step workflow for all feature development. Each step has a corresponding hook or gate that enforces completion before proceeding.
+
+### Step 1: Design
+- Create a design canvas (architecture, data flow, API contracts)
+- **Hook**: `check-design-canvas.sh` (PreToolUse) blocks code changes without a design
+
+### Step 2: Test Plan
+- Document test cases before writing implementation code
+- **Hook**: `check-test-plan.sh` (PreToolUse on Write|Edit) blocks code changes without a test plan
+
+### Step 3: Implement
+- Write code following TDD — tests first, then implementation
+- Follow OWASP security practices (see below)
+
+### Step 4: Unit Tests
+- Run `npm test` and verify all tests pass with zero failures
+- Run `npm run test:coverage` to verify coverage requirements
+- **Hook**: `check-unit-tests.sh` (PreToolUse on Bash) blocks commits with failing tests
+
+### Step 5: PR Creation
+- Code-simplify review before committing (`check-code-simplifier.sh`)
+- PR review check before pushing (`check-pr-review.sh`)
+- Create PR via feature branch → main
+
+### Step 6: CI Verification
+- GitHub Actions runs tests + Snyk security scan on push
+- **Hook**: `verify-completion.sh` (Stop) blocks task completion until CI passes
+- Also runs local typecheck (`tsc --noEmit`) and ESLint before checking CI
+
+### Step 7: Preview Deploy
+- Cloudflare Pages deploys a preview for the PR branch
+- Verify the preview URL loads correctly
+
+### Step 8: E2E Check
+- Run E2E tests on the preview environment
+- Mark complete: `.claude/hooks/state-manager.sh mark e2e-tests`
+- **Hook**: `verify-completion.sh` (Stop) blocks task completion without E2E verification
+
+### Step 9: Merge
+- Ensure all review comments are resolved
+- **Hook**: `verify-completion.sh` (Stop) blocks completion with unresolved review threads
+- Merge PR and verify production deploy
+
+## State Management
+
+State is tracked in `.claude/state/` via `state-manager.sh`:
+
+```bash
+.claude/hooks/state-manager.sh mark <action>     # Mark step completed
+.claude/hooks/state-manager.sh check <action>    # Check if step completed
+.claude/hooks/state-manager.sh clear-all         # Reset for new task
+.claude/hooks/state-manager.sh list              # Show current states
+```
+
+Actions: `design-canvas`, `test-plan`, `code-simplifier`, `pr-review`, `unit-tests`, `e2e-tests`
+
+State files expire after 30 minutes and are tied to the current git HEAD.
+
+## Resume Capability
+
+If resuming work from a previous session, check `.claude/state/` for completed steps and continue from where you left off.
+
+## Hooks Reference
+
+All hooks live in `.claude/hooks/` and are configured in `.claude/settings.json`. Paths use `$CLAUDE_PROJECT_DIR` for portability.
+
+| Hook | Event | Purpose |
+|------|-------|---------|
+| `check-test-plan.sh` | PreToolUse (Write\|Edit) | Blocks code changes without a test plan |
+| `check-unit-tests.sh` | PreToolUse (Bash) | Blocks commits with failing tests |
+| `check-design-canvas.sh` | PreToolUse | Blocks code without design canvas |
+| `check-code-simplifier.sh` | PreToolUse | Ensures code simplification before commit |
+| `check-pr-review.sh` | PreToolUse | Ensures PR review before push |
+| `verify-completion.sh` | Stop | Blocks completion until CI + E2E + reviews pass; runs typecheck and lint |
+| `post-file-edit-reminder.sh` | PostToolUse | Reminds to run tests after edits |
+| `post-git-action-clear.sh` | PostToolUse | Clears state after git operations |
+| `post-git-push.sh` | PostToolUse | Post-push notifications |
+| `warn-skip-verification.sh` | PreToolUse | Warns if trying to skip verification |
+| `state-manager.sh` | Utility | Tracks workflow step completion |
+| `lib.sh` | Utility | Shared functions for hook scripts |
+
 ## Before Committing
 
 1. **Always run `npm test`** before committing any changes
@@ -54,6 +137,7 @@ npm run test:coverage # Run tests with coverage report
 
 ## Project Structure
 
+### Frontend (Static Site)
 - `script.js` - Browser-facing code with DOM interactions
 - `lib.js` - Testable business logic (pricing, validation, webhook payloads)
 - `tests/` - Vitest test files
@@ -63,20 +147,39 @@ npm run test:coverage # Run tests with coverage report
   - `formatting.test.js` - Currency and date formatting
   - `security.test.js` - XSS, SQL injection, tampering prevention
 
-## Development Workflow (AI Digital Engineer)
-Follow this structured workflow for all feature development:
-1. Test Plan - Document test cases before implementation
-2. Implementation - Write code following TDD
-3. Unit Tests - Verify all tests pass (npm test)
-4. Commit - Only after tests pass
-5. Push - Triggers CI (GitHub Actions runs tests + Snyk security scan)
-6. Verify CI - Do not consider task complete until CI passes
+### Backend (Cloudflare Worker)
+- `worker/src/index.ts` - Hono app entry point with scheduled handler
+- `worker/src/types.ts` - TypeScript interfaces (Env, User, Zone, Pricing, etc.)
+- `worker/src/middleware/auth.ts` - JWT + session auth middleware
+- `worker/src/routes/` - API route handlers
+  - `auth.ts` - Login, TOTP MFA, logout
+  - `zones.ts` - Zone CRUD (protected)
+  - `zips.ts` - ZIP code management (protected)
+  - `pricing.ts` - Pricing CRUD (protected)
+  - `audit.ts` - Audit log queries (protected)
+  - `admin.ts` - Backup management and restore (protected)
+  - `public.ts` - Public quote/lookup endpoints
+- `worker/src/services/` - Business logic
+  - `auth.ts` - Authentication and session service
+  - `audit.ts` - Immutable audit logging
+  - `backup.ts` - D1-to-R2 backup, restore, and cleanup
+  - `totp.ts` - TOTP/MFA service
+- `worker/src/utils/crypto.ts` - JWT and crypto utilities
+- `worker/wrangler.toml` - Cloudflare Worker config (D1, R2, cron)
+- `worker/schema.sql` - D1 database schema
 
-## Hooks Enforcement
-- PreToolUse hooks block code changes without test plans
-- PreToolUse hooks block commits with failing tests
-- Stop hooks block task completion without CI passing
-- State is tracked in .claude/state/ for resume capability
+### D1-to-R2 Backup System
+- **Cron**: `0 8 * * *` (2AM Central / 8AM UTC) runs nightly
+- **Tables backed up**: zones, zip_codes, pricing, users (excluding password_hash/totp_secret), audit_log
+- **R2 layout**: `backups/YYYY-MM-DD/tablename.json` + `manifest.json`
+- **Retention**: 14 days, auto-cleanup after each backup
+- **Restore**: POST `/api/admin/restore` — only zones, zip_codes, pricing (atomic via D1 batch)
+- **Manual trigger**: POST `/api/admin/backups/trigger` (auth required)
+- **List backups**: GET `/api/admin/backups`
 
-## Resume Capability
-If resuming work from a previous session, check .claude/state/ for completed steps and continue from where you left off.
+### Deploy Commands
+
+```bash
+cd worker && npx wrangler deploy -c wrangler.toml   # Deploy worker (requires -c flag for wrangler 4.x)
+cd worker && npx tsc --noEmit                         # Typecheck worker
+```
