@@ -1,5 +1,6 @@
 #!/bin/bash
 # Stop hook - BLOCKS task completion until:
+# 0. Typecheck and lint pass locally
 # 1. CI passes
 # 2. E2E tests are run
 # 3. All PR review comments are resolved
@@ -28,24 +29,6 @@ if ! command -v jq &> /dev/null; then
   exit 0
 fi
 
-# Check if gh CLI is available
-if ! command -v gh &> /dev/null; then
-  cat <<EOF
-{
-  "systemMessage": "## ⚠️ Warning - GitHub CLI Not Available\\n\\nThe \`gh\` CLI is not installed. Cannot verify CI status automatically.\\n\\nPlease verify manually:\\n1. Check GitHub Actions status in browser\\n2. Ensure all CI checks pass\\n3. Run E2E tests on preview environment\\n\\n**Task completion allowed - but verify manually.**"
-}
-EOF
-  exit 0
-fi
-
-# Get PR number for current branch
-pr_number=$(gh pr view --json number -q '.number' 2>/dev/null || echo "")
-
-# Get CI status for current branch
-ci_status=$(gh run list --branch "$current_branch" --limit 1 --json status,conclusion 2>/dev/null || echo "[]")
-status=$(echo "$ci_status" | jq -r '.[0].status // "unknown"')
-conclusion=$(echo "$ci_status" | jq -r '.[0].conclusion // "unknown"')
-
 # Helper function to output BLOCKING hook response
 # Exit code 2 blocks the action
 output_block_response() {
@@ -67,6 +50,54 @@ output_warn_response() {
 }
 EOF
 }
+
+# --- Local quality checks: typecheck and lint ---
+PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || echo ".")"
+local_errors=""
+
+# Typecheck: run tsc in worker/ if tsconfig exists
+if [[ -f "$PROJECT_ROOT/worker/tsconfig.json" ]]; then
+  tsc_output=$(cd "$PROJECT_ROOT/worker" && npx tsc --noEmit 2>&1) || {
+    local_errors="${local_errors}### TypeScript Errors\\n\`\`\`\\n${tsc_output}\\n\`\`\`\\n\\n"
+  }
+fi
+
+# Lint: run eslint if config exists
+if [[ -f "$PROJECT_ROOT/.eslintrc.json" || -f "$PROJECT_ROOT/.eslintrc.js" || -f "$PROJECT_ROOT/.eslintrc.cjs" || -f "$PROJECT_ROOT/eslint.config.js" || -f "$PROJECT_ROOT/eslint.config.mjs" ]]; then
+  lint_output=$(cd "$PROJECT_ROOT" && npx eslint . 2>&1) || {
+    local_errors="${local_errors}### ESLint Errors\\n\`\`\`\\n${lint_output}\\n\`\`\`\\n\\n"
+  }
+fi
+
+# Lint: also check worker/ if it has its own eslint config
+if [[ -f "$PROJECT_ROOT/worker/.eslintrc.json" || -f "$PROJECT_ROOT/worker/.eslintrc.js" || -f "$PROJECT_ROOT/worker/.eslintrc.cjs" || -f "$PROJECT_ROOT/worker/eslint.config.js" || -f "$PROJECT_ROOT/worker/eslint.config.mjs" ]]; then
+  worker_lint_output=$(cd "$PROJECT_ROOT/worker" && npx eslint . 2>&1) || {
+    local_errors="${local_errors}### Worker ESLint Errors\\n\`\`\`\\n${worker_lint_output}\\n\`\`\`\\n\\n"
+  }
+fi
+
+# Block if any local quality checks failed
+if [[ -n "$local_errors" ]]; then
+  output_block_response "## ⛔ BLOCKED - Local Quality Checks Failed\\n\\nFix the following issues before completing the task:\\n\\n${local_errors}### Required Steps:\\n1. Fix all reported errors\\n2. Run \`npx tsc --noEmit\` in worker/ to verify typecheck\\n3. Run \`npx eslint .\` to verify lint\\n4. Commit the fixes and retry\\n\\n**Cannot complete task with typecheck or lint errors.**"
+fi
+
+# Check if gh CLI is available
+if ! command -v gh &> /dev/null; then
+  cat <<EOF
+{
+  "systemMessage": "## ⚠️ Warning - GitHub CLI Not Available\\n\\nThe \`gh\` CLI is not installed. Cannot verify CI status automatically.\\n\\nPlease verify manually:\\n1. Check GitHub Actions status in browser\\n2. Ensure all CI checks pass\\n3. Run E2E tests on preview environment\\n\\n**Task completion allowed - but verify manually.**"
+}
+EOF
+  exit 0
+fi
+
+# Get PR number for current branch
+pr_number=$(gh pr view --json number -q '.number' 2>/dev/null || echo "")
+
+# Get CI status for current branch
+ci_status=$(gh run list --branch "$current_branch" --limit 1 --json status,conclusion 2>/dev/null || echo "[]")
+status=$(echo "$ci_status" | jq -r '.[0].status // "unknown"')
+conclusion=$(echo "$ci_status" | jq -r '.[0].conclusion // "unknown"')
 
 # Function to check unresolved review threads
 check_unresolved_reviews() {
