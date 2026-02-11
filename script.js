@@ -395,7 +395,6 @@ function displayQuoteSummary() {
         sms_consent: document.getElementById('smsConsent') ? document.getElementById('smsConsent').checked : false,
         sms_consent_timestamp: document.getElementById('smsConsent') && document.getElementById('smsConsent').checked ? new Date().toISOString() : null,
         ...quote,
-        taxToday: 0,
         whenDoneTotal: quote.dueWhenDone
     };
 
@@ -607,7 +606,6 @@ function buildQuoteData(formType) {
         deliveryFee: formatDollar(quoteData.deliveryFee),
         firstMonthRent: formatDollar(quoteData.firstMonthRent),
         monthlyRent: formatDollar(quoteData.monthlyRent),
-        taxToday: formatDollar(quoteData.taxToday || 0),
         dueToday: formatDollar(quoteData.dueToday),
         ongoingMonthly: formatDollar(quoteData.ongoingMonthly),
         whenDoneTotal: formatDollar(quoteData.whenDoneTotal || quoteData.dueWhenDone),
@@ -720,7 +718,6 @@ function handleBookingSubmit(e) {
         quoteData.relocationFee = freshQuote.relocationFee;
         quoteData.pickupFee = freshQuote.pickupFee;
         quoteData.dueToday = freshQuote.dueToday;
-        quoteData.taxToday = 0;
         quoteData.ongoingMonthly = freshQuote.ongoingMonthly;
         quoteData.dueWhenDone = freshQuote.dueWhenDone;
         quoteData.whenDoneTotal = freshQuote.dueWhenDone;
