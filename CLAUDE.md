@@ -140,12 +140,14 @@ npm run test:coverage # Run tests with coverage report
 ### Frontend (Static Site)
 - `script.js` - Browser-facing code with DOM interactions
 - `lib.js` - Testable business logic (pricing, validation, webhook payloads)
+- `src/email/quote-confirmation.js` - Resend email module (Phase 1a standalone)
 - `tests/` - Vitest test files
   - `pricing.test.js` - Quote calculation and zone detection
   - `validation.test.js` - Form field validation
   - `webhook.test.js` - Webhook payload construction
   - `formatting.test.js` - Currency and date formatting
   - `security.test.js` - XSS, SQL injection, tampering prevention
+  - `quote-email.test.js` - Quote confirmation email tests
 
 ### Backend (Cloudflare Worker)
 - `worker/src/index.ts` - Hono app entry point with scheduled handler
@@ -158,12 +160,15 @@ npm run test:coverage # Run tests with coverage report
   - `pricing.ts` - Pricing CRUD (protected)
   - `audit.ts` - Audit log queries (protected)
   - `admin.ts` - Backup management and restore (protected)
-  - `public.ts` - Public quote/lookup endpoints
+  - `public.ts` - Public pricing/zone lookup endpoints
+  - `quote.ts` - POST /api/public/quote (Resend email + Stella CRM)
+  - `booking.ts` - POST /api/public/booking (Resend email + Stella CRM)
 - `worker/src/services/` - Business logic
   - `auth.ts` - Authentication and session service
   - `audit.ts` - Immutable audit logging
   - `backup.ts` - D1-to-R2 backup, restore, and cleanup
   - `totp.ts` - TOTP/MFA service
+  - `email.ts` - Resend email service (quote + booking templates, Stella forwarding)
 - `worker/src/utils/crypto.ts` - JWT and crypto utilities
 - `worker/wrangler.toml` - Cloudflare Worker config (D1, R2, cron)
 - `worker/schema.sql` - D1 database schema
@@ -183,3 +188,33 @@ npm run test:coverage # Run tests with coverage report
 cd worker && npx wrangler deploy -c wrangler.toml   # Deploy worker (requires -c flag for wrangler 4.x)
 cd worker && npx tsc --noEmit                         # Typecheck worker
 ```
+
+## Email Template Standards
+
+All email templates (quote confirmations, booking confirmations, future transactional emails) MUST follow these rules:
+
+### Brand Colors
+- **Header background**: `#333333` (dark)
+- **Header text / accent**: `#FFDD00` (yellow)
+- **Section heading borders**: `2px solid #FFDD00`
+- **Section heading text**: `#333333`
+- **CTA button background**: `#FFDD00`
+- **CTA button text**: `#333333`
+- **Body text**: `#555555` (labels), `#333333` (values)
+- **Section backgrounds**: `#f8f9fa`
+- **NEVER use blue (#0056A6, #007ABD, or similar)**
+
+### Phone Number
+- Always use `(713) 929-6051` with `tel:7139296051`
+- NEVER use (713) 405-8800
+
+### Content Rules
+- No emojis in any email template
+- No markdown in HTML emails
+- All user-provided values MUST be HTML-escaped via `escapeHtml()`
+- From address: `MI-BOX Houston <sales@miboxhouston.com>`
+
+### Template Files
+- `src/email/quote-confirmation.js` — Phase 1a standalone module (snake_case fields)
+- `worker/src/services/email.ts` — Worker email service (camelCase fields)
+- Both files must stay in sync on branding, colors, and phone number

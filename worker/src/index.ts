@@ -6,6 +6,8 @@ import { zipsRoutes } from './routes/zips';
 import { pricingRoutes } from './routes/pricing';
 import { auditRoutes } from './routes/audit';
 import { publicRoutes } from './routes/public';
+import { quoteRoutes } from './routes/quote';
+import { bookingRoutes } from './routes/booking';
 import { adminRoutes } from './routes/admin';
 import { authMiddleware } from './middleware/auth';
 import { runBackup } from './services/backup';
@@ -15,18 +17,27 @@ export interface Env {
   JWT_SECRET: string;
   JWT_EXPIRES_IN: string;
   BACKUPS: R2Bucket;
+  RESEND_API_KEY: string;
 }
 
 const app = new Hono<{ Bindings: Env }>();
 
-// CORS for admin UI
+// CORS
 app.use('/api/*', cors({
-  origin: ['https://miboxhouston.com', 'https://houston.miboxhouston.com', 'http://localhost:8787'],
+  origin: [
+    'https://miboxhouston.com',
+    'https://www.miboxhouston.com',
+    'https://houston.miboxhouston.com',
+    'https://mibox-houston.pages.dev',
+    'http://localhost:8787',
+  ],
   credentials: true,
 }));
 
 // Public routes (no auth required)
 app.route('/api/public', publicRoutes);
+app.route('/api/public/quote', quoteRoutes);
+app.route('/api/public/booking', bookingRoutes);
 app.route('/api/auth', authRoutes);
 
 // Protected routes (auth required)

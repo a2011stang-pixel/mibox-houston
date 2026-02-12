@@ -2,6 +2,7 @@ export interface Env {
   DB: D1Database;
   JWT_SECRET: string;
   BACKUPS: R2Bucket;
+  RESEND_API_KEY: string;
 }
 
 export interface User {

@@ -53,9 +53,9 @@ export function buildQuoteConfirmationEmail(quoteData) {
 
 <!-- Header -->
 <tr>
-<td style="background-color:#0056A6;padding:24px;text-align:center;">
-<h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:bold;">MI-BOX Houston</h1>
-<p style="margin:4px 0 0;color:#cce0f5;font-size:14px;">Portable Storage & Moving</p>
+<td style="background-color:#333333;padding:24px;text-align:center;">
+<h1 style="margin:0;color:#FFDD00;font-size:24px;font-weight:bold;">MI-BOX Houston</h1>
+<p style="margin:4px 0 0;color:#cccccc;font-size:14px;">Portable Storage &amp; Moving</p>
 </td>
 </tr>
 
@@ -75,7 +75,7 @@ Thank you for requesting a quote! Here's a summary of your MI-BOX portable stora
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8f9fa;border-radius:6px;border:1px solid #e9ecef;">
 <tr>
 <td style="padding:20px;">
-<h3 style="margin:0 0 16px;color:#0056A6;font-size:16px;border-bottom:2px solid #0056A6;padding-bottom:8px;">Quote Details</h3>
+<h3 style="margin:0 0 16px;color:#333333;font-size:16px;border-bottom:2px solid #FFDD00;padding-bottom:8px;">Quote Details</h3>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
 <tr>
 <td style="padding:6px 0;color:#555555;font-size:14px;">Service Type</td>
@@ -106,7 +106,7 @@ ${deliveryDate ? `<tr>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8f9fa;border-radius:6px;border:1px solid #e9ecef;">
 <tr>
 <td style="padding:20px;">
-<h3 style="margin:0 0 16px;color:#0056A6;font-size:16px;border-bottom:2px solid #0056A6;padding-bottom:8px;">Pricing Breakdown</h3>
+<h3 style="margin:0 0 16px;color:#333333;font-size:16px;border-bottom:2px solid #FFDD00;padding-bottom:8px;">Pricing Breakdown</h3>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
 <tr>
 <td style="padding:6px 0;color:#555555;font-size:14px;">Delivery Fee</td>
@@ -121,11 +121,11 @@ ${deliveryDate ? `<tr>
 <td style="padding:6px 0;color:#333333;font-size:14px;text-align:right;font-weight:bold;">${ongoingMonthly}</td>
 </tr>
 <tr>
-<td colspan="2" style="padding:12px 0 0;border-top:2px solid #0056A6;"></td>
+<td colspan="2" style="padding:12px 0 0;border-top:2px solid #FFDD00;"></td>
 </tr>
 <tr>
-<td style="padding:6px 0;color:#0056A6;font-size:16px;font-weight:bold;">Due Today</td>
-<td style="padding:6px 0;color:#0056A6;font-size:16px;text-align:right;font-weight:bold;">${dueToday}</td>
+<td style="padding:6px 0;color:#333333;font-size:16px;font-weight:bold;">Due Today</td>
+<td style="padding:6px 0;color:#333333;font-size:16px;text-align:right;font-weight:bold;">${dueToday}</td>
 </tr>
 </table>
 </td>
@@ -140,7 +140,7 @@ ${deliveryDate ? `<tr>
 <p style="margin:0 0 16px;color:#555555;font-size:14px;">
 Ready to book? Call us or reply to this email to schedule your delivery.
 </p>
-<a href="tel:7134058800" style="display:inline-block;background-color:#0056A6;color:#ffffff;text-decoration:none;padding:12px 32px;border-radius:4px;font-size:16px;font-weight:bold;">(713) 405-8800</a>
+<a href="tel:7139296051" style="display:inline-block;background-color:#FFDD00;color:#333333;text-decoration:none;padding:12px 32px;border-radius:4px;font-size:16px;font-weight:bold;">(713) 929-6051</a>
 </td>
 </tr>
 
