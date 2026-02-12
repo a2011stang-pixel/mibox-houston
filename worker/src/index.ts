@@ -8,6 +8,7 @@ import { auditRoutes } from './routes/audit';
 import { publicRoutes } from './routes/public';
 import { quoteRoutes } from './routes/quote';
 import { bookingRoutes } from './routes/booking';
+import { getQuoteRoutes } from './routes/get-quote';
 import { adminRoutes } from './routes/admin';
 import { authMiddleware } from './middleware/auth';
 import { runBackup } from './services/backup';
@@ -37,6 +38,7 @@ app.use('/api/*', cors({
 // Public routes (no auth required)
 app.route('/api/public', publicRoutes);
 app.route('/api/public/quote', quoteRoutes);
+app.route('/api/public/quote', getQuoteRoutes);
 app.route('/api/public/booking', bookingRoutes);
 app.route('/api/auth', authRoutes);
 

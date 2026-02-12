@@ -134,7 +134,7 @@ Questions? Call us or reply to this email.
 </html>`;
 }
 
-export function buildQuoteConfirmationHtml(data: QuoteEmailData): string {
+export function buildQuoteConfirmationHtml(data: QuoteEmailData, quoteId?: string): string {
   const firstName = escapeHtml(data.firstName);
   const serviceDisplay = escapeHtml(data.serviceDisplay);
   const boxSize = escapeHtml(data.boxSize);
@@ -145,6 +145,13 @@ export function buildQuoteConfirmationHtml(data: QuoteEmailData): string {
   const monthlyRent = escapeHtml(data.monthlyRent);
   const dueToday = escapeHtml(data.dueToday);
   const ongoingMonthly = escapeHtml(data.ongoingMonthly);
+  const safeQuoteId = escapeHtml(quoteId);
+
+  const quoteIdBanner = quoteId ? `<tr>
+<td style="padding:16px 32px 0;text-align:center;">
+<span style="display:inline-block;background-color:#f8f9fa;border:1px solid #e9ecef;border-radius:6px;padding:8px 16px;font-size:14px;color:${BRAND_DARK};font-weight:bold;">Quote #${safeQuoteId}</span>
+</td>
+</tr>` : '';
 
   const greeting = `<tr>
 <td style="padding:32px 32px 16px;">
@@ -181,10 +188,17 @@ Thank you for requesting a quote! Here&#39;s a summary of your MI-BOX portable s
     + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${pricingRows}</table>`
   );
 
-  return emailShell('Your MI-BOX Houston Quote', greeting + detailsSection + pricingSection);
+  const bookNowSection = quoteId ? `<tr>
+<td style="padding:24px 32px;text-align:center;">
+<p style="margin:0 0 16px;color:${BRAND_DARK};font-size:15px;font-weight:bold;">Ready to book? Complete your delivery details:</p>
+<a href="https://houston.miboxhouston.com/?quoteId=${encodeURIComponent(quoteId)}" style="display:inline-block;background-color:${BRAND_YELLOW};color:${BRAND_DARK};text-decoration:none;padding:14px 36px;border-radius:6px;font-size:16px;font-weight:bold;">Book Now</a>
+</td>
+</tr>` : '';
+
+  return emailShell('Your MI-BOX Houston Quote', quoteIdBanner + greeting + detailsSection + pricingSection + bookNowSection);
 }
 
-export function buildBookingConfirmationHtml(data: BookingEmailData): string {
+export function buildBookingConfirmationHtml(data: BookingEmailData, quoteId?: string): string {
   const firstName = escapeHtml(data.firstName);
   const serviceDisplay = escapeHtml(data.serviceDisplay);
   const boxSize = escapeHtml(data.boxSize);
@@ -202,6 +216,13 @@ export function buildBookingConfirmationHtml(data: BookingEmailData): string {
   const doorFacing = escapeHtml(data.doorFacing);
   const gateCode = escapeHtml(data.gateCode);
   const notes = escapeHtml(data.notes);
+  const safeQuoteId = escapeHtml(quoteId);
+
+  const quoteIdBanner = quoteId ? `<tr>
+<td style="padding:16px 32px 0;text-align:center;">
+<span style="display:inline-block;background-color:#f8f9fa;border:1px solid #e9ecef;border-radius:6px;padding:8px 16px;font-size:14px;color:${BRAND_DARK};font-weight:bold;">Booking Confirmed - Quote #${safeQuoteId}</span>
+</td>
+</tr>` : '';
 
   const greeting = `<tr>
 <td style="padding:32px 32px 16px;">
@@ -258,7 +279,7 @@ Thank you for booking with MI-BOX Houston! Here are your booking details.
     + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${pricingRows}</table>`
   );
 
-  return emailShell('Your MI-BOX Houston Booking Confirmation', greeting + detailsSection + deliverySection + pricingSection);
+  return emailShell('Your MI-BOX Houston Booking Confirmation', quoteIdBanner + greeting + detailsSection + deliverySection + pricingSection);
 }
 
 async function sendEmail(
@@ -297,7 +318,7 @@ async function sendEmail(
   }
 }
 
-export async function sendQuoteConfirmation(data: QuoteEmailData, apiKey: string): Promise<EmailResult> {
+export async function sendQuoteConfirmation(data: QuoteEmailData, apiKey: string, quoteId?: string): Promise<EmailResult> {
   if (!apiKey) {
     return { success: false, error: 'API key is required' };
   }
@@ -309,11 +330,12 @@ export async function sendQuoteConfirmation(data: QuoteEmailData, apiKey: string
     return { success: false, error: 'Invalid email address' };
   }
 
-  const html = buildQuoteConfirmationHtml(data);
-  return sendEmail(data.email, 'Your MI-BOX Houston Quote', html, apiKey);
+  const html = buildQuoteConfirmationHtml(data, quoteId);
+  const subject = quoteId ? `Your MI-BOX Houston Quote #${quoteId}` : 'Your MI-BOX Houston Quote';
+  return sendEmail(data.email, subject, html, apiKey);
 }
 
-export async function sendBookingConfirmation(data: BookingEmailData, apiKey: string): Promise<EmailResult> {
+export async function sendBookingConfirmation(data: BookingEmailData, apiKey: string, quoteId?: string): Promise<EmailResult> {
   if (!apiKey) {
     return { success: false, error: 'API key is required' };
   }
@@ -325,8 +347,9 @@ export async function sendBookingConfirmation(data: BookingEmailData, apiKey: st
     return { success: false, error: 'Invalid email address' };
   }
 
-  const html = buildBookingConfirmationHtml(data);
-  return sendEmail(data.email, 'Your MI-BOX Houston Booking Confirmation', html, apiKey);
+  const html = buildBookingConfirmationHtml(data, quoteId);
+  const subject = quoteId ? `Your MI-BOX Houston Booking Confirmation #${quoteId}` : 'Your MI-BOX Houston Booking Confirmation';
+  return sendEmail(data.email, subject, html, apiKey);
 }
 
 export async function forwardToStella(payload: Record<string, unknown>): Promise<boolean> {
