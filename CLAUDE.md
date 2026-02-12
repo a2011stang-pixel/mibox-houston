@@ -161,17 +161,20 @@ npm run test:coverage # Run tests with coverage report
   - `audit.ts` - Audit log queries (protected)
   - `admin.ts` - Backup management and restore (protected)
   - `public.ts` - Public pricing/zone lookup endpoints
-  - `quote.ts` - POST /api/public/quote (Resend email + Stella CRM)
-  - `booking.ts` - POST /api/public/booking (Resend email + Stella CRM)
+  - `quote.ts` - POST /api/public/quote (D1 insert + Resend email + Stella CRM)
+  - `booking.ts` - POST /api/public/booking (D1 update/insert + Resend email + Stella CRM)
+  - `get-quote.ts` - GET /api/public/quote/:quoteId (fetch quote for pre-fill)
 - `worker/src/services/` - Business logic
   - `auth.ts` - Authentication and session service
   - `audit.ts` - Immutable audit logging
   - `backup.ts` - D1-to-R2 backup, restore, and cleanup
   - `totp.ts` - TOTP/MFA service
   - `email.ts` - Resend email service (quote + booking templates, Stella forwarding)
+  - `database.ts` - Quote ID generation, D1 CRUD for quotes table
 - `worker/src/utils/crypto.ts` - JWT and crypto utilities
 - `worker/wrangler.toml` - Cloudflare Worker config (D1, R2, cron)
-- `worker/schema.sql` - D1 database schema
+- `worker/schema.sql` - D1 database schema (admin tables)
+- `worker/migrations/001_create_quotes.sql` - Quotes table migration
 
 ### D1-to-R2 Backup System
 - **Cron**: `0 8 * * *` (2AM Central / 8AM UTC) runs nightly
@@ -181,6 +184,17 @@ npm run test:coverage # Run tests with coverage report
 - **Restore**: POST `/api/admin/restore` — only zones, zip_codes, pricing (atomic via D1 batch)
 - **Manual trigger**: POST `/api/admin/backups/trigger` (auth required)
 - **List backups**: GET `/api/admin/backups`
+
+### Quote System (Phase 1B)
+- **Table**: `quotes` in mibox-houston D1 database
+- **Quote ID format**: `Q-XXXXX` (charset: `2346789ABCDEFGHJKMNPQRTUVWXYZ`, no ambiguous chars)
+- **Status flow**: `quoted` → `booked` (or `expired` / `cancelled`)
+- **POST /api/public/quote**: Generates quote ID, inserts into D1, sends email, forwards to Stella
+- **POST /api/public/booking**: Updates existing quote to booked (or creates new), sends email
+- **GET /api/public/quote/:quoteId**: Returns quote data for frontend pre-fill (only status=quoted)
+- **Book Now link**: `https://houston.miboxhouston.com/?quoteId=Q-XXXXX`
+- **Frontend pre-fill**: Detects `?quoteId=` param, fetches quote data, skips to Step 4
+- **Migration**: `worker/migrations/001_create_quotes.sql`
 
 ### Deploy Commands
 

@@ -634,12 +634,24 @@ function sendQuoteWebhook() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
-    }).catch(err => console.log('Quote webhook error:', err));
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(result) {
+        if (result.quoteId) {
+            quoteData.quoteId = result.quoteId;
+        }
+    })
+    .catch(err => console.log('Quote webhook error:', err));
 }
 
 // Send booking via Worker (fires when booking is submitted)
 function sendBookingWebhook() {
     const data = buildQuoteData('booking');
+
+    // Include quoteId if we have one from a previous quote or URL pre-fill
+    if (quoteData.quoteId) {
+        data.quoteId = quoteData.quoteId;
+    }
 
     fetch(WORKER_API_URL + '/api/public/booking', {
         method: 'POST',
@@ -739,8 +751,119 @@ function handleBookingSubmit(e) {
 // Make function available globally for onclick
 window.handleBookingSubmit = handleBookingSubmit;
 
+// Pre-fill form from quote ID URL parameter
+function prefillFromQuoteId() {
+    var params = new URLSearchParams(window.location.search);
+    var quoteId = params.get('quoteId');
+    if (!quoteId) return;
+
+    // Validate format
+    if (!/^Q-[2346789ABCDEFGHJKMNPQRTUVWXYZ]{5}$/.test(quoteId)) return;
+
+    fetch(WORKER_API_URL + '/api/public/quote/' + encodeURIComponent(quoteId))
+        .then(function(res) {
+            if (!res.ok) throw new Error('Quote not found');
+            return res.json();
+        })
+        .then(function(data) {
+            // Store quoteId for booking submission
+            quoteData.quoteId = data.quoteId;
+
+            // Pre-fill Step 1 fields
+            if (data.boxSize) {
+                var size = data.boxSize === '8x16' ? '16' : data.boxSize === '8x20' ? '20' : '';
+                var containerEl = document.getElementById('containerSize');
+                if (containerEl && size) containerEl.value = size;
+            }
+            if (data.deliveryZip) {
+                var zipEl = document.getElementById('deliveryZip');
+                if (zipEl) zipEl.value = data.deliveryZip;
+            }
+            if (data.destinationZip) {
+                var destEl = document.getElementById('destinationZip');
+                if (destEl) destEl.value = data.destinationZip;
+            }
+            if (data.storageDuration) {
+                var durEl = document.getElementById('storageDuration');
+                if (durEl) durEl.value = data.storageDuration;
+            }
+            if (data.deliveryDate) {
+                var dateEl = document.getElementById('deliveryDate');
+                if (dateEl) dateEl.value = data.deliveryDate;
+            }
+
+            // Pre-fill Step 2 fields
+            if (data.firstName) {
+                var fnEl = document.getElementById('firstName');
+                if (fnEl) fnEl.value = data.firstName;
+            }
+            if (data.lastName) {
+                var lnEl = document.getElementById('lastName');
+                if (lnEl) lnEl.value = data.lastName;
+            }
+            if (data.email) {
+                var emEl = document.getElementById('email');
+                if (emEl) emEl.value = data.email;
+            }
+            if (data.phone) {
+                var phEl = document.getElementById('phone');
+                if (phEl) phEl.value = data.phone;
+            }
+            if (data.company) {
+                var coEl = document.getElementById('company');
+                if (coEl) coEl.value = data.company;
+            }
+
+            // Store pricing data for Step 3
+            quoteData.serviceType = data.serviceDisplay || '';
+            quoteData.deliveryZip = data.deliveryZip || '';
+            quoteData.destinationZip = data.destinationZip || '';
+            quoteData.deliveryDate = data.deliveryDate || '';
+            quoteData.storageDuration = data.storageDuration || '';
+            quoteData.firstName = data.firstName || '';
+            quoteData.lastName = data.lastName || '';
+            quoteData.email = data.email || '';
+            quoteData.phone = data.phone || '';
+            quoteData.company = data.company || '';
+            quoteData.howHeard = data.howHeard || '';
+            quoteData.deliveryFee = data.deliveryFee ? parseFloat(data.deliveryFee.replace('$', '')) : 0;
+            quoteData.firstMonthRent = data.firstMonthRent ? parseFloat(data.firstMonthRent.replace('$', '')) : 0;
+            quoteData.monthlyRent = data.monthlyRent ? parseFloat(data.monthlyRent.replace('$', '')) : 0;
+            quoteData.dueToday = data.dueToday ? parseFloat(data.dueToday.replace('$', '')) : 0;
+            quoteData.ongoingMonthly = data.ongoingMonthly ? parseFloat(data.ongoingMonthly.replace('$', '')) : 0;
+
+            // Show welcome banner and skip to Step 4
+            var bannerHtml = '<div class="alert alert-success mb-3" style="background-color:#f8f9fa;border:2px solid #FFDD00;color:#333333;font-weight:bold;text-align:center;padding:16px;border-radius:6px;">'
+                + 'Welcome back! Your quote ' + quoteId + ' is ready. Complete your booking below.'
+                + '</div>';
+            var step4Panel = document.getElementById('step4');
+            if (step4Panel) {
+                step4Panel.insertAdjacentHTML('afterbegin', bannerHtml);
+            }
+
+            // Pre-fill delivery ZIP on Step 4
+            var zipConfirm = document.getElementById('deliveryZipConfirm');
+            if (zipConfirm && data.deliveryZip) zipConfirm.value = data.deliveryZip;
+
+            goToStep(4);
+        })
+        .catch(function() {
+            // Show error message for expired/invalid quote
+            var formCard = document.querySelector('.quote-card');
+            if (formCard) {
+                var errorHtml = '<div class="alert alert-warning mb-3" style="background-color:#fff3cd;border:1px solid #ffc107;color:#333333;text-align:center;padding:16px;border-radius:6px;">'
+                    + 'This quote has expired or is not valid. Please request a new quote below.'
+                    + '</div>';
+                formCard.insertAdjacentHTML('afterbegin', errorHtml);
+            }
+        });
+}
+
 // Initialize on DOM ready
 document.addEventListener('DOMContentLoaded', function() {
+    // Check for quote pre-fill URL parameter
+    prefillFromQuoteId();
+
     // Set minimum delivery date to tomorrow
     var deliveryDateInput = document.getElementById('deliveryDate');
 
