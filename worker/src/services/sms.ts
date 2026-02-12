@@ -47,6 +47,8 @@ async function sendSms(
   const auth = btoa(`${config.accountSid}:${config.authToken}`);
 
   try {
+    console.log(`[SMS] Sending to=${to} from=${config.fromNumber} accountSid=${config.accountSid?.slice(0, 6)}...`);
+
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -60,15 +62,21 @@ async function sendSms(
       }).toString(),
     });
 
+    const result = await response.json() as Record<string, unknown>;
+    console.log(`[SMS] Twilio response status=${response.status}`, JSON.stringify(result));
+
     if (!response.ok) {
-      const err = await response.json() as { message?: string };
-      return { success: false, error: err.message || `Twilio error (${response.status})` };
+      const errorMsg = (result.message as string) || `Twilio error (${response.status})`;
+      const errorCode = result.code as number | undefined;
+      console.error(`[SMS] FAILED to=${to} code=${errorCode} status=${result.status} error=${errorMsg}`);
+      return { success: false, error: `${errorMsg} (code: ${errorCode})` };
     }
 
-    const result = await response.json() as { sid: string };
-    return { success: true, sid: result.sid };
+    console.log(`[SMS] SUCCESS to=${to} sid=${result.sid} status=${result.status}`);
+    return { success: true, sid: result.sid as string };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Failed to send SMS';
+    console.error(`[SMS] EXCEPTION to=${to} error=${message}`);
     return { success: false, error: message };
   }
 }
@@ -98,11 +106,13 @@ export async function sendCustomerSms(
   config: TwilioConfig
 ): Promise<SmsResult> {
   if (!config.accountSid || !config.authToken || !config.fromNumber) {
+    console.error(`[SMS] Missing Twilio credentials: sid=${!!config.accountSid} token=${!!config.authToken} from=${!!config.fromNumber}`);
     return { success: false, error: 'Twilio credentials not configured' };
   }
 
   const to = normalizePhone(data.phone);
   if (!to) {
+    console.error(`[SMS] Invalid customer phone: "${data.phone}"`);
     return { success: false, error: 'Invalid customer phone number' };
   }
 
@@ -116,6 +126,7 @@ export async function sendTeamNotificationSms(
   config: TwilioConfig
 ): Promise<{ sent: number; failed: number }> {
   if (!config.accountSid || !config.authToken || !config.fromNumber) {
+    console.error(`[SMS] Team SMS skipped — missing Twilio credentials`);
     return { sent: 0, failed: TEAM_NUMBERS.length };
   }
 
