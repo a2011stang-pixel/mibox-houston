@@ -127,7 +127,7 @@ describe('Quote confirmation CTA', () => {
   it('includes Book Now button when quoteId provided', () => {
     const html = buildQuoteConfirmationHtml(sampleQuoteData, 'Q-ABC23');
     expect(html).toContain('Book Now');
-    expect(html).toContain('houston.miboxhouston.com/?quoteId=Q-ABC23');
+    expect(html).toContain('miboxhouston.com/?quoteId=Q-ABC23');
   });
 
   it('Book Now button uses brand yellow background', () => {

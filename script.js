@@ -859,8 +859,8 @@ function prefillFromQuoteId() {
             var formCard = document.querySelector('.quote-card');
             if (formCard) {
                 var msg = err && err.expired
-                    ? 'This quote has expired. Please <a href="https://houston.miboxhouston.com/" style="color:#333333;font-weight:bold;">request a new quote</a>.'
-                    : 'This quote is no longer available. Please <a href="https://houston.miboxhouston.com/" style="color:#333333;font-weight:bold;">request a new quote</a>.';
+                    ? 'This quote has expired. Please <a href="https://miboxhouston.com/" style="color:#333333;font-weight:bold;">request a new quote</a>.'
+                    : 'This quote is no longer available. Please <a href="https://miboxhouston.com/" style="color:#333333;font-weight:bold;">request a new quote</a>.';
                 var errorHtml = '<div class="alert alert-warning mb-3" style="background-color:#fff3cd;border:1px solid #ffc107;color:#333333;text-align:center;padding:16px;border-radius:6px;">'
                     + msg
                     + '</div>';
