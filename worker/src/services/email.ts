@@ -86,6 +86,38 @@ ${content}
 </tr>`;
 }
 
+function trustBar(): string {
+  return `<!-- Trust Bar -->
+<tr>
+<td style="padding:0 32px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #e9ecef;border-bottom:1px solid #e9ecef;">
+<tr>
+<td width="49%" style="padding:16px 0;text-align:center;vertical-align:top;">
+<p style="margin:0;color:${BRAND_DARK};font-size:13px;font-weight:bold;">Google Reviews</p>
+<p style="margin:4px 0 0;font-size:14px;"><span style="color:${BRAND_YELLOW};">&#9733;&#9733;&#9733;&#9733;&#9733;</span> <span style="color:${BRAND_DARK};font-weight:bold;">5.0</span></p>
+</td>
+<td width="2%" style="padding:16px 0;vertical-align:top;">
+<table role="presentation" width="1" cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr><td style="background-color:#e9ecef;width:1px;height:40px;font-size:0;line-height:0;">&nbsp;</td></tr></table>
+</td>
+<td width="49%" style="padding:16px 0;text-align:center;vertical-align:top;">
+<p style="margin:0;color:${BRAND_DARK};font-size:13px;font-weight:bold;">Locally Owned</p>
+<p style="margin:4px 0 0;color:#666666;font-size:13px;">Operated in Houston, TX</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>`;
+}
+
+function legalDisclaimer(): string {
+  return `<!-- Legal Disclaimer -->
+<tr>
+<td style="padding:16px 32px 8px;">
+<p style="margin:0;color:#888888;font-size:11px;line-height:1.5;">Pricing is based on the information provided at the time of this quote and is subject to change without notice. Sales tax is not included and will be applied at the time of booking. Final pricing may vary based on actual delivery location, container availability, and service requirements. This quote does not constitute a binding agreement or guarantee of service. MI-BOX Moving &amp; Mobile Storage of Houston reserves the right to adjust pricing based on updated information or market conditions.</p>
+</td>
+</tr>`;
+}
+
 function emailShell(subject: string, bodyContent: string): string {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -102,28 +134,22 @@ function emailShell(subject: string, bodyContent: string): string {
 <!-- Header -->
 <tr>
 <td style="background-color:${BRAND_DARK};padding:24px;text-align:center;">
-<h1 style="margin:0;color:${BRAND_YELLOW};font-size:24px;font-weight:bold;">MI-BOX Houston</h1>
-<p style="margin:4px 0 0;color:#cccccc;font-size:14px;">Portable Storage &amp; Moving</p>
+<h1 style="margin:0;color:${BRAND_YELLOW};font-size:24px;font-weight:bold;">MI-BOX Moving &amp; Mobile Storage</h1>
+<p style="margin:4px 0 0;color:#cccccc;font-size:14px;">of Houston</p>
 </td>
 </tr>
 
 ${bodyContent}
 
-<!-- CTA -->
-<tr>
-<td style="padding:24px 32px;text-align:center;">
-<p style="margin:0 0 16px;color:#666666;font-size:14px;">
-Questions? Call us or reply to this email.
-</p>
-<a href="tel:7139296051" style="display:inline-block;background-color:${BRAND_YELLOW};color:${BRAND_DARK};text-decoration:none;padding:12px 32px;border-radius:6px;font-size:16px;font-weight:bold;">(713) 929-6051</a>
-</td>
-</tr>
+${trustBar()}
+
+${legalDisclaimer()}
 
 <!-- Footer -->
 <tr>
 <td style="background-color:${BRAND_DARK};padding:20px 32px;text-align:center;">
-<p style="margin:0;color:#cccccc;font-size:12px;">MI-BOX Houston | Portable Storage &amp; Moving</p>
-<p style="margin:4px 0 0;color:#cccccc;font-size:12px;">This quote is valid for 30 days from the date of this email.</p>
+<p style="margin:0;color:#cccccc;font-size:12px;">MI-BOX Moving &amp; Mobile Storage of Houston</p>
+<p style="margin:4px 0 0;color:#cccccc;font-size:12px;">This quote is valid for 10 days from the date of this email.</p>
 </td>
 </tr>
 
@@ -188,14 +214,24 @@ Thank you for requesting a quote! Here&#39;s a summary of your MI-BOX portable s
     + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${pricingRows}</table>`
   );
 
-  const bookNowSection = quoteId ? `<tr>
+  const ctaSection = quoteId ? `<!-- CTA -->
+<tr>
 <td style="padding:24px 32px;text-align:center;">
 <p style="margin:0 0 16px;color:${BRAND_DARK};font-size:15px;font-weight:bold;">Ready to book? Complete your delivery details:</p>
 <a href="https://houston.miboxhouston.com/?quoteId=${encodeURIComponent(quoteId)}" style="display:inline-block;background-color:${BRAND_YELLOW};color:${BRAND_DARK};text-decoration:none;padding:14px 36px;border-radius:6px;font-size:16px;font-weight:bold;">Book Now</a>
+<p style="margin:12px 0 0;color:#666666;font-size:14px;">Or call <a href="tel:7139296051" style="color:${BRAND_DARK};font-weight:bold;text-decoration:none;">(713) 929-6051</a></p>
 </td>
-</tr>` : '';
+</tr>` : `<!-- CTA -->
+<tr>
+<td style="padding:24px 32px;text-align:center;">
+<p style="margin:0;color:#666666;font-size:14px;">
+Questions? Call us or reply to this email.
+</p>
+<p style="margin:8px 0 0;"><a href="tel:7139296051" style="color:${BRAND_DARK};font-weight:bold;text-decoration:none;font-size:16px;">(713) 929-6051</a></p>
+</td>
+</tr>`;
 
-  return emailShell('Your MI-BOX Houston Quote', quoteIdBanner + greeting + detailsSection + pricingSection + bookNowSection);
+  return emailShell('Your MI-BOX Houston Quote', quoteIdBanner + greeting + detailsSection + pricingSection + ctaSection);
 }
 
 export function buildBookingConfirmationHtml(data: BookingEmailData, quoteId?: string): string {
@@ -279,7 +315,23 @@ Thank you for booking with MI-BOX Houston! Here are your booking details.
     + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${pricingRows}</table>`
   );
 
-  return emailShell('Your MI-BOX Houston Booking Confirmation', quoteIdBanner + greeting + detailsSection + deliverySection + pricingSection);
+  // Booking CTA - no Book Now button, just reference info
+  const ctaSection = quoteId ? `<!-- CTA -->
+<tr>
+<td style="padding:24px 32px;text-align:center;">
+<p style="margin:0;color:#666666;font-size:14px;">Questions? Call <a href="tel:7139296051" style="color:${BRAND_DARK};font-weight:bold;text-decoration:none;">(713) 929-6051</a> and reference Quote #${safeQuoteId}</p>
+</td>
+</tr>` : `<!-- CTA -->
+<tr>
+<td style="padding:24px 32px;text-align:center;">
+<p style="margin:0;color:#666666;font-size:14px;">
+Questions? Call us or reply to this email.
+</p>
+<p style="margin:8px 0 0;"><a href="tel:7139296051" style="color:${BRAND_DARK};font-weight:bold;text-decoration:none;font-size:16px;">(713) 929-6051</a></p>
+</td>
+</tr>`;
+
+  return emailShell('Your MI-BOX Houston Booking Confirmation', quoteIdBanner + greeting + detailsSection + deliverySection + pricingSection + ctaSection);
 }
 
 async function sendEmail(
