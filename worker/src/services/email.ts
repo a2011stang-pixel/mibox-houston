@@ -65,7 +65,7 @@ export function escapeHtml(str: string | null | undefined): string {
 
 function emailRow(label: string, value: string): string {
   return `<tr>
-<td style="padding:6px 0;color:#555555;font-size:14px;">${label}</td>
+<td style="padding:6px 0;color:#666666;font-size:14px;">${label}</td>
 <td style="padding:6px 0;color:${BRAND_DARK};font-size:14px;text-align:right;font-weight:bold;">${value}</td>
 </tr>`;
 }
@@ -112,18 +112,18 @@ ${bodyContent}
 <!-- CTA -->
 <tr>
 <td style="padding:24px 32px;text-align:center;">
-<p style="margin:0 0 16px;color:#555555;font-size:14px;">
+<p style="margin:0 0 16px;color:#666666;font-size:14px;">
 Questions? Call us or reply to this email.
 </p>
-<a href="tel:7139296051" style="display:inline-block;background-color:${BRAND_YELLOW};color:${BRAND_DARK};text-decoration:none;padding:12px 32px;border-radius:4px;font-size:16px;font-weight:bold;">(713) 929-6051</a>
+<a href="tel:7139296051" style="display:inline-block;background-color:${BRAND_YELLOW};color:${BRAND_DARK};text-decoration:none;padding:12px 32px;border-radius:6px;font-size:16px;font-weight:bold;">(713) 929-6051</a>
 </td>
 </tr>
 
 <!-- Footer -->
 <tr>
-<td style="background-color:#f0f0f0;padding:20px 32px;text-align:center;">
-<p style="margin:0;color:#888888;font-size:12px;">MI-BOX Houston | Portable Storage &amp; Moving</p>
-<p style="margin:4px 0 0;color:#888888;font-size:12px;">This quote is valid for 30 days from the date of this email.</p>
+<td style="background-color:${BRAND_DARK};padding:20px 32px;text-align:center;">
+<p style="margin:0;color:#cccccc;font-size:12px;">MI-BOX Houston | Portable Storage &amp; Moving</p>
+<p style="margin:4px 0 0;color:#cccccc;font-size:12px;">This quote is valid for 30 days from the date of this email.</p>
 </td>
 </tr>
 
@@ -149,7 +149,7 @@ export function buildQuoteConfirmationHtml(data: QuoteEmailData): string {
   const greeting = `<tr>
 <td style="padding:32px 32px 16px;">
 <h2 style="margin:0 0 8px;color:${BRAND_DARK};font-size:20px;">Hi ${firstName},</h2>
-<p style="margin:0;color:#555555;font-size:15px;line-height:1.5;">
+<p style="margin:0;color:#666666;font-size:15px;line-height:1.5;">
 Thank you for requesting a quote! Here&#39;s a summary of your MI-BOX portable storage quote.
 </p>
 </td>
@@ -206,7 +206,7 @@ export function buildBookingConfirmationHtml(data: BookingEmailData): string {
   const greeting = `<tr>
 <td style="padding:32px 32px 16px;">
 <h2 style="margin:0 0 8px;color:${BRAND_DARK};font-size:20px;">Hi ${firstName},</h2>
-<p style="margin:0;color:#555555;font-size:15px;line-height:1.5;">
+<p style="margin:0;color:#666666;font-size:15px;line-height:1.5;">
 Thank you for booking with MI-BOX Houston! Here are your booking details.
 </p>
 </td>

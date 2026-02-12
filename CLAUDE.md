@@ -191,28 +191,32 @@ cd worker && npx tsc --noEmit                         # Typecheck worker
 
 ## Email Template Standards
 
-All email templates (quote confirmations, booking confirmations, future transactional emails) MUST follow these rules:
+All email templates (quote confirmations, booking confirmations, future transactional emails) MUST follow these rules.
 
 ### Brand Colors
-- **Header background**: `#333333` (dark)
-- **Header text / accent**: `#FFDD00` (yellow)
-- **Section heading borders**: `2px solid #FFDD00`
-- **Section heading text**: `#333333`
-- **CTA button background**: `#FFDD00`
-- **CTA button text**: `#333333`
-- **Body text**: `#555555` (labels), `#333333` (values)
-- **Section backgrounds**: `#f8f9fa`
-- **NEVER use blue (#0056A6, #007ABD, or similar)**
+- **MI-BOX Yellow**: `#FFDD00` — primary accent, CTA buttons, section headers
+- **MI-BOX Dark/Black**: `#333333` — body text, dark backgrounds (header, footer)
+- **Gray**: `#f8f9fa` — section backgrounds, quote detail boxes
+- **Muted text**: `#666666` — secondary/caption text
+- **White**: `#ffffff` — email body background
+- **Footer text on dark**: `#cccccc`
 
-### Phone Number
-- Always use `(713) 929-6051` with `tel:7139296051`
-- NEVER use (713) 405-8800
+The brand is yellow, black, and gray. Do NOT use blue (`#007ABD`, `#0056A6`, or any other blue) in email templates.
 
-### Content Rules
-- No emojis in any email template
-- No markdown in HTML emails
-- All user-provided values MUST be HTML-escaped via `escapeHtml()`
-- From address: `MI-BOX Houston <sales@miboxhouston.com>`
+### Email Rules — ALWAYS follow these:
+1. **No emojis** — never use emoji in subject lines, body text, or CTAs
+2. **Brand colors only** — yellow, black/dark, gray, white. No blue.
+3. **Font stack**: Arial, Helvetica, sans-serif (email-safe)
+4. **CTA button**: MI-BOX Yellow (`#FFDD00`) background, dark (`#333333`) text, bold, 6px border-radius
+5. **Phone number**: (713) 929-6051 with `tel:7139296051` — this is the only phone number to use
+6. **From address**: `MI-BOX Houston <sales@miboxhouston.com>`
+7. **Header**: Dark background (`#333333`) with MI-BOX Yellow (`#FFDD00`) text
+8. **Footer**: Dark background (`#333333`), white/light text, company name, "Portable Storage & Moving" tagline, 30-day quote validity
+9. **Table-based layout only** — no CSS grid, no flexbox (email client compatibility)
+10. **All styles inline** — no external stylesheets, no `<style>` blocks
+11. **Max width**: 600px centered
+12. **Tone**: Professional, friendly, concise. No exclamation marks in subject lines.
+13. **XSS prevention**: All user-provided values MUST be HTML-escaped via `escapeHtml()`
 
 ### Template Files
 - `src/email/quote-confirmation.js` — Phase 1a standalone module (snake_case fields)

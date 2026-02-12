@@ -63,7 +63,7 @@ export function buildQuoteConfirmationEmail(quoteData) {
 <tr>
 <td style="padding:32px 32px 16px;">
 <h2 style="margin:0 0 8px;color:#333333;font-size:20px;">Hi ${firstName},</h2>
-<p style="margin:0;color:#555555;font-size:15px;line-height:1.5;">
+<p style="margin:0;color:#666666;font-size:15px;line-height:1.5;">
 Thank you for requesting a quote! Here's a summary of your MI-BOX portable storage quote.
 </p>
 </td>
@@ -78,19 +78,19 @@ Thank you for requesting a quote! Here's a summary of your MI-BOX portable stora
 <h3 style="margin:0 0 16px;color:#333333;font-size:16px;border-bottom:2px solid #FFDD00;padding-bottom:8px;">Quote Details</h3>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
 <tr>
-<td style="padding:6px 0;color:#555555;font-size:14px;">Service Type</td>
+<td style="padding:6px 0;color:#666666;font-size:14px;">Service Type</td>
 <td style="padding:6px 0;color:#333333;font-size:14px;text-align:right;font-weight:bold;">${serviceDisplay}</td>
 </tr>
 <tr>
-<td style="padding:6px 0;color:#555555;font-size:14px;">Container Size</td>
+<td style="padding:6px 0;color:#666666;font-size:14px;">Container Size</td>
 <td style="padding:6px 0;color:#333333;font-size:14px;text-align:right;font-weight:bold;">${boxSize}</td>
 </tr>
 <tr>
-<td style="padding:6px 0;color:#555555;font-size:14px;">Delivery ZIP</td>
+<td style="padding:6px 0;color:#666666;font-size:14px;">Delivery ZIP</td>
 <td style="padding:6px 0;color:#333333;font-size:14px;text-align:right;font-weight:bold;">${deliveryZip}</td>
 </tr>
 ${deliveryDate ? `<tr>
-<td style="padding:6px 0;color:#555555;font-size:14px;">Delivery Date</td>
+<td style="padding:6px 0;color:#666666;font-size:14px;">Delivery Date</td>
 <td style="padding:6px 0;color:#333333;font-size:14px;text-align:right;font-weight:bold;">${deliveryDate}</td>
 </tr>` : ''}
 </table>
@@ -109,15 +109,15 @@ ${deliveryDate ? `<tr>
 <h3 style="margin:0 0 16px;color:#333333;font-size:16px;border-bottom:2px solid #FFDD00;padding-bottom:8px;">Pricing Breakdown</h3>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
 <tr>
-<td style="padding:6px 0;color:#555555;font-size:14px;">Delivery Fee</td>
+<td style="padding:6px 0;color:#666666;font-size:14px;">Delivery Fee</td>
 <td style="padding:6px 0;color:#333333;font-size:14px;text-align:right;font-weight:bold;">${deliveryPrice}</td>
 </tr>
 <tr>
-<td style="padding:6px 0;color:#555555;font-size:14px;">First Month Rent</td>
+<td style="padding:6px 0;color:#666666;font-size:14px;">First Month Rent</td>
 <td style="padding:6px 0;color:#333333;font-size:14px;text-align:right;font-weight:bold;">${firstMonthRent}</td>
 </tr>
 <tr>
-<td style="padding:6px 0;color:#555555;font-size:14px;">Monthly Rent (ongoing)</td>
+<td style="padding:6px 0;color:#666666;font-size:14px;">Monthly Rent (ongoing)</td>
 <td style="padding:6px 0;color:#333333;font-size:14px;text-align:right;font-weight:bold;">${ongoingMonthly}</td>
 </tr>
 <tr>
@@ -137,18 +137,18 @@ ${deliveryDate ? `<tr>
 <!-- CTA -->
 <tr>
 <td style="padding:24px 32px;text-align:center;">
-<p style="margin:0 0 16px;color:#555555;font-size:14px;">
+<p style="margin:0 0 16px;color:#666666;font-size:14px;">
 Ready to book? Call us or reply to this email to schedule your delivery.
 </p>
-<a href="tel:7139296051" style="display:inline-block;background-color:#FFDD00;color:#333333;text-decoration:none;padding:12px 32px;border-radius:4px;font-size:16px;font-weight:bold;">(713) 929-6051</a>
+<a href="tel:7139296051" style="display:inline-block;background-color:#FFDD00;color:#333333;text-decoration:none;padding:12px 32px;border-radius:6px;font-size:16px;font-weight:bold;">(713) 929-6051</a>
 </td>
 </tr>
 
 <!-- Footer -->
 <tr>
-<td style="background-color:#f0f0f0;padding:20px 32px;text-align:center;">
-<p style="margin:0;color:#888888;font-size:12px;">MI-BOX Houston | Portable Storage &amp; Moving</p>
-<p style="margin:4px 0 0;color:#888888;font-size:12px;">This quote is valid for 30 days from the date of this email.</p>
+<td style="background-color:#333333;padding:20px 32px;text-align:center;">
+<p style="margin:0;color:#cccccc;font-size:12px;">MI-BOX Houston | Portable Storage &amp; Moving</p>
+<p style="margin:4px 0 0;color:#cccccc;font-size:12px;">This quote is valid for 30 days from the date of this email.</p>
 </td>
 </tr>
 
