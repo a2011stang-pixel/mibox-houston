@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import type { Env } from '../index';
 import { sendQuoteConfirmation, forwardToStella } from '../services/email';
 import type { QuoteEmailData } from '../services/email';
+import { sendCustomerSms, sendTeamNotificationSms } from '../services/sms';
 import { generateQuoteId, insertQuote, updateQuoteFlags } from '../services/database';
 
 export const quoteRoutes = new Hono<{ Bindings: Env }>();
@@ -22,11 +23,27 @@ quoteRoutes.post('/', async (c) => {
   const quoteId = await generateQuoteId(c.env.DB);
   await insertQuote(c.env.DB, quoteId, body);
 
+  const twilioConfig = {
+    accountSid: c.env.TWILIO_ACCOUNT_SID,
+    authToken: c.env.TWILIO_AUTH_TOKEN,
+    fromNumber: c.env.TWILIO_PHONE_NUMBER,
+  };
+
   // Forward to Stella CRM (non-blocking)
   const stellaPayload = { ...body, quoteId, formType: 'quote' };
   c.executionCtx.waitUntil(
     forwardToStella(stellaPayload).then((ok) =>
       updateQuoteFlags(c.env.DB, quoteId, { stella_forwarded: ok ? 1 : 0 })
+    )
+  );
+
+  // Send SMS notifications (non-blocking)
+  c.executionCtx.waitUntil(
+    Promise.all([
+      sendCustomerSms(body, quoteId, twilioConfig),
+      sendTeamNotificationSms(body, quoteId, twilioConfig),
+    ]).then(([customerResult]) =>
+      updateQuoteFlags(c.env.DB, quoteId, { sms_sent: customerResult.success ? 1 : 0 })
     )
   );
 

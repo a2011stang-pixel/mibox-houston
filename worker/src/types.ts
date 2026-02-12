@@ -3,6 +3,9 @@ export interface Env {
   JWT_SECRET: string;
   BACKUPS: R2Bucket;
   RESEND_API_KEY: string;
+  TWILIO_ACCOUNT_SID: string;
+  TWILIO_AUTH_TOKEN: string;
+  TWILIO_PHONE_NUMBER: string;
 }
 
 export interface User {
