@@ -224,8 +224,8 @@ The brand is yellow, black, and gray. Do NOT use blue (`#007ABD`, `#0056A6`, or 
 4. **CTA button**: MI-BOX Yellow (`#FFDD00`) background, dark (`#333333`) text, bold, 6px border-radius
 5. **Phone number**: (713) 929-6051 with `tel:7139296051` — this is the only phone number to use
 6. **From address**: `MI-BOX Houston <sales@miboxhouston.com>`
-7. **Header**: Dark background (`#333333`) with MI-BOX Yellow (`#FFDD00`) text
-8. **Footer**: Dark background (`#333333`), white/light text, company name, "Portable Storage & Moving" tagline, 30-day quote validity
+7. **Header**: Dark background (`#333333`) with "MI-BOX Moving & Mobile Storage" in MI-BOX Yellow (`#FFDD00`), "of Houston" in `#cccccc`
+8. **Footer**: Dark background (`#333333`), white/light text, company name, "MI-BOX Moving & Mobile Storage of Houston", 10-day quote validity
 9. **Table-based layout only** — no CSS grid, no flexbox (email client compatibility)
 10. **All styles inline** — no external stylesheets, no `<style>` blocks
 11. **Max width**: 600px centered

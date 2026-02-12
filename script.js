@@ -762,6 +762,13 @@ function prefillFromQuoteId() {
 
     fetch(WORKER_API_URL + '/api/public/quote/' + encodeURIComponent(quoteId))
         .then(function(res) {
+            if (res.status === 410) {
+                return res.json().then(function(body) {
+                    var err = new Error(body.message || 'This quote has expired.');
+                    err.expired = true;
+                    throw err;
+                });
+            }
             if (!res.ok) throw new Error('Quote not found');
             return res.json();
         })
@@ -847,12 +854,15 @@ function prefillFromQuoteId() {
 
             goToStep(4);
         })
-        .catch(function() {
+        .catch(function(err) {
             // Show error message for expired/invalid quote
             var formCard = document.querySelector('.quote-card');
             if (formCard) {
+                var msg = err && err.expired
+                    ? 'This quote has expired. Please <a href="https://houston.miboxhouston.com/" style="color:#333333;font-weight:bold;">request a new quote</a>.'
+                    : 'This quote is no longer available. Please <a href="https://houston.miboxhouston.com/" style="color:#333333;font-weight:bold;">request a new quote</a>.';
                 var errorHtml = '<div class="alert alert-warning mb-3" style="background-color:#fff3cd;border:1px solid #ffc107;color:#333333;text-align:center;padding:16px;border-radius:6px;">'
-                    + 'This quote has expired or is not valid. Please request a new quote below.'
+                    + msg
                     + '</div>';
                 formCard.insertAdjacentHTML('afterbegin', errorHtml);
             }
