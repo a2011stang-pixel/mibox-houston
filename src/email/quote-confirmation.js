@@ -4,7 +4,7 @@
  */
 
 const RESEND_API_URL = 'https://api.resend.com/emails';
-const FROM_ADDRESS = 'MI-BOX Houston <quotes@miboxhouston.com>';
+const FROM_ADDRESS = 'MI-BOX Houston <sales@miboxhouston.com>';
 const SUBJECT = 'Your MI-BOX Houston Quote';
 
 /**

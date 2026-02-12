@@ -203,7 +203,7 @@ describe('sendQuoteConfirmation', () => {
     });
     await sendQuoteConfirmation(baseQuoteData, 're_test_key');
     const body = JSON.parse(global.fetch.mock.calls[0][1].body);
-    expect(body.from).toBe('MI-BOX Houston <quotes@miboxhouston.com>');
+    expect(body.from).toBe('MI-BOX Houston <sales@miboxhouston.com>');
   });
 
   it('sends to customer email from quoteData', async () => {
