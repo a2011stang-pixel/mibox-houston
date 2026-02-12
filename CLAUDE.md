@@ -140,12 +140,14 @@ npm run test:coverage # Run tests with coverage report
 ### Frontend (Static Site)
 - `script.js` - Browser-facing code with DOM interactions
 - `lib.js` - Testable business logic (pricing, validation, webhook payloads)
+- `src/email/quote-confirmation.js` - Resend email module (Phase 1a standalone)
 - `tests/` - Vitest test files
   - `pricing.test.js` - Quote calculation and zone detection
   - `validation.test.js` - Form field validation
   - `webhook.test.js` - Webhook payload construction
   - `formatting.test.js` - Currency and date formatting
   - `security.test.js` - XSS, SQL injection, tampering prevention
+  - `quote-email.test.js` - Quote confirmation email tests
 
 ### Backend (Cloudflare Worker)
 - `worker/src/index.ts` - Hono app entry point with scheduled handler
@@ -158,12 +160,15 @@ npm run test:coverage # Run tests with coverage report
   - `pricing.ts` - Pricing CRUD (protected)
   - `audit.ts` - Audit log queries (protected)
   - `admin.ts` - Backup management and restore (protected)
-  - `public.ts` - Public quote/lookup endpoints
+  - `public.ts` - Public pricing/zone lookup endpoints
+  - `quote.ts` - POST /api/public/quote (Resend email + Stella CRM)
+  - `booking.ts` - POST /api/public/booking (Resend email + Stella CRM)
 - `worker/src/services/` - Business logic
   - `auth.ts` - Authentication and session service
   - `audit.ts` - Immutable audit logging
   - `backup.ts` - D1-to-R2 backup, restore, and cleanup
   - `totp.ts` - TOTP/MFA service
+  - `email.ts` - Resend email service (quote + booking templates, Stella forwarding)
 - `worker/src/utils/crypto.ts` - JWT and crypto utilities
 - `worker/wrangler.toml` - Cloudflare Worker config (D1, R2, cron)
 - `worker/schema.sql` - D1 database schema
@@ -183,3 +188,37 @@ npm run test:coverage # Run tests with coverage report
 cd worker && npx wrangler deploy -c wrangler.toml   # Deploy worker (requires -c flag for wrangler 4.x)
 cd worker && npx tsc --noEmit                         # Typecheck worker
 ```
+
+## Email Template Standards
+
+All email templates (quote confirmations, booking confirmations, future transactional emails) MUST follow these rules.
+
+### Brand Colors
+- **MI-BOX Yellow**: `#FFDD00` — primary accent, CTA buttons, section headers
+- **MI-BOX Dark/Black**: `#333333` — body text, dark backgrounds (header, footer)
+- **Gray**: `#f8f9fa` — section backgrounds, quote detail boxes
+- **Muted text**: `#666666` — secondary/caption text
+- **White**: `#ffffff` — email body background
+- **Footer text on dark**: `#cccccc`
+
+The brand is yellow, black, and gray. Do NOT use blue (`#007ABD`, `#0056A6`, or any other blue) in email templates.
+
+### Email Rules — ALWAYS follow these:
+1. **No emojis** — never use emoji in subject lines, body text, or CTAs
+2. **Brand colors only** — yellow, black/dark, gray, white. No blue.
+3. **Font stack**: Arial, Helvetica, sans-serif (email-safe)
+4. **CTA button**: MI-BOX Yellow (`#FFDD00`) background, dark (`#333333`) text, bold, 6px border-radius
+5. **Phone number**: (713) 929-6051 with `tel:7139296051` — this is the only phone number to use
+6. **From address**: `MI-BOX Houston <sales@miboxhouston.com>`
+7. **Header**: Dark background (`#333333`) with MI-BOX Yellow (`#FFDD00`) text
+8. **Footer**: Dark background (`#333333`), white/light text, company name, "Portable Storage & Moving" tagline, 30-day quote validity
+9. **Table-based layout only** — no CSS grid, no flexbox (email client compatibility)
+10. **All styles inline** — no external stylesheets, no `<style>` blocks
+11. **Max width**: 600px centered
+12. **Tone**: Professional, friendly, concise. No exclamation marks in subject lines.
+13. **XSS prevention**: All user-provided values MUST be HTML-escaped via `escapeHtml()`
+
+### Template Files
+- `src/email/quote-confirmation.js` — Phase 1a standalone module (snake_case fields)
+- `worker/src/services/email.ts` — Worker email service (camelCase fields)
+- Both files must stay in sync on branding, colors, and phone number

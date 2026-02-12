@@ -106,9 +106,21 @@ describe('buildQuoteConfirmationEmail', () => {
     expect(html).toContain('MI-BOX Houston');
   });
 
-  it('contains brand color', () => {
+  it('contains brand colors (yellow header text, dark background)', () => {
     const html = buildQuoteConfirmationEmail(baseQuoteData);
-    expect(html).toContain('#0056A6');
+    expect(html).toContain('#FFDD00');
+    expect(html).toContain('#333333');
+  });
+
+  it('does not contain old blue brand color', () => {
+    const html = buildQuoteConfirmationEmail(baseQuoteData);
+    expect(html).not.toContain('#0056A6');
+  });
+
+  it('contains correct phone number', () => {
+    const html = buildQuoteConfirmationEmail(baseQuoteData);
+    expect(html).toContain('(713) 929-6051');
+    expect(html).not.toContain('(713) 405-8800');
   });
 
   it('returns valid HTML structure', () => {

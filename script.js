@@ -621,48 +621,31 @@ function buildQuoteData(formType) {
     };
 }
 
-// Send quote webhook (fires when quote is displayed)
-function sendQuoteWebhook() {
-    const zapierUrl = 'https://hooks.zapier.com/hooks/catch/21414077/2axrkxs/';
-    const stellaUrl = 'https://api.runstella.com/webhook/16216eb0';
+// Worker API base URL
+var WORKER_API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:8787'
+    : 'https://mibox-houston-api.miboxhouston.workers.dev';
 
+// Send quote via Worker (fires when quote is displayed)
+function sendQuoteWebhook() {
     const data = buildQuoteData('quote');
 
-    fetch(zapierUrl, {
+    fetch(WORKER_API_URL + '/api/public/quote', {
         method: 'POST',
-        mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
-    }).catch(err => console.log('Zapier quote webhook error:', err));
-
-    fetch(stellaUrl, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    }).catch(err => console.log('Stella quote webhook error:', err));
+    }).catch(err => console.log('Quote webhook error:', err));
 }
 
-// Send booking webhook (fires when booking is submitted)
+// Send booking via Worker (fires when booking is submitted)
 function sendBookingWebhook() {
-    const zapierUrl = 'https://hooks.zapier.com/hooks/catch/21414077/2axrkxs/';
-    const stellaUrl = 'https://api.runstella.com/webhook/16216eb0';
-
     const data = buildQuoteData('booking');
 
-    fetch(zapierUrl, {
+    fetch(WORKER_API_URL + '/api/public/booking', {
         method: 'POST',
-        mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
-    }).catch(err => console.log('Zapier booking webhook error:', err));
-
-    fetch(stellaUrl, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    }).catch(err => console.log('Stella booking webhook error:', err));
+    }).catch(err => console.log('Booking webhook error:', err));
 }
 
 // Set button loading state
