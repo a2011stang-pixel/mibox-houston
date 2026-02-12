@@ -628,20 +628,32 @@ var WORKER_API_URL = window.location.hostname === 'localhost' || window.location
 
 // Send quote via Worker (fires when quote is displayed)
 function sendQuoteWebhook() {
-    const data = buildQuoteData('quote');
+    try {
+        var data = buildQuoteData('quote');
+        var url = WORKER_API_URL + '/api/public/quote';
+        console.log('[Quote] Sending to:', url, 'email:', data.email);
 
-    fetch(WORKER_API_URL + '/api/public/quote', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    })
-    .then(function(res) { return res.json(); })
-    .then(function(result) {
-        if (result.quoteId) {
-            quoteData.quoteId = result.quoteId;
-        }
-    })
-    .catch(err => console.log('Quote webhook error:', err));
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(function(res) {
+            console.log('[Quote] Response status:', res.status);
+            return res.json();
+        })
+        .then(function(result) {
+            console.log('[Quote] Result:', JSON.stringify(result));
+            if (result.quoteId) {
+                quoteData.quoteId = result.quoteId;
+            }
+        })
+        .catch(function(err) {
+            console.error('[Quote] Fetch error:', err.message || err);
+        });
+    } catch (err) {
+        console.error('[Quote] buildQuoteData error:', err.message || err);
+    }
 }
 
 // Send booking via Worker (fires when booking is submitted)
