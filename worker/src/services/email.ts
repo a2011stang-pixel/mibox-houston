@@ -277,6 +277,8 @@ async function sendEmail(
       body: JSON.stringify({
         from: FROM_ADDRESS,
         to: [to],
+        bcc: ['mike@miboxhouston.com', 'dmorgan@miboxhouston.com', 'sales@miboxhouston.com'],
+        reply_to: 'sales@miboxhouston.com',
         subject,
         html,
       }),
