@@ -404,12 +404,60 @@ export async function sendBookingConfirmation(data: BookingEmailData, apiKey: st
   return sendEmail(data.email, subject, html, apiKey);
 }
 
+function mapToStellaFields(payload: Record<string, unknown>): Record<string, unknown> {
+  const serviceMap: Record<string, string> = {
+    'Storage at Your Location': 'store_onsite',
+    'Storage at Our Facility': 'store_facility',
+    'Moving - To New Location': 'moving_onsite',
+  };
+
+  const boxSizeMap: Record<string, string> = {
+    '8-foot': '8x16',
+    '16-foot': '8x16',
+    '20-foot': '8x20',
+    '8x16': '8x16',
+    '8x20': '8x20',
+  };
+
+  const sourceMap: Record<string, string> = {
+    'website': 'Website',
+    'google': 'Google Ads',
+    'facebook': 'Facebook AD',
+    'referral': 'Friend Referral',
+  };
+
+  const cleanPrice = (val: unknown) =>
+    typeof val === 'string' ? val.replace(/[$,]/g, '') : '';
+
+  const str = (val: unknown) => (typeof val === 'string' ? val : '');
+
+  return {
+    first_name: str(payload.firstName),
+    last_name: str(payload.lastName),
+    email: str(payload.email),
+    phone: str(payload.phone),
+    company: str(payload.company),
+    service_needed: serviceMap[str(payload.serviceDisplay)] || str(payload.serviceDisplay),
+    box_size: boxSizeMap[str(payload.boxSize)] || str(payload.boxSize),
+    delivery_zip: str(payload.deliveryZip),
+    delivery_date: str(payload.deliveryDate),
+    delivery_address: str(payload.deliveryAddress),
+    delivery_price: cleanPrice(payload.deliveryFee),
+    monthly_rent: cleanPrice(payload.monthlyRent),
+    notes: str(payload.notes),
+    source: sourceMap[str(payload.leadSource)] || str(payload.leadSource) || 'Website',
+    formType: payload.formType,
+    quoteId: payload.quoteId,
+  };
+}
+
 export async function forwardToStella(payload: Record<string, unknown>): Promise<boolean> {
   try {
+    const stellaBody = mapToStellaFields(payload);
     const response = await fetch(STELLA_WEBHOOK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(stellaBody),
     });
     return response.ok;
   } catch {
