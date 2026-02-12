@@ -426,6 +426,18 @@ function mapToStellaFields(payload: Record<string, unknown>): Record<string, unk
     'referral': 'Friend Referral',
   };
 
+  const mapDuration = (val: unknown): string => {
+    const s = typeof val === 'string' ? val : '';
+    if (s === '12+' || s === '1 year or longer') return '9-12 months';
+    const n = parseInt(s, 10);
+    if (isNaN(n)) return '';
+    if (n <= 1) return 'Less than 1 month';
+    if (n <= 3) return '1-3 months';
+    if (n <= 6) return '3-6 months';
+    if (n <= 9) return '6-9 months';
+    return '9-12 months';
+  };
+
   const cleanPrice = (val: unknown) =>
     typeof val === 'string' ? val.replace(/[$,]/g, '') : '';
 
@@ -444,6 +456,7 @@ function mapToStellaFields(payload: Record<string, unknown>): Record<string, unk
     delivery_address: str(payload.deliveryAddress),
     delivery_price: cleanPrice(payload.deliveryFee),
     monthly_rent: cleanPrice(payload.monthlyRent),
+    months_needed: mapDuration(payload.storageDuration),
     notes: str(payload.notes),
     source: sourceMap[str(payload.leadSource)] || str(payload.leadSource) || 'Website',
     formType: payload.formType,
