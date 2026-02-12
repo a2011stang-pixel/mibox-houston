@@ -192,7 +192,7 @@ npm run test:coverage # Run tests with coverage report
 - **POST /api/public/quote**: Generates quote ID, inserts into D1, sends email, forwards to Stella
 - **POST /api/public/booking**: Updates existing quote to booked (or creates new), sends email
 - **GET /api/public/quote/:quoteId**: Returns quote data for frontend pre-fill (only status=quoted)
-- **Book Now link**: `https://houston.miboxhouston.com/?quoteId=Q-XXXXX`
+- **Book Now link**: `https://miboxhouston.com/?quoteId=Q-XXXXX`
 - **Frontend pre-fill**: Detects `?quoteId=` param, fetches quote data, skips to Step 4
 - **Migration**: `worker/migrations/001_create_quotes.sql`
 

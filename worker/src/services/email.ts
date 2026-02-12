@@ -218,7 +218,7 @@ Thank you for requesting a quote! Here&#39;s a summary of your MI-BOX portable s
 <tr>
 <td style="padding:24px 32px;text-align:center;">
 <p style="margin:0 0 16px;color:${BRAND_DARK};font-size:15px;font-weight:bold;">Ready to book? Complete your delivery details:</p>
-<a href="https://houston.miboxhouston.com/?quoteId=${encodeURIComponent(quoteId)}" style="display:inline-block;background-color:${BRAND_YELLOW};color:${BRAND_DARK};text-decoration:none;padding:14px 36px;border-radius:6px;font-size:16px;font-weight:bold;">Book Now</a>
+<a href="https://miboxhouston.com/?quoteId=${encodeURIComponent(quoteId)}" style="display:inline-block;background-color:${BRAND_YELLOW};color:${BRAND_DARK};text-decoration:none;padding:14px 36px;border-radius:6px;font-size:16px;font-weight:bold;">Book Now</a>
 <p style="margin:12px 0 0;color:#666666;font-size:14px;">Or call <a href="tel:7139296051" style="color:${BRAND_DARK};font-weight:bold;text-decoration:none;">(713) 929-6051</a></p>
 </td>
 </tr>` : `<!-- CTA -->
