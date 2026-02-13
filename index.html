@@ -334,8 +334,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                                         <input type="text" class="form-control" id="deliveryZip" maxlength="5" pattern="[0-9]{5}" autocomplete="postal-code" required>
                                     </div>
                                     <div class="col-md-6 mb-3" id="destinationZipGroup" style="display:none;">
-                                        <label class="form-label" for="destinationZip">Destination ZIP</label>
+                                        <label class="form-label" for="destinationZip">Destination ZIP <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control" id="destinationZip" maxlength="5" pattern="[0-9]{5}" autocomplete="new-destination-zip" placeholder="Enter destination ZIP">
+                                        <div class="invalid-feedback">Please enter the destination ZIP code for your move.</div>
                                     </div>
                                 </div>
 

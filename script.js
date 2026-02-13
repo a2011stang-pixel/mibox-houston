@@ -208,6 +208,9 @@ function calculateQuote() {
     const zone = getDeliveryZone(deliveryZip);
     if (!zone) return null;
 
+    // Require destination ZIP for moving and both service types
+    if ((serviceType === 'moving' || serviceType === 'both') && !destinationZip) return null;
+
     let deliveryFee = PRICING.delivery[zone].fee;
     let firstMonthRent = PRICING.firstMonth[containerSize];
     let monthlyRent = 0;
@@ -460,7 +463,12 @@ function validateStep(step) {
         // Validate destination ZIP if moving or both
         if (serviceType === 'moving' || serviceType === 'both') {
             const destZip = document.getElementById('destinationZip').value;
-            if (destZip && !getDeliveryZone(destZip)) {
+            if (!destZip) {
+                document.getElementById('destinationZip').classList.add('is-invalid');
+                alert('Please enter the destination ZIP code for your move.');
+                isValid = false;
+                if (!firstInvalid) firstInvalid = document.getElementById('destinationZip');
+            } else if (!getDeliveryZone(destZip)) {
                 document.getElementById('destinationZip').classList.add('is-invalid');
                 alert('Sorry, we do not currently serve the destination ZIP code. Please call us at (713) 929-6051 to discuss options.');
                 isValid = false;
