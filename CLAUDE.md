@@ -1,5 +1,8 @@
 # Project Rules for Claude
 
+## Testing Defaults
+- **Test email address**: Always use `mike@miboxhouston.com` for test API requests (quotes, bookings, etc.)
+
 ## AI Digital Engineer Workflow
 
 Follow this 9-step workflow for all feature development. Each step has a corresponding hook or gate that enforces completion before proceeding.
