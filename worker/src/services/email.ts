@@ -165,7 +165,9 @@ export function buildQuoteConfirmationHtml(data: QuoteEmailData, quoteId?: strin
   const serviceDisplay = escapeHtml(data.serviceDisplay);
   const boxSize = escapeHtml(data.boxSize);
   const deliveryZip = escapeHtml(data.deliveryZip);
-  const deliveryDate = escapeHtml(data.deliveryDate);
+  const deliveryDate = data.deliveryDate
+    ? escapeHtml(new Date(data.deliveryDate + 'T00:00:00').toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }))
+    : '';
   const deliveryFee = escapeHtml(data.deliveryFee);
   const firstMonthRent = escapeHtml(data.firstMonthRent);
   const monthlyRent = escapeHtml(data.monthlyRent);
@@ -239,7 +241,9 @@ export function buildBookingConfirmationHtml(data: BookingEmailData, quoteId?: s
   const serviceDisplay = escapeHtml(data.serviceDisplay);
   const boxSize = escapeHtml(data.boxSize);
   const deliveryZip = escapeHtml(data.deliveryZip);
-  const deliveryDate = escapeHtml(data.deliveryDate);
+  const deliveryDate = data.deliveryDate
+    ? escapeHtml(new Date(data.deliveryDate + 'T00:00:00').toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }))
+    : '';
   const deliveryFee = escapeHtml(data.deliveryFee);
   const firstMonthRent = escapeHtml(data.firstMonthRent);
   const ongoingMonthly = escapeHtml(data.ongoingMonthly);
