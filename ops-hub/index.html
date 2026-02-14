@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://www.googletagmanager.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com; connect-src 'self' https://mibox-houston-api.cmykprnt.workers.dev https://hooks.zapier.com https://api.runstella.com https://www.google-analytics.com https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://www.googletagmanager.com https://challenges.cloudflare.com https://maps.googleapis.com https://maps.gstatic.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com; connect-src 'self' https://mibox-houston-api.cmykprnt.workers.dev https://hooks.zapier.com https://api.runstella.com https://www.google-analytics.com https://challenges.cloudflare.com https://maps.googleapis.com; frame-src https://challenges.cloudflare.com;">
     <title>Ops Hub - MI-BOX Houston</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -49,6 +49,9 @@
                 </a>
                 <a class="nav-item" href="#" data-page="quick-quote">
                     <i class="bi bi-calculator"></i><span>Quick Quote</span>
+                </a>
+                <a class="nav-item" href="#" data-page="advanced-quote">
+                    <i class="bi bi-calculator-fill"></i><span>Advanced Quote</span>
                 </a>
                 <a class="nav-item" href="#" data-page="quote-history">
                     <i class="bi bi-clock-history"></i><span>Quote History</span>
@@ -349,7 +352,7 @@
                 <div class="section-header">
                     <div>
                         <h4 class="page-title">Quick Quote</h4>
-                        <p class="page-subtitle">Generate instant quotes for phone customers</p>
+                        <p class="page-subtitle">Generate instant quotes for phone customers &mdash; <a href="#" onclick="navigateTo('advanced-quote');return false;" style="color:var(--yellow-dark);font-weight:600;">Need a complex quote? Switch to Advanced Mode</a></p>
                     </div>
                     <span class="badge badge-active" id="qqNumberBadge" style="font-size:14px;padding:8px 16px;display:none;"></span>
                 </div>
@@ -488,6 +491,132 @@
                                         <i class="bi bi-send me-1"></i>Send to Stella CRM
                                     </button>
                                     <button class="btn btn-outline-secondary" id="qqPrintBtn" type="button">
+                                        <i class="bi bi-printer me-1"></i>Print
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced Quote Page -->
+            <div id="page-advanced-quote" class="page-content d-none">
+                <div class="section-header">
+                    <div>
+                        <h4 class="page-title">Advanced Quote</h4>
+                        <p class="page-subtitle">Multi-container, multi-service quotes &mdash; <a href="#" onclick="navigateTo('quick-quote');return false;" style="color:var(--yellow-dark);font-weight:600;">Back to Quick Quote</a></p>
+                    </div>
+                    <span class="badge badge-active" id="aqNumberBadge" style="font-size:14px;padding:8px 16px;display:none;"></span>
+                </div>
+                <div class="qq-layout">
+                    <!-- Left Panel: Form -->
+                    <div class="qq-form-panel">
+                        <!-- Customer Info Card -->
+                        <div class="card mb-3">
+                            <div class="card-header"><h6 class="mb-0" style="font-weight:700;">Customer Info</h6></div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Customer Name *</label>
+                                        <input type="text" class="form-control" id="aqName" placeholder="Full name" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Phone</label>
+                                        <input type="tel" class="form-control" id="aqPhone" placeholder="(555) 555-5555">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="aqEmail" placeholder="customer@email.com">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Containers Card -->
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0" style="font-weight:700;">Containers</h6>
+                                <button class="btn btn-sm btn-primary" id="aqAddContainerBtn" type="button">
+                                    <i class="bi bi-plus-lg me-1"></i>Add Container
+                                </button>
+                            </div>
+                            <div class="card-body" id="aqContainersWrap">
+                                <!-- Dynamic container cards rendered here -->
+                            </div>
+                        </div>
+
+                        <!-- Quote Details Card -->
+                        <div class="card mb-3">
+                            <div class="card-header"><h6 class="mb-0" style="font-weight:700;">Quote Details</h6></div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Delivery Date</label>
+                                        <input type="date" class="form-control" id="aqDeliveryDate">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Months Needed</label>
+                                        <input type="number" class="form-control" id="aqMonths" value="1" min="1" max="36">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Discounts & Overrides Card -->
+                        <div class="card mb-3">
+                            <div class="card-header"><h6 class="mb-0" style="font-weight:700;">Discounts &amp; Overrides</h6></div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Promotion</label>
+                                        <select class="form-select" id="aqPromo">
+                                            <option value="">No promotion</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Promo Code</label>
+                                        <input type="text" class="form-control" id="aqPromoCode" placeholder="Enter code" readonly>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Override Monthly Rate</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" class="form-control" id="aqOverride" step="0.01" placeholder="Leave blank for standard">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Override Reason</label>
+                                        <input type="text" class="form-control" id="aqOverrideReason" placeholder="Required if overriding">
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <label class="form-label">Notes</label>
+                                    <textarea class="form-control" id="aqNotes" rows="2" placeholder="Internal notes..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Panel: Summary -->
+                    <div class="qq-summary-panel">
+                        <div class="card qq-summary-card" id="aqSummaryCard">
+                            <div class="card-header"><h6 class="mb-0" style="font-weight:700;">Quote Summary</h6></div>
+                            <div class="card-body" id="aqSummaryBody">
+                                <p class="text-muted text-center py-4">Add containers and enter ZIP codes to begin</p>
+                            </div>
+                            <div class="card-body border-top pt-3" id="aqActions" style="display:none;">
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-primary" id="aqSaveBtn" type="button">
+                                        <i class="bi bi-save me-1"></i>Save Quote
+                                    </button>
+                                    <button class="btn btn-secondary" id="aqEmailBtn" type="button" disabled>
+                                        <i class="bi bi-envelope me-1"></i>Email to Customer
+                                    </button>
+                                    <button class="btn btn-secondary" id="aqStellaBtn" type="button" disabled>
+                                        <i class="bi bi-send me-1"></i>Send to Stella CRM
+                                    </button>
+                                    <button class="btn btn-outline-secondary" id="aqPrintBtn" type="button">
                                         <i class="bi bi-printer me-1"></i>Print
                                     </button>
                                 </div>
@@ -870,6 +999,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAT69KxwoDHfLL6zUl77VrcWkCvqjIJMRk&libraries=places&loading=async" defer></script>
     <script src="js/api.js"></script>
     <script src="js/admin.js"></script>
 </body>

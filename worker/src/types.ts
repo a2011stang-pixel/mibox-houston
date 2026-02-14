@@ -105,6 +105,7 @@ export interface AuthContext {
 export interface StaffQuote {
   id: number;
   quote_number: string;
+  quote_type: string;
   status: string;
   created_at: string;
   updated_at: string;
@@ -151,4 +152,18 @@ export interface StaffQuoteItem {
   storage_location: string;
   monthly_rate_cents: number;
   first_month_rate_cents: number;
+  service_type: string | null;
+  address_1: string | null;
+  apt_1: string | null;
+  city_1: string | null;
+  state_1: string | null;
+  zip_1: string | null;
+  address_2: string | null;
+  apt_2: string | null;
+  city_2: string | null;
+  state_2: string | null;
+  zip_2: string | null;
+  zone_id: number | null;
+  zone_name: string | null;
+  delivery_fee_cents: number;
 }

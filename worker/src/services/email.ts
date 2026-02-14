@@ -506,25 +506,52 @@ Thank you for your interest in MI-BOX Houston! Here is your portable storage quo
 </td>
 </tr>`;
 
+  // Detect advanced mode: items have service_type set
+  const isAdvanced = items.some(i => !!i.service_type);
+
   // Service details
-  const serviceDisplay = escapeHtml(quote.service_type);
   const deliveryDate = quote.delivery_date
     ? escapeHtml(new Date(quote.delivery_date + 'T00:00:00').toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }))
     : '';
-  let detailsRows = emailRow('Service Type', serviceDisplay)
-    + emailRow('Delivery ZIP', escapeHtml(quote.zip));
+
+  let detailsRows = '';
+  if (!isAdvanced) {
+    detailsRows += emailRow('Service Type', escapeHtml(quote.service_type))
+      + emailRow('Delivery ZIP', escapeHtml(quote.zip));
+  }
   if (deliveryDate) {
     detailsRows += emailRow('Delivery Date', deliveryDate);
   }
 
-  // Container details
-  const containerSummary: Record<string, number> = {};
-  for (const item of items) {
-    const key = item.container_size + "' " + escapeHtml(item.storage_location);
-    containerSummary[key] = (containerSummary[key] || 0) + 1;
-  }
-  for (const [desc, count] of Object.entries(containerSummary)) {
-    detailsRows += emailRow('Container', count > 1 ? `${count}x ${desc}` : desc);
+  if (isAdvanced) {
+    // Per-container details for advanced quotes
+    for (let idx = 0; idx < items.length; idx++) {
+      const item = items[idx];
+      const num = idx + 1;
+      const svcType = escapeHtml(item.service_type || '');
+      const sizeLabel = item.container_size + "' Container";
+      detailsRows += emailRow(`Container #${num}`, `${sizeLabel} - ${svcType}`);
+      if (item.zip_1) {
+        detailsRows += emailRow(`  Delivery ZIP`, escapeHtml(item.zip_1));
+      }
+      if (item.zone_name) {
+        detailsRows += emailRow(`  Zone`, escapeHtml(item.zone_name));
+      }
+      detailsRows += emailRow(`  Monthly Rate`, formatCents(item.monthly_rate_cents));
+      if (item.delivery_fee_cents > 0) {
+        detailsRows += emailRow(`  Delivery Fee`, formatCents(item.delivery_fee_cents));
+      }
+    }
+  } else {
+    // Simple mode: grouped container summary
+    const containerSummary: Record<string, number> = {};
+    for (const item of items) {
+      const key = item.container_size + "' " + escapeHtml(item.storage_location);
+      containerSummary[key] = (containerSummary[key] || 0) + 1;
+    }
+    for (const [desc, count] of Object.entries(containerSummary)) {
+      detailsRows += emailRow('Container', count > 1 ? `${count}x ${desc}` : desc);
+    }
   }
 
   const detailsSection = sectionWrapper(
@@ -534,7 +561,9 @@ Thank you for your interest in MI-BOX Houston! Here is your portable storage quo
 
   // Pricing breakdown
   const firstMonthRent = items.reduce((sum, i) => sum + i.first_month_rate_cents, 0);
-  const deliveryTotal = quote.delivery_fee_cents * quote.container_count;
+  const deliveryTotal = isAdvanced
+    ? items.reduce((sum, i) => sum + (i.delivery_fee_cents || 0), 0)
+    : quote.delivery_fee_cents * quote.container_count;
   let pricingRows = emailRow('First Month Rent', formatCents(firstMonthRent))
     + emailRow('Delivery Fee' + (quote.container_count > 1 ? ` (x${quote.container_count})` : ''), formatCents(deliveryTotal));
 

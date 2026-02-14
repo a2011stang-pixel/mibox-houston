@@ -8,15 +8,32 @@ import type { StaffQuote, StaffQuoteItem } from '../types';
 export interface StaffQuoteItemInput {
   container_size: string;
   storage_location: string;
+  service_type?: string;
+  address_1?: string;
+  apt_1?: string;
+  city_1?: string;
+  state_1?: string;
+  zip_1?: string;
+  address_2?: string;
+  apt_2?: string;
+  city_2?: string;
+  state_2?: string;
+  zip_2?: string;
+}
+
+export interface PricingResultItem {
+  container_size: string;
+  storage_location: string;
+  monthly_rate_cents: number;
+  first_month_rate_cents: number;
+  service_type?: string;
+  zone_id?: number;
+  zone_name?: string;
+  delivery_fee_cents?: number;
 }
 
 export interface PricingResult {
-  items: {
-    container_size: string;
-    storage_location: string;
-    monthly_rate_cents: number;
-    first_month_rate_cents: number;
-  }[];
+  items: PricingResultItem[];
   zone_id: number;
   zone_name: string;
   delivery_fee_cents: number;
@@ -49,6 +66,34 @@ export interface CreateQuoteInput {
   override_monthly_cents?: number;
   override_reason?: string;
   notes?: string;
+  quote_type?: string;
+}
+
+/**
+ * Map service type to storage_location rate key.
+ */
+const SERVICE_LOCATION_MAP: Record<string, string> = {
+  'Storage at Your Location': 'onsite',
+  'Facility Storage (Inside)': 'facility_inside',
+  'Facility Storage (Outside)': 'facility_outside',
+  'Moving - Local': 'onsite',
+  'Relocation': 'onsite',
+};
+
+/**
+ * Determine delivery fee type for a service type.
+ * Returns 'delivery', 'relocation', or 'none'.
+ */
+function getDeliveryFeeType(serviceType: string): 'delivery' | 'relocation' | 'none' {
+  switch (serviceType) {
+    case 'Storage at Your Location':
+    case 'Moving - Local':
+      return 'delivery';
+    case 'Relocation':
+      return 'relocation';
+    default:
+      return 'none'; // Facility storage
+  }
 }
 
 /**
@@ -98,8 +143,36 @@ export async function previewNextQuoteNumber(db: D1Database): Promise<string> {
 }
 
 /**
+ * Look up zone data for a ZIP code.
+ */
+async function lookupZone(
+  db: D1Database,
+  zip: string
+): Promise<{
+  zone_id: number;
+  zone_name: string;
+  delivery_fee: number;
+  pickup_fee: number;
+  relocation_fee: number;
+} | null> {
+  return db
+    .prepare(`
+      SELECT z.id as zone_id, z.name as zone_name, z.delivery_fee, z.pickup_fee, z.relocation_fee
+      FROM zip_codes zc
+      JOIN zones z ON zc.zone_id = z.id
+      WHERE zc.zip = ? AND z.is_active = 1
+    `)
+    .bind(zip)
+    .first();
+}
+
+/**
  * Calculate full pricing breakdown from DB data.
  * Multi-container discount: 2 = 5%, 3+ = 10% (monthly only).
+ *
+ * Supports two modes:
+ * - Simple (Quick Quote): single global ZIP, all items share zone
+ * - Advanced: per-item service_type + zip_1 for individual zone lookups
  */
 export async function calculatePricing(
   db: D1Database,
@@ -108,28 +181,10 @@ export async function calculatePricing(
   promoId?: number,
   overrideMonthlyCents?: number
 ): Promise<PricingResult> {
-  // Fetch zone by ZIP
-  const zoneRow = await db
-    .prepare(`
-      SELECT z.id as zone_id, z.name as zone_name, z.delivery_fee, z.pickup_fee, z.relocation_fee
-      FROM zip_codes zc
-      JOIN zones z ON zc.zone_id = z.id
-      WHERE zc.zip = ? AND z.is_active = 1
-    `)
-    .bind(zip)
-    .first<{
-      zone_id: number;
-      zone_name: string;
-      delivery_fee: number;
-      pickup_fee: number;
-      relocation_fee: number;
-    }>();
+  // Detect advanced mode: any item has service_type set
+  const isAdvanced = items.some(i => !!i.service_type);
 
-  if (!zoneRow) {
-    throw new Error('ZIP code not in service area');
-  }
-
-  // Fetch all pricing
+  // Fetch all pricing rates
   const pricingRows = await db
     .prepare('SELECT container_size, rate_type, amount FROM pricing')
     .all<{ container_size: string; rate_type: string; amount: number }>();
@@ -137,28 +192,117 @@ export async function calculatePricing(
   const pricingMap: Record<string, Record<string, number>> = {};
   for (const p of pricingRows.results || []) {
     if (!pricingMap[p.container_size]) pricingMap[p.container_size] = {};
-    pricingMap[p.container_size][p.rate_type] = p.amount; // already in cents
+    pricingMap[p.container_size][p.rate_type] = p.amount;
   }
 
-  // Build line items
-  const pricedItems = items.map((item) => {
-    const sizeRates = pricingMap[item.container_size];
-    if (!sizeRates) throw new Error(`No pricing for container size ${item.container_size}`);
+  // Zone cache for advanced mode (avoid duplicate lookups)
+  const zoneCache: Record<string, Awaited<ReturnType<typeof lookupZone>>> = {};
 
-    const monthlyRate = sizeRates[item.storage_location];
-    if (monthlyRate === undefined) {
-      throw new Error(`No pricing for ${item.container_size}/${item.storage_location}`);
+  let pricedItems: PricingResultItem[];
+  let globalZoneId: number;
+  let globalZoneName: string;
+  let globalDeliveryFee: number;
+  let globalPickupFee: number;
+  let globalRelocationFee: number;
+  let totalDeliveryFeeCents: number;
+
+  if (!isAdvanced) {
+    // === SIMPLE MODE (existing Quick Quote) ===
+    const zoneRow = await lookupZone(db, zip);
+    if (!zoneRow) throw new Error('ZIP code not in service area');
+
+    globalZoneId = zoneRow.zone_id;
+    globalZoneName = zoneRow.zone_name;
+    globalDeliveryFee = zoneRow.delivery_fee;
+    globalPickupFee = zoneRow.pickup_fee;
+    globalRelocationFee = zoneRow.relocation_fee;
+
+    pricedItems = items.map((item) => {
+      const sizeRates = pricingMap[item.container_size];
+      if (!sizeRates) throw new Error(`No pricing for container size ${item.container_size}`);
+
+      const monthlyRate = sizeRates[item.storage_location];
+      if (monthlyRate === undefined) {
+        throw new Error(`No pricing for ${item.container_size}/${item.storage_location}`);
+      }
+
+      return {
+        container_size: item.container_size,
+        storage_location: item.storage_location,
+        monthly_rate_cents: monthlyRate,
+        first_month_rate_cents: sizeRates['first_month'] ?? monthlyRate,
+      };
+    });
+
+    totalDeliveryFeeCents = globalDeliveryFee * items.length;
+  } else {
+    // === ADVANCED MODE (per-item service type + zone lookup) ===
+    pricedItems = [];
+    totalDeliveryFeeCents = 0;
+
+    // Default zone from global zip (fallback)
+    let firstZone: Awaited<ReturnType<typeof lookupZone>> = null;
+
+    for (const item of items) {
+      const serviceType = item.service_type!;
+      const storageLocation = SERVICE_LOCATION_MAP[serviceType] || 'onsite';
+      const feeType = getDeliveryFeeType(serviceType);
+
+      const sizeRates = pricingMap[item.container_size];
+      if (!sizeRates) throw new Error(`No pricing for container size ${item.container_size}`);
+
+      const monthlyRate = sizeRates[storageLocation];
+      if (monthlyRate === undefined) {
+        throw new Error(`No pricing for ${item.container_size}/${storageLocation}`);
+      }
+
+      let itemZoneId: number | undefined;
+      let itemZoneName: string | undefined;
+      let itemDeliveryFeeCents = 0;
+
+      if (feeType !== 'none' && item.zip_1) {
+        // Look up zone for this item's ZIP
+        if (!(item.zip_1 in zoneCache)) {
+          zoneCache[item.zip_1] = await lookupZone(db, item.zip_1);
+        }
+        const zone = zoneCache[item.zip_1];
+        if (!zone) throw new Error(`ZIP ${item.zip_1} not in service area`);
+
+        itemZoneId = zone.zone_id;
+        itemZoneName = zone.zone_name;
+        itemDeliveryFeeCents = feeType === 'relocation'
+          ? zone.relocation_fee
+          : zone.delivery_fee;
+
+        if (!firstZone) firstZone = zone;
+      }
+
+      totalDeliveryFeeCents += itemDeliveryFeeCents;
+
+      pricedItems.push({
+        container_size: item.container_size,
+        storage_location: storageLocation,
+        monthly_rate_cents: monthlyRate,
+        first_month_rate_cents: sizeRates['first_month'] ?? monthlyRate,
+        service_type: serviceType,
+        zone_id: itemZoneId,
+        zone_name: itemZoneName,
+        delivery_fee_cents: itemDeliveryFeeCents,
+      });
     }
 
-    const firstMonthRate = sizeRates['first_month'] ?? monthlyRate;
+    // Fallback: if no per-item zone found, try global zip
+    if (!firstZone && zip) {
+      firstZone = await lookupZone(db, zip);
+    }
 
-    return {
-      container_size: item.container_size,
-      storage_location: item.storage_location,
-      monthly_rate_cents: monthlyRate,
-      first_month_rate_cents: firstMonthRate,
-    };
-  });
+    // Use first item's zone data (or global) for the quote-level fields
+    globalZoneId = firstZone?.zone_id ?? 0;
+    globalZoneName = firstZone?.zone_name ?? '';
+    globalDeliveryFee = firstZone?.delivery_fee ?? 0;
+    globalPickupFee = firstZone?.pickup_fee ?? 0;
+    globalRelocationFee = firstZone?.relocation_fee ?? 0;
+  }
 
   const containerCount = items.length;
 
@@ -193,21 +337,18 @@ export async function calculatePricing(
     if (promo) {
       const appliesTo: string[] = JSON.parse(promo.applies_to || '[]');
 
-      // Apply to monthly rent
       if (appliesTo.includes('rent')) {
         const applicableMonthly = subtotalMonthlyCents - multiDiscountCents;
         if (promo.discount_type === 'percent') {
           promoDiscountCents += Math.round(applicableMonthly * promo.discount_value / 100);
         } else {
-          promoDiscountCents += Math.round(promo.discount_value * 100); // flat value is in dollars
+          promoDiscountCents += Math.round(promo.discount_value * 100);
         }
       }
 
-      // Apply to delivery
       if (appliesTo.includes('delivery')) {
-        const deliveryTotal = zoneRow.delivery_fee * containerCount;
         if (promo.discount_type === 'percent') {
-          promoDiscountCents += Math.round(deliveryTotal * promo.discount_value / 100);
+          promoDiscountCents += Math.round(totalDeliveryFeeCents * promo.discount_value / 100);
         } else {
           promoDiscountCents += Math.round(promo.discount_value * 100);
         }
@@ -218,21 +359,17 @@ export async function calculatePricing(
   const discountMonthlyCents = multiDiscountCents + promoDiscountCents;
   const totalMonthlyCents = subtotalMonthlyCents - multiDiscountCents;
 
-  // First month total = first month rates + delivery fees - promo
   const firstMonthRentCents = pricedItems.reduce((sum, i) => sum + i.first_month_rate_cents, 0);
-  const deliveryTotalCents = zoneRow.delivery_fee * containerCount;
-  const firstMonthTotalCents = firstMonthRentCents + deliveryTotalCents - promoDiscountCents;
-
-  // Due today = first month total
+  const firstMonthTotalCents = firstMonthRentCents + totalDeliveryFeeCents - promoDiscountCents;
   const dueTodayCents = firstMonthTotalCents;
 
   return {
     items: pricedItems,
-    zone_id: zoneRow.zone_id,
-    zone_name: zoneRow.zone_name,
-    delivery_fee_cents: zoneRow.delivery_fee,
-    pickup_fee_cents: zoneRow.pickup_fee,
-    relocation_fee_cents: zoneRow.relocation_fee,
+    zone_id: globalZoneId,
+    zone_name: globalZoneName,
+    delivery_fee_cents: globalDeliveryFee,
+    pickup_fee_cents: globalPickupFee,
+    relocation_fee_cents: globalRelocationFee,
     container_count: containerCount,
     multi_discount_percent: multiDiscountPercent,
     promo_discount_cents: promoDiscountCents,
@@ -260,7 +397,7 @@ export async function insertQuote(
   const result = await db
     .prepare(`
       INSERT INTO staff_quotes (
-        quote_number, status, created_at, updated_at,
+        quote_number, quote_type, status, created_at, updated_at,
         customer_name, phone, email, address, city, state, zip,
         service_type, delivery_date, months_needed,
         zone_id, zone_name, delivery_fee_cents, pickup_fee_cents, relocation_fee_cents,
@@ -270,10 +407,12 @@ export async function insertQuote(
         subtotal_monthly_cents, discount_monthly_cents, total_monthly_cents,
         first_month_total_cents, due_today_cents,
         created_by, notes
-      ) VALUES (?, 'draft', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, 'draft', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
     .bind(
-      quoteNumber, now, now,
+      quoteNumber,
+      input.quote_type || 'quick',
+      now, now,
       input.customer_name,
       input.phone || null,
       input.email || null,
@@ -314,14 +453,41 @@ export async function insertQuote(
 
   const quoteId = inserted!.id;
 
-  // Insert line items
-  for (const item of pricing.items) {
+  // Insert line items (match input items with pricing items by index)
+  for (let idx = 0; idx < pricing.items.length; idx++) {
+    const item = pricing.items[idx];
+    const inputItem = input.items[idx];
+
     await db
       .prepare(`
-        INSERT INTO staff_quote_items (quote_id, container_size, storage_location, monthly_rate_cents, first_month_rate_cents)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO staff_quote_items (
+          quote_id, container_size, storage_location, monthly_rate_cents, first_month_rate_cents,
+          service_type, address_1, apt_1, city_1, state_1, zip_1,
+          address_2, apt_2, city_2, state_2, zip_2,
+          zone_id, zone_name, delivery_fee_cents
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `)
-      .bind(quoteId, item.container_size, item.storage_location, item.monthly_rate_cents, item.first_month_rate_cents)
+      .bind(
+        quoteId,
+        item.container_size,
+        item.storage_location,
+        item.monthly_rate_cents,
+        item.first_month_rate_cents,
+        item.service_type || null,
+        inputItem?.address_1 || null,
+        inputItem?.apt_1 || null,
+        inputItem?.city_1 || null,
+        inputItem?.state_1 || null,
+        inputItem?.zip_1 || null,
+        inputItem?.address_2 || null,
+        inputItem?.apt_2 || null,
+        inputItem?.city_2 || null,
+        inputItem?.state_2 || null,
+        inputItem?.zip_2 || null,
+        item.zone_id ?? null,
+        item.zone_name ?? null,
+        item.delivery_fee_cents ?? 0
+      )
       .run();
   }
 
