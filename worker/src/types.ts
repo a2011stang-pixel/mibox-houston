@@ -101,3 +101,54 @@ export interface AuthContext {
   };
   sessionId: string;
 }
+
+export interface StaffQuote {
+  id: number;
+  quote_number: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  customer_name: string;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  zip: string;
+  service_type: string;
+  delivery_date: string | null;
+  months_needed: number;
+  zone_id: number | null;
+  zone_name: string | null;
+  delivery_fee_cents: number;
+  pickup_fee_cents: number;
+  relocation_fee_cents: number;
+  container_count: number;
+  multi_discount_percent: number;
+  promo_id: number | null;
+  promo_code: string | null;
+  promo_discount_cents: number;
+  override_monthly_cents: number | null;
+  override_reason: string | null;
+  subtotal_monthly_cents: number;
+  discount_monthly_cents: number;
+  total_monthly_cents: number;
+  first_month_total_cents: number;
+  due_today_cents: number;
+  created_by: string;
+  email_sent: number;
+  email_sent_at: string | null;
+  stella_forwarded: number;
+  stella_order_id: string | null;
+  converted_at: string | null;
+  notes: string | null;
+}
+
+export interface StaffQuoteItem {
+  id: number;
+  quote_id: number;
+  container_size: string;
+  storage_location: string;
+  monthly_rate_cents: number;
+  first_month_rate_cents: number;
+}

@@ -46,6 +46,8 @@ async function navigateTo(page) {
         case 'zips': await loadZips(); break;
         case 'pricing': await loadPricing(); break;
         case 'promotions': await loadPromotions(); break;
+        case 'quick-quote': await loadQuickQuote(); break;
+        case 'quote-history': await loadQuoteHistory(); break;
         case 'audit': await loadAudit(); break;
     }
 }
@@ -107,6 +109,16 @@ async function loadDashboard() {
             '<tr><td>' + escapeHtml(z.name) + '</td><td>' + escapeHtml(z.display_name) + '</td><td>' +
             formatCurrency(z.delivery_fee) + '</td><td>' + (z.zip_count || 0) + '</td></tr>'
         ).join('');
+
+        // Load quote stats
+        try {
+            const stats = await api.getQuoteStats();
+            document.getElementById('statQuotesWeek').textContent = stats.this_week;
+            document.getElementById('statConvertedWeek').textContent = stats.converted_this_week;
+            document.getElementById('statQuotesDraft').textContent = stats.draft_count + stats.sent_count;
+        } catch (e) {
+            // Non-critical - quote tables may not exist yet
+        }
     } catch (err) {
         showToast('Error', err.message, 'error');
     }
@@ -714,6 +726,575 @@ function formatChanges(oldVal, newVal) {
     if (!newVal) return '<span class="text-danger">Deleted</span>';
     return '<span class="text-warning">Modified</span>';
 }
+
+// ============================================================
+// Quick Quote
+// ============================================================
+let qqZoneData = null;
+let qqPricingData = null;
+let qqContainers = [{ size: '16', location: 'onsite' }];
+let qqSavedQuoteId = null;
+let qqActivePromos = [];
+let qqZipDebounceTimer = null;
+
+async function loadQuickQuote() {
+    // Reset state
+    qqZoneData = null;
+    qqPricingData = null;
+    qqContainers = [{ size: '16', location: 'onsite' }];
+    qqSavedQuoteId = null;
+
+    // Reset form fields
+    const fields = ['qqName', 'qqPhone', 'qqEmail', 'qqZip', 'qqAddress', 'qqCity', 'qqPromoCode', 'qqOverride', 'qqOverrideReason', 'qqNotes'];
+    fields.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    document.getElementById('qqState').value = 'TX';
+    document.getElementById('qqServiceType').value = 'Storage at Your Location';
+    document.getElementById('qqDeliveryDate').value = '';
+    document.getElementById('qqMonths').value = '1';
+    document.getElementById('qqPromo').value = '';
+    document.getElementById('qqZipStatus').textContent = '';
+    document.getElementById('qqZipStatus').className = 'qq-zip-status';
+    document.getElementById('qqNumberBadge').style.display = 'none';
+    document.getElementById('qqActions').style.display = 'none';
+    document.getElementById('qqSaveBtn').disabled = false;
+    document.getElementById('qqEmailBtn').disabled = true;
+    document.getElementById('qqStellaBtn').disabled = true;
+
+    qqRenderContainers();
+    qqRenderSummary();
+
+    // Load promotions for dropdown
+    try {
+        const data = await api.getPromotions();
+        const now = new Date().toISOString().split('T')[0];
+        qqActivePromos = (data.promotions || []).filter(p => p.is_active && p.start_date <= now && p.end_date >= now);
+        const select = document.getElementById('qqPromo');
+        select.innerHTML = '<option value="">No promotion</option>' +
+            qqActivePromos.map(p => '<option value="' + p.id + '">' + escapeHtml(p.name) +
+                ' (' + (p.discount_type === 'percent' ? p.discount_value + '%' : '$' + Number(p.discount_value).toFixed(2)) + ' off)' +
+                '</option>').join('');
+    } catch (err) {
+        // Non-critical, promos just won't be available
+    }
+}
+
+function qqRenderContainers() {
+    const wrap = document.getElementById('qqContainersWrap');
+    wrap.innerHTML = qqContainers.map((c, i) =>
+        '<div class="qq-container-item">' +
+            '<span style="font-weight:700;color:var(--gray-400);font-size:12px;width:20px;">#' + (i + 1) + '</span>' +
+            '<select class="form-select" onchange="qqUpdateContainer(' + i + ', \'size\', this.value)">' +
+                '<option value="16"' + (c.size === '16' ? ' selected' : '') + '>16-ft Container</option>' +
+                '<option value="20"' + (c.size === '20' ? ' selected' : '') + '>20-ft Container</option>' +
+            '</select>' +
+            '<select class="form-select" onchange="qqUpdateContainer(' + i + ', \'location\', this.value)">' +
+                '<option value="onsite"' + (c.location === 'onsite' ? ' selected' : '') + '>Onsite Storage</option>' +
+                '<option value="facility_inside"' + (c.location === 'facility_inside' ? ' selected' : '') + '>Facility Inside</option>' +
+                '<option value="facility_outside"' + (c.location === 'facility_outside' ? ' selected' : '') + '>Facility Outside</option>' +
+            '</select>' +
+            (qqContainers.length > 1
+                ? '<button class="btn btn-sm btn-outline-danger btn-remove" onclick="qqRemoveContainer(' + i + ')" type="button"><i class="bi bi-x-lg"></i></button>'
+                : '') +
+        '</div>'
+    ).join('');
+}
+
+function qqUpdateContainer(idx, field, value) {
+    qqContainers[idx][field === 'size' ? 'size' : 'location'] = value;
+    qqRecalculate();
+}
+window.qqUpdateContainer = qqUpdateContainer;
+
+function qqAddContainer() {
+    if (qqContainers.length >= 10) {
+        showToast('Limit', 'Maximum 10 containers per quote', 'error');
+        return;
+    }
+    qqContainers.push({ size: '16', location: 'onsite' });
+    qqRenderContainers();
+    qqRecalculate();
+}
+
+function qqRemoveContainer(idx) {
+    if (qqContainers.length <= 1) return;
+    qqContainers.splice(idx, 1);
+    qqRenderContainers();
+    qqRecalculate();
+}
+window.qqRemoveContainer = qqRemoveContainer;
+
+function qqRecalculate() {
+    if (!qqZoneData || !qqPricingData) {
+        qqRenderSummary();
+        return;
+    }
+
+    qqRenderSummary();
+}
+
+function qqGetPricing() {
+    if (!qqZoneData || !qqPricingData) return null;
+
+    const monthly = qqPricingData.monthly || {};
+    const firstMonth = qqPricingData.first_month || {};
+    const count = qqContainers.length;
+
+    // Build items with rates
+    const items = qqContainers.map(c => {
+        const sizeRates = monthly[c.size] || {};
+        const monthlyRate = sizeRates[c.location] || 0;
+        const firstMonthRate = firstMonth[c.size] || monthlyRate;
+        return {
+            container_size: c.size,
+            storage_location: c.location,
+            monthly_rate: monthlyRate,      // in dollars
+            first_month_rate: firstMonthRate // in dollars
+        };
+    });
+
+    // Delivery fee per container (from zone, in dollars)
+    const deliveryFeeEach = qqZoneData.delivery_fee || 0;
+    const deliveryTotal = deliveryFeeEach * count;
+
+    // Monthly subtotal
+    let monthlySubtotal = items.reduce((s, i) => s + i.monthly_rate, 0);
+
+    // Override
+    const overrideVal = parseFloat(document.getElementById('qqOverride').value);
+    const hasOverride = !isNaN(overrideVal) && overrideVal > 0;
+    if (hasOverride) {
+        monthlySubtotal = overrideVal * count;
+    }
+
+    // Multi-container discount (monthly only)
+    let multiPct = 0;
+    if (count === 2) multiPct = 5;
+    else if (count >= 3) multiPct = 10;
+    const multiDiscount = monthlySubtotal * multiPct / 100;
+
+    // Promo discount
+    let promoDiscount = 0;
+    const promoId = document.getElementById('qqPromo').value;
+    if (promoId) {
+        const promo = qqActivePromos.find(p => p.id === parseInt(promoId));
+        if (promo) {
+            const appliesTo = safeJsonParse(promo.applies_to, []);
+            if (appliesTo.includes('rent')) {
+                const applicableMonthly = monthlySubtotal - multiDiscount;
+                promoDiscount += promo.discount_type === 'percent'
+                    ? applicableMonthly * promo.discount_value / 100
+                    : promo.discount_value;
+            }
+            if (appliesTo.includes('delivery')) {
+                promoDiscount += promo.discount_type === 'percent'
+                    ? deliveryTotal * promo.discount_value / 100
+                    : promo.discount_value;
+            }
+        }
+    }
+
+    const totalMonthly = monthlySubtotal - multiDiscount;
+    const firstMonthRent = items.reduce((s, i) => s + i.first_month_rate, 0);
+    const firstMonthTotal = firstMonthRent + deliveryTotal - promoDiscount;
+    const dueTodayVal = firstMonthTotal;
+
+    return {
+        items,
+        deliveryFeeEach,
+        deliveryTotal,
+        monthlySubtotal,
+        multiPct,
+        multiDiscount,
+        promoDiscount,
+        totalMonthly,
+        firstMonthRent,
+        firstMonthTotal,
+        dueToday: dueTodayVal,
+        hasOverride,
+        count,
+    };
+}
+
+function qqRenderSummary() {
+    const body = document.getElementById('qqSummaryBody');
+    const pricing = qqGetPricing();
+
+    if (!pricing) {
+        body.innerHTML = '<p class="text-muted text-center py-4">Enter a ZIP code to begin</p>';
+        document.getElementById('qqActions').style.display = 'none';
+        return;
+    }
+
+    document.getElementById('qqActions').style.display = '';
+
+    const fmt = v => '$' + Number(v).toFixed(2);
+    const name = document.getElementById('qqName').value;
+    const zip = document.getElementById('qqZip').value;
+
+    let html = '';
+
+    // Customer section
+    if (name || zip) {
+        html += '<div class="qq-section-label">Customer</div>';
+        if (name) html += '<div class="qq-summary-row"><span class="label">' + escapeHtml(name) + '</span></div>';
+        if (zip) html += '<div class="qq-summary-row"><span class="label">ZIP ' + escapeHtml(zip) + '</span><span class="value">' + escapeHtml(qqZoneData.zone_name || '') + '</span></div>';
+    }
+
+    // Containers section
+    html += '<div class="qq-section-label">Containers';
+    if (pricing.multiPct > 0) {
+        html += ' <span class="qq-discount-badge">' + pricing.multiPct + '% multi-discount</span>';
+    }
+    html += '</div>';
+
+    pricing.items.forEach((item, i) => {
+        const locLabel = { onsite: 'Onsite', facility_inside: 'Facility In', facility_outside: 'Facility Out' }[item.storage_location] || item.storage_location;
+        html += '<div class="qq-summary-row"><span class="label">' + item.container_size + "' " + locLabel + '</span><span class="value">' + fmt(item.monthly_rate) + '/mo</span></div>';
+    });
+
+    // Pricing section
+    html += '<div class="qq-section-label">Pricing</div>';
+    html += '<div class="qq-summary-row"><span class="label">First Month Rent</span><span class="value">' + fmt(pricing.firstMonthRent) + '</span></div>';
+    html += '<div class="qq-summary-row"><span class="label">Delivery' + (pricing.count > 1 ? ' (x' + pricing.count + ')' : '') + '</span><span class="value">' + fmt(pricing.deliveryTotal) + '</span></div>';
+
+    if (pricing.multiDiscount > 0) {
+        html += '<div class="qq-summary-row discount"><span class="label">Multi-Container (' + pricing.multiPct + '%)</span><span class="value">-' + fmt(pricing.multiDiscount) + '</span></div>';
+    }
+
+    if (pricing.promoDiscount > 0) {
+        html += '<div class="qq-summary-row discount"><span class="label">Promo Discount</span><span class="value">-' + fmt(pricing.promoDiscount) + '</span></div>';
+    }
+
+    if (pricing.hasOverride) {
+        html += '<div class="qq-summary-row"><span class="label" style="color:var(--orange);font-weight:700;">Override Applied</span></div>';
+    }
+
+    // Totals
+    html += '<div class="qq-summary-row total"><span class="label">Due at Delivery</span><span class="value">' + fmt(pricing.dueToday) + '</span></div>';
+    html += '<div class="qq-summary-row"><span class="label">Monthly After First</span><span class="value">' + fmt(pricing.totalMonthly) + '</span></div>';
+
+    body.innerHTML = html;
+}
+
+// ZIP lookup with debounce
+document.getElementById('qqZip').addEventListener('input', function() {
+    clearTimeout(qqZipDebounceTimer);
+    const zip = this.value.trim();
+    const statusEl = document.getElementById('qqZipStatus');
+
+    if (zip.length < 5) {
+        qqZoneData = null;
+        qqPricingData = null;
+        statusEl.textContent = '';
+        statusEl.className = 'qq-zip-status';
+        qqRecalculate();
+        return;
+    }
+
+    if (!/^\d{5}$/.test(zip)) return;
+
+    statusEl.innerHTML = '<i class="bi bi-arrow-repeat"></i>';
+    statusEl.className = 'qq-zip-status qq-zip-loading';
+
+    qqZipDebounceTimer = setTimeout(async () => {
+        try {
+            const data = await api.request('GET', '/public/pricing/' + zip, null, true);
+            qqZoneData = {
+                zone: data.zone,
+                zone_name: data.zone_name,
+                delivery_fee: data.delivery_fee,
+                pickup_fee: data.pickup_fee,
+                relocation_fee: data.relocation_fee,
+            };
+            qqPricingData = {
+                monthly: data.monthly,
+                first_month: data.first_month,
+            };
+            statusEl.innerHTML = '<i class="bi bi-check-circle-fill"></i>';
+            statusEl.className = 'qq-zip-status qq-zip-ok';
+            qqRecalculate();
+        } catch (err) {
+            qqZoneData = null;
+            qqPricingData = null;
+            statusEl.innerHTML = '<i class="bi bi-x-circle-fill"></i>';
+            statusEl.className = 'qq-zip-status qq-zip-error';
+            qqRecalculate();
+        }
+    }, 400);
+});
+
+// Recalculate on input changes
+['qqServiceType', 'qqMonths', 'qqPromo'].forEach(id => {
+    document.getElementById(id).addEventListener('change', qqRecalculate);
+});
+['qqOverride', 'qqName'].forEach(id => {
+    document.getElementById(id).addEventListener('input', qqRecalculate);
+});
+
+// Promo selection updates promo code display
+document.getElementById('qqPromo').addEventListener('change', function() {
+    const promoId = this.value;
+    const codeInput = document.getElementById('qqPromoCode');
+    if (promoId) {
+        const promo = qqActivePromos.find(p => p.id === parseInt(promoId));
+        codeInput.value = promo?.promo_code || '';
+    } else {
+        codeInput.value = '';
+    }
+    qqRecalculate();
+});
+
+// Add Container button
+document.getElementById('qqAddContainerBtn').addEventListener('click', qqAddContainer);
+
+// Save Quote
+document.getElementById('qqSaveBtn').addEventListener('click', async function() {
+    const name = document.getElementById('qqName').value.trim();
+    const zip = document.getElementById('qqZip').value.trim();
+
+    if (!name) { showToast('Validation', 'Customer name is required', 'error'); return; }
+    if (!zip || !/^\d{5}$/.test(zip)) { showToast('Validation', 'Valid ZIP code is required', 'error'); return; }
+    if (!qqZoneData) { showToast('Validation', 'ZIP code not in service area', 'error'); return; }
+
+    const overrideVal = parseFloat(document.getElementById('qqOverride').value);
+    const hasOverride = !isNaN(overrideVal) && overrideVal > 0;
+    const overrideReason = document.getElementById('qqOverrideReason').value.trim();
+    if (hasOverride && !overrideReason) {
+        showToast('Validation', 'Override reason is required', 'error');
+        return;
+    }
+
+    const promoId = document.getElementById('qqPromo').value;
+
+    const data = {
+        customer_name: name,
+        phone: document.getElementById('qqPhone').value.trim() || undefined,
+        email: document.getElementById('qqEmail').value.trim() || undefined,
+        address: document.getElementById('qqAddress').value.trim() || undefined,
+        city: document.getElementById('qqCity').value.trim() || undefined,
+        state: document.getElementById('qqState').value.trim() || undefined,
+        zip: zip,
+        service_type: document.getElementById('qqServiceType').value,
+        delivery_date: document.getElementById('qqDeliveryDate').value || undefined,
+        months_needed: parseInt(document.getElementById('qqMonths').value) || 1,
+        items: qqContainers.map(c => ({
+            container_size: c.size,
+            storage_location: c.location,
+        })),
+        promo_id: promoId ? parseInt(promoId) : undefined,
+        promo_code: document.getElementById('qqPromoCode').value || undefined,
+        override_monthly_cents: hasOverride ? Math.round(overrideVal * 100) : undefined,
+        override_reason: hasOverride ? overrideReason : undefined,
+        notes: document.getElementById('qqNotes').value.trim() || undefined,
+    };
+
+    this.disabled = true;
+    this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
+
+    try {
+        const result = await api.createStaffQuote(data);
+        qqSavedQuoteId = result.quote.id;
+
+        // Show quote number badge
+        const badge = document.getElementById('qqNumberBadge');
+        badge.textContent = result.quote.quote_number;
+        badge.style.display = '';
+
+        // Enable action buttons
+        document.getElementById('qqEmailBtn').disabled = !result.quote.email;
+        document.getElementById('qqStellaBtn').disabled = false;
+        this.innerHTML = '<i class="bi bi-check-lg me-1"></i>Saved';
+
+        showToast('Quote Saved', 'Quote ' + result.quote.quote_number + ' created');
+    } catch (err) {
+        showToast('Error', err.message, 'error');
+        this.disabled = false;
+        this.innerHTML = '<i class="bi bi-save me-1"></i>Save Quote';
+    }
+});
+
+// Email Quote
+document.getElementById('qqEmailBtn').addEventListener('click', async function() {
+    if (!qqSavedQuoteId) return;
+    this.disabled = true;
+    this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Sending...';
+
+    try {
+        await api.emailStaffQuote(qqSavedQuoteId);
+        this.innerHTML = '<i class="bi bi-check-lg me-1"></i>Email Sent';
+        showToast('Email Sent', 'Quote emailed to customer');
+    } catch (err) {
+        showToast('Error', err.message, 'error');
+        this.disabled = false;
+        this.innerHTML = '<i class="bi bi-envelope me-1"></i>Email to Customer';
+    }
+});
+
+// Send to Stella
+document.getElementById('qqStellaBtn').addEventListener('click', async function() {
+    if (!qqSavedQuoteId) return;
+    this.disabled = true;
+    this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Sending...';
+
+    try {
+        await api.convertStaffQuote(qqSavedQuoteId);
+        this.innerHTML = '<i class="bi bi-check-lg me-1"></i>Sent to Stella';
+        showToast('Stella CRM', 'Quote forwarded to Stella');
+    } catch (err) {
+        showToast('Error', err.message, 'error');
+        this.disabled = false;
+        this.innerHTML = '<i class="bi bi-send me-1"></i>Send to Stella CRM';
+    }
+});
+
+// Print
+document.getElementById('qqPrintBtn').addEventListener('click', function() {
+    window.print();
+});
+
+// ============================================================
+// Quote History
+// ============================================================
+let qhPage = 0;
+const qhLimit = 25;
+
+async function loadQuoteHistory() {
+    await refreshQuoteHistory();
+    // Load stats
+    try {
+        const stats = await api.getQuoteStats();
+        document.getElementById('qhDraftCount').textContent = stats.draft_count;
+        document.getElementById('qhSentCount').textContent = stats.sent_count;
+        document.getElementById('qhConvertedCount').textContent = stats.converted_count;
+    } catch (err) {
+        // Non-critical
+    }
+}
+
+async function refreshQuoteHistory() {
+    const search = document.getElementById('qhSearch').value;
+    const status = document.getElementById('qhStatusFilter').value;
+
+    try {
+        const data = await api.getStaffQuotes({
+            search: search || undefined,
+            status: status || undefined,
+            limit: qhLimit,
+            offset: qhPage * qhLimit,
+        });
+
+        const tbody = document.getElementById('qhTable');
+        if (!data.quotes || data.quotes.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">No quotes found</td></tr>';
+        } else {
+            tbody.innerHTML = data.quotes.map(q => {
+                const statusClass = 'badge-' + q.status;
+                const created = new Date(q.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                return '<tr>' +
+                    '<td><code>' + escapeHtml(q.quote_number) + '</code></td>' +
+                    '<td>' + escapeHtml(q.customer_name) + (q.email ? '<br><small class="text-muted">' + escapeHtml(q.email) + '</small>' : '') + '</td>' +
+                    '<td>' + escapeHtml(q.zip) + '</td>' +
+                    '<td>' + q.container_count + '</td>' +
+                    '<td><strong>' + formatCurrency(q.due_today_cents) + '</strong></td>' +
+                    '<td><span class="badge ' + statusClass + '">' + capitalize(q.status) + '</span></td>' +
+                    '<td class="small">' + created + '</td>' +
+                    '<td><button class="btn btn-sm btn-outline-primary" onclick="viewQuoteDetail(' + q.id + ')"><i class="bi bi-eye"></i></button></td>' +
+                    '</tr>';
+            }).join('');
+        }
+
+        renderPagination('qhPagination', data.total, qhLimit, qhPage, (p) => {
+            qhPage = p;
+            refreshQuoteHistory();
+        });
+    } catch (err) {
+        showToast('Error', err.message, 'error');
+    }
+}
+
+document.getElementById('qhSearch').addEventListener('input', debounce(() => { qhPage = 0; refreshQuoteHistory(); }, 300));
+document.getElementById('qhStatusFilter').addEventListener('change', () => { qhPage = 0; refreshQuoteHistory(); });
+
+async function viewQuoteDetail(id) {
+    try {
+        const data = await api.getStaffQuote(id);
+        const q = data.quote;
+        const items = q.items || [];
+
+        document.getElementById('quoteDetailTitle').textContent = 'Quote ' + q.quote_number;
+
+        const fmt = cents => '$' + (cents / 100).toFixed(2);
+        const locLabel = loc => ({ onsite: 'Onsite', facility_inside: 'Facility Inside', facility_outside: 'Facility Outside' }[loc] || loc);
+
+        let html = '<div class="mb-3"><span class="badge badge-' + q.status + '" style="font-size:13px;">' + capitalize(q.status) + '</span></div>';
+
+        html += '<h6 style="font-weight:700;">Customer</h6>';
+        html += '<table class="table table-sm"><tbody>';
+        html += '<tr><td class="text-muted">Name</td><td>' + escapeHtml(q.customer_name) + '</td></tr>';
+        if (q.email) html += '<tr><td class="text-muted">Email</td><td>' + escapeHtml(q.email) + '</td></tr>';
+        if (q.phone) html += '<tr><td class="text-muted">Phone</td><td>' + escapeHtml(q.phone) + '</td></tr>';
+        html += '<tr><td class="text-muted">ZIP</td><td>' + escapeHtml(q.zip) + ' (' + escapeHtml(q.zone_name || '') + ')</td></tr>';
+        if (q.address) html += '<tr><td class="text-muted">Address</td><td>' + escapeHtml(q.address) + '</td></tr>';
+        html += '</tbody></table>';
+
+        html += '<h6 style="font-weight:700;">Containers</h6>';
+        html += '<table class="table table-sm"><tbody>';
+        items.forEach((item, i) => {
+            html += '<tr><td>' + item.container_size + "' " + locLabel(item.storage_location) + '</td><td class="text-end">' + fmt(item.monthly_rate_cents) + '/mo</td></tr>';
+        });
+        html += '</tbody></table>';
+
+        html += '<h6 style="font-weight:700;">Pricing</h6>';
+        html += '<table class="table table-sm"><tbody>';
+        html += '<tr><td class="text-muted">Delivery' + (q.container_count > 1 ? ' (x' + q.container_count + ')' : '') + '</td><td class="text-end">' + fmt(q.delivery_fee_cents * q.container_count) + '</td></tr>';
+        if (q.multi_discount_percent > 0) {
+            html += '<tr><td class="text-muted">Multi-Container (' + q.multi_discount_percent + '%)</td><td class="text-end text-success">-' + fmt(q.discount_monthly_cents) + '</td></tr>';
+        }
+        if (q.promo_discount_cents > 0) {
+            html += '<tr><td class="text-muted">Promo Discount</td><td class="text-end text-success">-' + fmt(q.promo_discount_cents) + '</td></tr>';
+        }
+        html += '<tr style="border-top:2px solid var(--yellow);"><td><strong>Due at Delivery</strong></td><td class="text-end"><strong>' + fmt(q.due_today_cents) + '</strong></td></tr>';
+        html += '<tr><td class="text-muted">Monthly After First</td><td class="text-end">' + fmt(q.total_monthly_cents) + '</td></tr>';
+        html += '</tbody></table>';
+
+        html += '<h6 style="font-weight:700;">Tracking</h6>';
+        html += '<table class="table table-sm"><tbody>';
+        html += '<tr><td class="text-muted">Created by</td><td>' + escapeHtml(q.created_by) + '</td></tr>';
+        html += '<tr><td class="text-muted">Created</td><td>' + new Date(q.created_at).toLocaleString() + '</td></tr>';
+        if (q.email_sent) html += '<tr><td class="text-muted">Email Sent</td><td>' + new Date(q.email_sent_at).toLocaleString() + '</td></tr>';
+        if (q.stella_forwarded) html += '<tr><td class="text-muted">Stella</td><td>Forwarded</td></tr>';
+        if (q.notes) html += '<tr><td class="text-muted">Notes</td><td>' + escapeHtml(q.notes) + '</td></tr>';
+        html += '</tbody></table>';
+
+        document.getElementById('quoteDetailBody').innerHTML = html;
+
+        // Wire up drawer action buttons
+        document.getElementById('qdEmailBtn').disabled = !q.email || q.email_sent;
+        document.getElementById('qdEmailBtn').onclick = async function() {
+            this.disabled = true;
+            try {
+                await api.emailStaffQuote(q.id);
+                showToast('Email Sent', 'Quote emailed');
+                this.innerHTML = '<i class="bi bi-check-lg me-1"></i>Sent';
+            } catch (err) { showToast('Error', err.message, 'error'); this.disabled = false; }
+        };
+
+        document.getElementById('qdStellaBtn').disabled = q.stella_forwarded;
+        document.getElementById('qdStellaBtn').onclick = async function() {
+            this.disabled = true;
+            try {
+                await api.convertStaffQuote(q.id);
+                showToast('Stella', 'Forwarded to Stella');
+                this.innerHTML = '<i class="bi bi-check-lg me-1"></i>Sent';
+            } catch (err) { showToast('Error', err.message, 'error'); this.disabled = false; }
+        };
+
+        new bootstrap.Modal(document.getElementById('quoteDetailModal')).show();
+    } catch (err) {
+        showToast('Error', err.message, 'error');
+    }
+}
+window.viewQuoteDetail = viewQuoteDetail;
 
 // ============================================================
 // Utilities

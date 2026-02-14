@@ -468,6 +468,188 @@ function mapToStellaFields(payload: Record<string, unknown>): Record<string, unk
   };
 }
 
+// ============================================================
+// Staff Quote Email
+// ============================================================
+
+import type { StaffQuote, StaffQuoteItem } from '../types';
+
+interface StaffQuoteEmailResult {
+  success: boolean;
+  id?: string;
+  error?: string;
+}
+
+function formatCents(cents: number): string {
+  return '$' + (cents / 100).toFixed(2);
+}
+
+export function buildStaffQuoteEmailHtml(
+  quote: StaffQuote,
+  items: StaffQuoteItem[]
+): string {
+  const customerName = escapeHtml(quote.customer_name.split(' ')[0]);
+  const quoteNumber = escapeHtml(quote.quote_number);
+
+  const quoteIdBanner = `<tr>
+<td style="padding:16px 32px 0;text-align:center;">
+<span style="display:inline-block;background-color:#f8f9fa;border:1px solid #e9ecef;border-radius:6px;padding:8px 16px;font-size:14px;color:${BRAND_DARK};font-weight:bold;">Quote #${quoteNumber}</span>
+</td>
+</tr>`;
+
+  const greeting = `<tr>
+<td style="padding:32px 32px 16px;">
+<h2 style="margin:0 0 8px;color:${BRAND_DARK};font-size:20px;">Hi ${customerName},</h2>
+<p style="margin:0;color:#666666;font-size:15px;line-height:1.5;">
+Thank you for your interest in MI-BOX Houston! Here is your portable storage quote.
+</p>
+</td>
+</tr>`;
+
+  // Service details
+  const serviceDisplay = escapeHtml(quote.service_type);
+  const deliveryDate = quote.delivery_date
+    ? escapeHtml(new Date(quote.delivery_date + 'T00:00:00').toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }))
+    : '';
+  let detailsRows = emailRow('Service Type', serviceDisplay)
+    + emailRow('Delivery ZIP', escapeHtml(quote.zip));
+  if (deliveryDate) {
+    detailsRows += emailRow('Delivery Date', deliveryDate);
+  }
+
+  // Container details
+  const containerSummary: Record<string, number> = {};
+  for (const item of items) {
+    const key = item.container_size + "' " + escapeHtml(item.storage_location);
+    containerSummary[key] = (containerSummary[key] || 0) + 1;
+  }
+  for (const [desc, count] of Object.entries(containerSummary)) {
+    detailsRows += emailRow('Container', count > 1 ? `${count}x ${desc}` : desc);
+  }
+
+  const detailsSection = sectionWrapper(
+    sectionHeader('Quote Details')
+    + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${detailsRows}</table>`
+  );
+
+  // Pricing breakdown
+  const firstMonthRent = items.reduce((sum, i) => sum + i.first_month_rate_cents, 0);
+  const deliveryTotal = quote.delivery_fee_cents * quote.container_count;
+  let pricingRows = emailRow('First Month Rent', formatCents(firstMonthRent))
+    + emailRow('Delivery Fee' + (quote.container_count > 1 ? ` (x${quote.container_count})` : ''), formatCents(deliveryTotal));
+
+  if (quote.multi_discount_percent > 0) {
+    const monthlySubtotal = items.reduce((sum, i) => sum + i.monthly_rate_cents, 0);
+    const discountAmt = Math.round(monthlySubtotal * quote.multi_discount_percent / 100);
+    pricingRows += emailRow(
+      `Multi-Container Discount (${quote.multi_discount_percent}%)`,
+      `<span style="color:#22C55E;">-${formatCents(discountAmt)}</span>`
+    );
+  }
+
+  if (quote.promo_discount_cents > 0) {
+    pricingRows += emailRow(
+      'Promo Discount' + (quote.promo_code ? ` (${escapeHtml(quote.promo_code)})` : ''),
+      `<span style="color:#22C55E;">-${formatCents(quote.promo_discount_cents)}</span>`
+    );
+  }
+
+  pricingRows += `<tr><td colspan="2" style="padding:12px 0 0;border-top:2px solid ${BRAND_YELLOW};"></td></tr>`
+    + `<tr>
+<td style="padding:6px 0;color:${BRAND_DARK};font-size:16px;font-weight:bold;">Due at Delivery</td>
+<td style="padding:6px 0;color:${BRAND_DARK};font-size:16px;text-align:right;font-weight:bold;">${formatCents(quote.due_today_cents)}</td>
+</tr>`
+    + emailRow('Monthly After First', formatCents(quote.total_monthly_cents));
+
+  const pricingSection = sectionWrapper(
+    sectionHeader('Pricing Breakdown')
+    + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${pricingRows}</table>`
+  );
+
+  // CTA
+  const ctaSection = `<!-- CTA -->
+<tr>
+<td style="padding:24px 32px;text-align:center;">
+<p style="margin:0 0 16px;color:${BRAND_DARK};font-size:15px;font-weight:bold;">Ready to book? Let us know:</p>
+<a href="tel:7139296051" style="display:inline-block;background-color:${BRAND_YELLOW};color:${BRAND_DARK};text-decoration:none;padding:14px 36px;border-radius:6px;font-size:16px;font-weight:bold;">Call (713) 929-6051</a>
+<p style="margin:12px 0 0;color:#666666;font-size:14px;">Reference Quote #${quoteNumber}</p>
+</td>
+</tr>`;
+
+  return emailShell(
+    `Your MI-BOX Houston Quote #${quote.quote_number}`,
+    quoteIdBanner + greeting + detailsSection + pricingSection + ctaSection
+  );
+}
+
+export async function sendStaffQuoteEmail(
+  quote: StaffQuote,
+  items: StaffQuoteItem[],
+  apiKey: string
+): Promise<StaffQuoteEmailResult> {
+  if (!apiKey) return { success: false, error: 'API key is required' };
+  if (!quote.email) return { success: false, error: 'Customer email is required' };
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(quote.email)) {
+    return { success: false, error: 'Invalid email address' };
+  }
+
+  const html = buildStaffQuoteEmailHtml(quote, items);
+  const subject = `Your MI-BOX Houston Quote #${quote.quote_number}`;
+  return sendEmail(quote.email, subject, html, apiKey);
+}
+
+export function mapStaffQuoteToStella(
+  quote: StaffQuote,
+  items: StaffQuoteItem[]
+): Record<string, unknown> {
+  const boxSizeMap: Record<string, string> = {
+    '16': '8x16',
+    '20': '8x20',
+  };
+
+  const serviceMap: Record<string, string> = {
+    'Storage at Your Location': 'store_onsite',
+    'Storage at Our Facility': 'store_facility',
+    'Moving - To New Location': 'moving_onsite',
+  };
+
+  const mapDuration = (months: number): string => {
+    if (months <= 1) return 'Less than 1 month';
+    if (months <= 3) return '1-3 months';
+    if (months <= 6) return '3-6 months';
+    if (months <= 9) return '6-9 months';
+    return '9-12 months';
+  };
+
+  const nameParts = (quote.customer_name || '').trim().split(/\s+/);
+  const firstName = nameParts[0] || '';
+  const lastName = nameParts.slice(1).join(' ') || '';
+
+  // Use the first item's container size for Stella
+  const primarySize = items.length > 0 ? items[0].container_size : '16';
+
+  return {
+    first_name: firstName,
+    last_name: lastName,
+    email: quote.email || '',
+    phone: quote.phone || '',
+    service_needed: serviceMap[quote.service_type] || quote.service_type,
+    box_size: boxSizeMap[primarySize] || primarySize,
+    delivery_zip: quote.zip,
+    delivery_date: quote.delivery_date || '',
+    delivery_address: quote.address || '',
+    delivery_price: (quote.delivery_fee_cents / 100).toFixed(2),
+    monthly_rent: (quote.total_monthly_cents / 100).toFixed(2),
+    months_needed: mapDuration(quote.months_needed),
+    notes: quote.notes || '',
+    source: 'Ops Hub',
+    formType: 'staff_quote',
+    quoteId: quote.quote_number,
+  };
+}
+
 export async function forwardToStella(payload: Record<string, unknown>): Promise<boolean> {
   try {
     const stellaBody = mapToStellaFields(payload);

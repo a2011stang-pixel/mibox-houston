@@ -160,6 +160,38 @@ class AdminAPI {
     async deletePromotion(id) {
         return this.request('DELETE', '/promotions/' + id);
     }
+    // Staff Quotes
+    async getStaffQuotes(params = {}) {
+        const filtered = Object.fromEntries(
+            Object.entries(params).filter(([_, v]) => v != null && v !== '')
+        );
+        const query = new URLSearchParams(filtered).toString();
+        return this.request('GET', '/quotes' + (query ? '?' + query : ''));
+    }
+
+    async getStaffQuote(id) {
+        return this.request('GET', '/quotes/' + id);
+    }
+
+    async createStaffQuote(data) {
+        return this.request('POST', '/quotes', data);
+    }
+
+    async emailStaffQuote(id) {
+        return this.request('POST', '/quotes/' + id + '/email');
+    }
+
+    async convertStaffQuote(id) {
+        return this.request('POST', '/quotes/' + id + '/convert');
+    }
+
+    async getNextQuoteNumber() {
+        return this.request('GET', '/quotes/next-number');
+    }
+
+    async getQuoteStats() {
+        return this.request('GET', '/quotes/stats/summary');
+    }
 }
 
 const api = new AdminAPI();

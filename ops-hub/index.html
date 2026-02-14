@@ -47,6 +47,12 @@
                 <a class="nav-item" href="#" data-page="promotions">
                     <i class="bi bi-tag"></i><span>Promotions</span>
                 </a>
+                <a class="nav-item" href="#" data-page="quick-quote">
+                    <i class="bi bi-calculator"></i><span>Quick Quote</span>
+                </a>
+                <a class="nav-item" href="#" data-page="quote-history">
+                    <i class="bi bi-clock-history"></i><span>Quote History</span>
+                </a>
                 <a class="nav-item" href="#" data-page="audit">
                     <i class="bi bi-journal-text"></i><span>Audit Log</span>
                 </a>
@@ -83,6 +89,29 @@
                             <div class="stat-label">Recent Changes</div>
                         </div>
                         <div class="stat-icon blue"><i class="bi bi-journal-text"></i></div>
+                    </div>
+                </div>
+                <div class="stat-cards mb-4">
+                    <div class="stat-card accent-yellow">
+                        <div class="stat-info">
+                            <div class="stat-value" id="statQuotesWeek">-</div>
+                            <div class="stat-label">Quotes This Week</div>
+                        </div>
+                        <div class="stat-icon yellow"><i class="bi bi-calculator"></i></div>
+                    </div>
+                    <div class="stat-card accent-green">
+                        <div class="stat-info">
+                            <div class="stat-value" id="statConvertedWeek">-</div>
+                            <div class="stat-label">Converted This Week</div>
+                        </div>
+                        <div class="stat-icon green"><i class="bi bi-check2-circle"></i></div>
+                    </div>
+                    <div class="stat-card accent-blue">
+                        <div class="stat-info">
+                            <div class="stat-value" id="statQuotesDraft">-</div>
+                            <div class="stat-label">Pending Quotes</div>
+                        </div>
+                        <div class="stat-icon blue"><i class="bi bi-clock-history"></i></div>
                     </div>
                 </div>
                 <div class="card">
@@ -310,6 +339,245 @@
                                 </thead>
                                 <tbody id="promotionsTable"></tbody>
                             </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Quote Page -->
+            <div id="page-quick-quote" class="page-content d-none">
+                <div class="section-header">
+                    <div>
+                        <h4 class="page-title">Quick Quote</h4>
+                        <p class="page-subtitle">Generate instant quotes for phone customers</p>
+                    </div>
+                    <span class="badge badge-active" id="qqNumberBadge" style="font-size:14px;padding:8px 16px;display:none;"></span>
+                </div>
+                <div class="qq-layout">
+                    <!-- Left Panel: Form -->
+                    <div class="qq-form-panel">
+                        <!-- Customer Info Card -->
+                        <div class="card mb-3">
+                            <div class="card-header"><h6 class="mb-0" style="font-weight:700;">Customer Info</h6></div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Customer Name *</label>
+                                        <input type="text" class="form-control" id="qqName" placeholder="Full name" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Phone</label>
+                                        <input type="tel" class="form-control" id="qqPhone" placeholder="(555) 555-5555">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="qqEmail" placeholder="customer@email.com">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">ZIP Code *</label>
+                                        <div class="position-relative">
+                                            <input type="text" class="form-control" id="qqZip" maxlength="5" pattern="[0-9]{5}" placeholder="77002">
+                                            <span class="qq-zip-status" id="qqZipStatus"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">Street Address</label>
+                                        <input type="text" class="form-control" id="qqAddress" placeholder="123 Main St">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">City</label>
+                                        <input type="text" class="form-control" id="qqCity" placeholder="Houston">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">State</label>
+                                        <input type="text" class="form-control" id="qqState" value="TX" maxlength="2">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Containers Card -->
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0" style="font-weight:700;">Containers</h6>
+                                <button class="btn btn-sm btn-primary" id="qqAddContainerBtn" type="button">
+                                    <i class="bi bi-plus-lg me-1"></i>Add Container
+                                </button>
+                            </div>
+                            <div class="card-body" id="qqContainersWrap">
+                                <!-- Dynamic container items rendered here -->
+                            </div>
+                        </div>
+
+                        <!-- Service Details Card -->
+                        <div class="card mb-3">
+                            <div class="card-header"><h6 class="mb-0" style="font-weight:700;">Service Details</h6></div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Service Type *</label>
+                                        <select class="form-select" id="qqServiceType">
+                                            <option value="Storage at Your Location">Storage at Your Location</option>
+                                            <option value="Storage at Our Facility">Storage at Our Facility</option>
+                                            <option value="Moving - To New Location">Moving - To New Location</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Delivery Date</label>
+                                        <input type="date" class="form-control" id="qqDeliveryDate">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Months Needed</label>
+                                        <input type="number" class="form-control" id="qqMonths" value="1" min="1" max="36">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Discounts & Overrides Card -->
+                        <div class="card mb-3">
+                            <div class="card-header"><h6 class="mb-0" style="font-weight:700;">Discounts &amp; Overrides</h6></div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Promotion</label>
+                                        <select class="form-select" id="qqPromo">
+                                            <option value="">No promotion</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Promo Code</label>
+                                        <input type="text" class="form-control" id="qqPromoCode" placeholder="Enter code" readonly>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Override Monthly Rate</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" class="form-control" id="qqOverride" step="0.01" placeholder="Leave blank for standard">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Override Reason</label>
+                                        <input type="text" class="form-control" id="qqOverrideReason" placeholder="Required if overriding">
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <label class="form-label">Notes</label>
+                                    <textarea class="form-control" id="qqNotes" rows="2" placeholder="Internal notes..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Panel: Summary -->
+                    <div class="qq-summary-panel">
+                        <div class="card qq-summary-card" id="qqSummaryCard">
+                            <div class="card-header"><h6 class="mb-0" style="font-weight:700;">Quote Summary</h6></div>
+                            <div class="card-body" id="qqSummaryBody">
+                                <p class="text-muted text-center py-4">Enter a ZIP code to begin</p>
+                            </div>
+                            <div class="card-body border-top pt-3" id="qqActions" style="display:none;">
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-primary" id="qqSaveBtn" type="button">
+                                        <i class="bi bi-save me-1"></i>Save Quote
+                                    </button>
+                                    <button class="btn btn-secondary" id="qqEmailBtn" type="button" disabled>
+                                        <i class="bi bi-envelope me-1"></i>Email to Customer
+                                    </button>
+                                    <button class="btn btn-secondary" id="qqStellaBtn" type="button" disabled>
+                                        <i class="bi bi-send me-1"></i>Send to Stella CRM
+                                    </button>
+                                    <button class="btn btn-outline-secondary" id="qqPrintBtn" type="button">
+                                        <i class="bi bi-printer me-1"></i>Print
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quote History Page -->
+            <div id="page-quote-history" class="page-content d-none">
+                <div class="section-header">
+                    <div>
+                        <h4 class="page-title">Quote History</h4>
+                        <p class="page-subtitle">View and manage all staff-generated quotes</p>
+                    </div>
+                </div>
+                <div class="stats-strip mb-4">
+                    <div class="stat-item">
+                        <span class="stat-value" id="qhDraftCount">0</span>
+                        <span class="stat-label">Draft</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="qhSentCount">0</span>
+                        <span class="stat-label">Sent</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="qhConvertedCount">0</span>
+                        <span class="stat-label">Converted</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="row g-2">
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" id="qhSearch" placeholder="Search name, email, quote #, ZIP...">
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="qhStatusFilter">
+                                    <option value="">All Statuses</option>
+                                    <option value="draft">Draft</option>
+                                    <option value="sent">Sent</option>
+                                    <option value="converted">Converted</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Quote #</th>
+                                        <th>Customer</th>
+                                        <th>ZIP</th>
+                                        <th>Containers</th>
+                                        <th>Due Today</th>
+                                        <th>Status</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="qhTable"></tbody>
+                            </table>
+                        </div>
+                        <div class="p-3">
+                            <nav id="qhPagination"></nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quote Detail Drawer -->
+            <div class="modal fade" id="quoteDetailModal" tabindex="-1">
+                <div class="modal-dialog modal-dialog-end">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="quoteDetailTitle">Quote Details</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body" id="quoteDetailBody">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-secondary" id="qdEmailBtn">
+                                <i class="bi bi-envelope me-1"></i>Email
+                            </button>
+                            <button type="button" class="btn btn-primary" id="qdStellaBtn">
+                                <i class="bi bi-send me-1"></i>Stella
+                            </button>
                         </div>
                     </div>
                 </div>
