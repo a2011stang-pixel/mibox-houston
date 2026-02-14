@@ -3,327 +3,374 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https:; font-src 'self' https://cdn.jsdelivr.net; connect-src 'self' https://mibox-houston-api.cmykprnt.workers.dev; frame-src 'none';">
-    <title>Admin Dashboard - MiBox Houston</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com; connect-src 'self' https://mibox-houston-api.cmykprnt.workers.dev; frame-src 'none';">
+    <title>Ops Hub - MI-BOX Houston</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <link href="css/admin.css" rel="stylesheet">
 </head>
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/ops-hub/">
-                <i class="bi bi-box-seam me-2"></i>MiBox Admin
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="#" data-page="dashboard">
-                            <i class="bi bi-speedometer2 me-1"></i>Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" data-page="zones">
-                            <i class="bi bi-geo-alt me-1"></i>Zones
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" data-page="zips">
-                            <i class="bi bi-mailbox me-1"></i>ZIP Codes
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" data-page="pricing">
-                            <i class="bi bi-currency-dollar me-1"></i>Pricing
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" data-page="audit">
-                            <i class="bi bi-journal-text me-1"></i>Audit Log
-                        </a>
-                    </li>
-                </ul>
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <span class="nav-link text-light" id="userEmail"></span>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" id="logoutBtn">
-                            <i class="bi bi-box-arrow-right"></i> Logout
-                        </a>
-                    </li>
-                </ul>
+    <div class="app-layout">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-brand">
+                <div class="logo-box"><i class="bi bi-box-seam"></i></div>
+                <span class="brand-name">MI-BOX <span class="accent">Ops Hub</span></span>
             </div>
-        </div>
-    </nav>
-
-    <!-- Main Content -->
-    <div class="container-fluid py-4">
-        <!-- Dashboard Page -->
-        <div id="page-dashboard" class="page-content">
-            <h4 class="mb-4">Dashboard</h4>
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="card bg-primary text-white">
-                        <div class="card-body">
-                            <h6 class="card-subtitle mb-2 opacity-75">Total Zones</h6>
-                            <h2 id="statZones">-</h2>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card bg-success text-white">
-                        <div class="card-body">
-                            <h6 class="card-subtitle mb-2 opacity-75">ZIP Codes</h6>
-                            <h2 id="statZips">-</h2>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card bg-info text-white">
-                        <div class="card-body">
-                            <h6 class="card-subtitle mb-2 opacity-75">Recent Changes</h6>
-                            <h2 id="statChanges">-</h2>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="card mt-4">
-                <div class="card-header">
-                    <h6 class="mb-0">Zone Summary</h6>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Zone</th>
-                                    <th>Display Name</th>
-                                    <th>Delivery Fee</th>
-                                    <th>ZIP Codes</th>
-                                </tr>
-                            </thead>
-                            <tbody id="zoneSummaryTable"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Zones Page -->
-        <div id="page-zones" class="page-content d-none">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h4 class="mb-0">Zone Management</h4>
-                <button class="btn btn-primary" id="addZoneBtn">
-                    <i class="bi bi-plus-lg me-1"></i>Add Zone
+            <div class="header-right">
+                <span class="header-user" id="userEmail"></span>
+                <button class="header-logout" id="logoutBtn">
+                    <i class="bi bi-box-arrow-right"></i> Logout
                 </button>
             </div>
-            <div class="card">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Display Name</th>
-                                    <th>Delivery Fee</th>
-                                    <th>Pickup Fee</th>
-                                    <th>Relocation Fee</th>
-                                    <th>ZIP Codes</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="zonesTable"></tbody>
-                        </table>
+        </header>
+
+        <!-- Sidebar -->
+        <aside class="app-sidebar">
+            <nav class="sidebar-nav">
+                <a class="nav-item active" href="#" data-page="dashboard">
+                    <i class="bi bi-grid-1x2"></i><span>Dashboard</span>
+                </a>
+                <a class="nav-item" href="#" data-page="zones">
+                    <i class="bi bi-geo-alt"></i><span>Zones</span>
+                </a>
+                <a class="nav-item" href="#" data-page="zips">
+                    <i class="bi bi-mailbox"></i><span>ZIP Codes</span>
+                </a>
+                <a class="nav-item" href="#" data-page="pricing">
+                    <i class="bi bi-currency-dollar"></i><span>Pricing</span>
+                </a>
+                <a class="nav-item" href="#" data-page="promotions">
+                    <i class="bi bi-tag"></i><span>Promotions</span>
+                </a>
+                <a class="nav-item" href="#" data-page="audit">
+                    <i class="bi bi-journal-text"></i><span>Audit Log</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-footer-text">MI-BOX Houston</div>
+                <div class="sidebar-footer-version">v2.0</div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="app-main">
+            <!-- Dashboard Page -->
+            <div id="page-dashboard" class="page-content">
+                <h4 class="page-title mb-4">Dashboard</h4>
+                <div class="stat-cards mb-4">
+                    <div class="stat-card accent-yellow">
+                        <div class="stat-info">
+                            <div class="stat-value" id="statZones">-</div>
+                            <div class="stat-label">Total Zones</div>
+                        </div>
+                        <div class="stat-icon yellow"><i class="bi bi-geo-alt"></i></div>
+                    </div>
+                    <div class="stat-card accent-green">
+                        <div class="stat-info">
+                            <div class="stat-value" id="statZips">-</div>
+                            <div class="stat-label">ZIP Codes</div>
+                        </div>
+                        <div class="stat-icon green"><i class="bi bi-mailbox"></i></div>
+                    </div>
+                    <div class="stat-card accent-blue">
+                        <div class="stat-info">
+                            <div class="stat-value" id="statChanges">-</div>
+                            <div class="stat-label">Recent Changes</div>
+                        </div>
+                        <div class="stat-icon blue"><i class="bi bi-journal-text"></i></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0" style="font-weight:700;">Zone Summary</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Zone</th>
+                                        <th>Display Name</th>
+                                        <th>Delivery Fee</th>
+                                        <th>ZIP Codes</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="zoneSummaryTable"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- ZIP Codes Page -->
-        <div id="page-zips" class="page-content d-none">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h4 class="mb-0">ZIP Code Management</h4>
-                <div>
-                    <button class="btn btn-outline-secondary me-2" id="exportZipsBtn">
+            <!-- Zones Page -->
+            <div id="page-zones" class="page-content d-none">
+                <div class="section-header">
+                    <h4 class="page-title">Zones</h4>
+                    <button class="btn btn-primary" id="addZoneBtn">
+                        <i class="bi bi-plus-lg me-1"></i>Add Zone
+                    </button>
+                </div>
+                <div class="card">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Display Name</th>
+                                        <th>Delivery Fee</th>
+                                        <th>Pickup Fee</th>
+                                        <th>Relocation Fee</th>
+                                        <th>ZIP Codes</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="zonesTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ZIP Codes Page -->
+            <div id="page-zips" class="page-content d-none">
+                <div class="section-header">
+                    <h4 class="page-title">ZIP Codes</h4>
+                    <div>
+                        <button class="btn btn-outline-secondary me-2" id="exportZipsBtn">
+                            <i class="bi bi-download me-1"></i>Export CSV
+                        </button>
+                        <button class="btn btn-outline-secondary me-2" id="importZipsBtn">
+                            <i class="bi bi-upload me-1"></i>Import CSV
+                        </button>
+                        <button class="btn btn-primary" id="addZipBtn">
+                            <i class="bi bi-plus-lg me-1"></i>Add ZIP
+                        </button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="row g-2">
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" id="zipSearch" placeholder="Search ZIP codes...">
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="zipZoneFilter">
+                                    <option value="">All Zones</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>ZIP Code</th>
+                                        <th>Zone</th>
+                                        <th>Last Updated</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="zipsTable"></tbody>
+                            </table>
+                        </div>
+                        <div class="p-3">
+                            <nav id="zipsPagination"></nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pricing Page -->
+            <div id="page-pricing" class="page-content d-none">
+                <h4 class="page-title mb-4">Pricing</h4>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Zone-specific delivery/pickup fees are managed in the Zones section.
+                    These monthly rates apply to all zones.
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <form id="pricingForm">
+                            <h6 class="mb-3" style="font-weight:700;">16' Container</h6>
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-3">
+                                    <label class="form-label">First Month</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="price_16_first_month" step="0.01">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Onsite Monthly</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="price_16_onsite" step="0.01">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Facility Inside</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="price_16_facility_inside" step="0.01">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Facility Outside</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="price_16_facility_outside" step="0.01">
+                                    </div>
+                                </div>
+                            </div>
+                            <h6 class="mb-3" style="font-weight:700;">20' Container</h6>
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-3">
+                                    <label class="form-label">First Month</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="price_20_first_month" step="0.01">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Onsite Monthly</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="price_20_onsite" step="0.01">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Facility Inside</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="price_20_facility_inside" step="0.01">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Facility Outside</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="price_20_facility_outside" step="0.01">
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Promotions Page -->
+            <div id="page-promotions" class="page-content d-none">
+                <div class="section-header">
+                    <div>
+                        <h4 class="page-title">Promotions</h4>
+                        <p class="page-subtitle">Manage sales, discounts, and promotional pricing</p>
+                    </div>
+                    <button class="btn btn-primary" id="addPromoBtn">
+                        <i class="bi bi-plus-lg me-1"></i>Create Promotion
+                    </button>
+                </div>
+                <div class="stats-strip mb-4">
+                    <div class="stat-item">
+                        <span class="stat-value" id="promoActiveCount">0</span>
+                        <span class="stat-label">Active</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="promoScheduledCount">0</span>
+                        <span class="stat-label">Scheduled</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="promoTotalCount">0</span>
+                        <span class="stat-label">Total</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Type</th>
+                                        <th>Discount</th>
+                                        <th>Applies To</th>
+                                        <th>Containers</th>
+                                        <th>Date Range</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="promotionsTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audit Log Page -->
+            <div id="page-audit" class="page-content d-none">
+                <div class="section-header">
+                    <h4 class="page-title">Audit Log</h4>
+                    <button class="btn btn-outline-secondary" id="exportAuditBtn">
                         <i class="bi bi-download me-1"></i>Export CSV
                     </button>
-                    <button class="btn btn-outline-secondary me-2" id="importZipsBtn">
-                        <i class="bi bi-upload me-1"></i>Import CSV
-                    </button>
-                    <button class="btn btn-primary" id="addZipBtn">
-                        <i class="bi bi-plus-lg me-1"></i>Add ZIP
-                    </button>
                 </div>
-            </div>
-            <div class="card">
-                <div class="card-header">
-                    <div class="row g-2">
-                        <div class="col-md-4">
-                            <input type="text" class="form-control" id="zipSearch" placeholder="Search ZIP codes...">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="row g-2">
+                            <div class="col-md-3">
+                                <input type="date" class="form-control" id="auditFromDate" placeholder="From date">
+                            </div>
+                            <div class="col-md-3">
+                                <input type="date" class="form-control" id="auditToDate" placeholder="To date">
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="auditTypeFilter">
+                                    <option value="">All Types</option>
+                                    <option value="zone">Zones</option>
+                                    <option value="zip_code">ZIP Codes</option>
+                                    <option value="pricing">Pricing</option>
+                                    <option value="promotion">Promotions</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-primary w-100" id="applyAuditFilters">Apply Filters</button>
+                            </div>
                         </div>
-                        <div class="col-md-3">
-                            <select class="form-select" id="zipZoneFilter">
-                                <option value="">All Zones</option>
-                            </select>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-sm mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>User</th>
+                                        <th>Action</th>
+                                        <th>Entity</th>
+                                        <th>Changes</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="auditTable"></tbody>
+                            </table>
+                        </div>
+                        <div class="p-3">
+                            <nav id="auditPagination"></nav>
                         </div>
                     </div>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>ZIP Code</th>
-                                    <th>Zone</th>
-                                    <th>Last Updated</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="zipsTable"></tbody>
-                        </table>
-                    </div>
-                    <nav id="zipsPagination"></nav>
-                </div>
             </div>
-        </div>
-
-        <!-- Pricing Page -->
-        <div id="page-pricing" class="page-content d-none">
-            <h4 class="mb-4">Pricing Configuration</h4>
-            <div class="alert alert-info">
-                <i class="bi bi-info-circle me-2"></i>
-                Zone-specific delivery/pickup fees are managed in the Zones section. 
-                These monthly rates apply to all zones.
-            </div>
-            <div class="card">
-                <div class="card-body">
-                    <form id="pricingForm">
-                        <h6 class="mb-3">16' Container</h6>
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-3">
-                                <label class="form-label">First Month</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input type="number" class="form-control" id="price_16_first_month" step="0.01">
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Onsite Monthly</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input type="number" class="form-control" id="price_16_onsite" step="0.01">
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Facility Inside</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input type="number" class="form-control" id="price_16_facility_inside" step="0.01">
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Facility Outside</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input type="number" class="form-control" id="price_16_facility_outside" step="0.01">
-                                </div>
-                            </div>
-                        </div>
-                        <h6 class="mb-3">20' Container</h6>
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-3">
-                                <label class="form-label">First Month</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input type="number" class="form-control" id="price_20_first_month" step="0.01">
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Onsite Monthly</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input type="number" class="form-control" id="price_20_onsite" step="0.01">
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Facility Inside</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input type="number" class="form-control" id="price_20_facility_inside" step="0.01">
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Facility Outside</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input type="number" class="form-control" id="price_20_facility_outside" step="0.01">
-                                </div>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- Audit Log Page -->
-        <div id="page-audit" class="page-content d-none">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h4 class="mb-0">Audit Log</h4>
-                <button class="btn btn-outline-secondary" id="exportAuditBtn">
-                    <i class="bi bi-download me-1"></i>Export CSV
-                </button>
-            </div>
-            <div class="card">
-                <div class="card-header">
-                    <div class="row g-2">
-                        <div class="col-md-3">
-                            <input type="date" class="form-control" id="auditFromDate" placeholder="From date">
-                        </div>
-                        <div class="col-md-3">
-                            <input type="date" class="form-control" id="auditToDate" placeholder="To date">
-                        </div>
-                        <div class="col-md-3">
-                            <select class="form-select" id="auditTypeFilter">
-                                <option value="">All Types</option>
-                                <option value="zone">Zones</option>
-                                <option value="zip_code">ZIP Codes</option>
-                                <option value="pricing">Pricing</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <button class="btn btn-primary w-100" id="applyAuditFilters">Apply Filters</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Timestamp</th>
-                                    <th>User</th>
-                                    <th>Action</th>
-                                    <th>Entity</th>
-                                    <th>Changes</th>
-                                </tr>
-                            </thead>
-                            <tbody id="auditTable"></tbody>
-                        </table>
-                    </div>
-                    <nav id="auditPagination"></nav>
-                </div>
-            </div>
-        </div>
+        </main>
     </div>
 
-    <!-- Modals -->
+    <!-- Zone Modal -->
     <div class="modal fade" id="zoneModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -376,6 +423,7 @@
         </div>
     </div>
 
+    <!-- ZIP Code Modal -->
     <div class="modal fade" id="zipModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -403,6 +451,7 @@
         </div>
     </div>
 
+    <!-- Import ZIP Modal -->
     <div class="modal fade" id="importModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -426,6 +475,115 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary">Import</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Promotion Slide-Over Drawer -->
+    <div class="modal fade" id="promoModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-end">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="promoModalTitle">Create Promotion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="promoForm">
+                    <div class="modal-body">
+                        <input type="hidden" id="promoId">
+
+                        <div class="mb-3">
+                            <label class="form-label">Promotion Name</label>
+                            <input type="text" class="form-control" id="promoName" required placeholder="e.g. Spring Move Sale">
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-6">
+                                <label class="form-label">Discount Type</label>
+                                <select class="form-select" id="promoDiscountType">
+                                    <option value="percent">Percentage Off</option>
+                                    <option value="flat">Flat Amount Off</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Discount Value</label>
+                                <div class="input-group">
+                                    <span class="input-group-text" id="promoValuePrefix">%</span>
+                                    <input type="number" class="form-control" id="promoDiscountValue" min="1" step="1" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Applies To</label>
+                            <div class="d-flex flex-wrap gap-3">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="promoAppliesRent" value="rent">
+                                    <label class="form-check-label" for="promoAppliesRent">Monthly Rent</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="promoAppliesDelivery" value="delivery">
+                                    <label class="form-check-label" for="promoAppliesDelivery">Delivery Fee</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="promoAppliesPickup" value="pickup">
+                                    <label class="form-check-label" for="promoAppliesPickup">Pickup Fee</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="promoAppliesRelocation" value="relocation">
+                                    <label class="form-check-label" for="promoAppliesRelocation">Relocation Fee</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Container Sizes</label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check">
+                                    <input type="radio" class="form-check-input" name="promoContainerSize" id="promoSizeAll" value="all" checked>
+                                    <label class="form-check-label" for="promoSizeAll">All Containers</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="radio" class="form-check-input" name="promoContainerSize" id="promoSize16" value="16">
+                                    <label class="form-check-label" for="promoSize16">16-ft Only</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="radio" class="form-check-input" name="promoContainerSize" id="promoSize20" value="20">
+                                    <label class="form-check-label" for="promoSize20">20-ft Only</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-6">
+                                <label class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="promoStartDate" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="promoEndDate" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Promo Code (optional)</label>
+                            <input type="text" class="form-control" id="promoCode" placeholder="Leave blank for auto-applied">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Notes (optional)</label>
+                            <textarea class="form-control" id="promoNotes" rows="2" placeholder="Internal notes..."></textarea>
+                        </div>
+
+                        <div class="form-check form-switch mb-3">
+                            <input type="checkbox" class="form-check-input" id="promoActive" checked>
+                            <label class="form-check-label" for="promoActive" style="font-weight:600;">Active</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Promotion</button>
                     </div>
                 </form>
             </div>

@@ -6,9 +6,10 @@ const BACKUP_TABLES: Record<string, string> = {
   pricing: 'SELECT * FROM pricing',
   users: 'SELECT id, email, totp_enabled, failed_attempts, locked_until, created_at, updated_at FROM users',
   audit_log: 'SELECT * FROM audit_log',
+  promotions: 'SELECT * FROM promotions',
 };
 
-const RESTORABLE_TABLES = ['zones', 'zip_codes', 'pricing'] as const;
+const RESTORABLE_TABLES = ['zones', 'zip_codes', 'pricing', 'promotions'] as const;
 type RestorableTable = (typeof RESTORABLE_TABLES)[number];
 
 export interface BackupManifest {

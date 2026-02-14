@@ -89,6 +89,29 @@ publicRoutes.get('/pricing/:zip', async (c) => {
   });
 });
 
+publicRoutes.get('/active-promotions', async (c) => {
+  const today = new Date().toISOString().split('T')[0];
+
+  const promotions = await c.env.DB
+    .prepare(`
+      SELECT id, name, discount_type, discount_value, applies_to, container_sizes,
+             start_date, end_date
+      FROM promotions
+      WHERE is_active = 1
+        AND start_date <= ?
+        AND end_date >= ?
+        AND promo_code IS NULL
+    `)
+    .bind(today, today)
+    .all();
+
+  return c.json(
+    { promotions: promotions.results || [] },
+    200,
+    { 'Cache-Control': 'public, max-age=300' }
+  );
+});
+
 publicRoutes.get('/zones', async (c) => {
   const zones = await c.env.DB
     .prepare('SELECT id, name, display_name, delivery_fee, pickup_fee FROM zones WHERE is_active = 1')
