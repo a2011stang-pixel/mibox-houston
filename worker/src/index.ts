@@ -10,6 +10,7 @@ import { quoteRoutes } from './routes/quote';
 import { bookingRoutes } from './routes/booking';
 import { getQuoteRoutes } from './routes/get-quote';
 import { adminRoutes } from './routes/admin';
+import { promotionsRoutes } from './routes/promotions';
 import { authMiddleware } from './middleware/auth';
 import { runBackup } from './services/backup';
 
@@ -51,12 +52,14 @@ app.use('/api/zips/*', authMiddleware);
 app.use('/api/pricing/*', authMiddleware);
 app.use('/api/audit/*', authMiddleware);
 app.use('/api/admin/*', authMiddleware);
+app.use('/api/promotions/*', authMiddleware);
 
 app.route('/api/zones', zonesRoutes);
 app.route('/api/zips', zipsRoutes);
 app.route('/api/pricing', pricingRoutes);
 app.route('/api/audit', auditRoutes);
 app.route('/api/admin', adminRoutes);
+app.route('/api/promotions', promotionsRoutes);
 
 // Health check
 app.get('/api/health', (c) => c.json({ status: 'ok', timestamp: Date.now() }));

@@ -143,6 +143,23 @@ class AdminAPI {
         const query = new URLSearchParams(params).toString();
         return API_BASE + '/audit/export' + (query ? '?' + query : '');
     }
+
+    // Promotions
+    async getPromotions() {
+        return this.request('GET', '/promotions');
+    }
+
+    async createPromotion(data) {
+        return this.request('POST', '/promotions', data);
+    }
+
+    async updatePromotion(id, data) {
+        return this.request('PUT', '/promotions/' + id, data);
+    }
+
+    async deletePromotion(id) {
+        return this.request('DELETE', '/promotions/' + id);
+    }
 }
 
 const api = new AdminAPI();

@@ -56,6 +56,23 @@ export interface Pricing {
   updated_at: number;
 }
 
+export interface Promotion {
+  id: number;
+  name: string;
+  discount_type: 'percent' | 'flat';
+  discount_value: number;
+  applies_to: string;
+  container_sizes: string;
+  promo_code: string | null;
+  start_date: string;
+  end_date: string;
+  is_active: number;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface AuditEntry {
   id: number;
   user_id: number;
