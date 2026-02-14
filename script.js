@@ -328,7 +328,9 @@ function goToStep(step) {
 
     // If going to step 4, pre-populate the ZIP from step 1
     if (step === 4) {
-        document.getElementById('deliveryZipConfirm').value = document.getElementById('deliveryZip').value;
+        var zipConfirmField = document.getElementById('deliveryZipConfirm');
+        zipConfirmField.value = document.getElementById('deliveryZip').value;
+        zipConfirmField.dispatchEvent(new Event('input', { bubbles: true }));
     }
 
     // Scroll to top of form so user sees the new step
@@ -796,50 +798,31 @@ function prefillFromQuoteId() {
             // Store quoteId for booking submission
             quoteData.quoteId = data.quoteId;
 
+            // Helper to set value and dispatch input event
+            function setField(id, value) {
+                var el = document.getElementById(id);
+                if (el && value) {
+                    el.value = value;
+                    el.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            }
+
             // Pre-fill Step 1 fields
             if (data.boxSize) {
                 var size = data.boxSize === '8x16' ? '16' : data.boxSize === '8x20' ? '20' : '';
-                var containerEl = document.getElementById('containerSize');
-                if (containerEl && size) containerEl.value = size;
+                setField('containerSize', size);
             }
-            if (data.deliveryZip) {
-                var zipEl = document.getElementById('deliveryZip');
-                if (zipEl) zipEl.value = data.deliveryZip;
-            }
-            if (data.destinationZip) {
-                var destEl = document.getElementById('destinationZip');
-                if (destEl) destEl.value = data.destinationZip;
-            }
-            if (data.storageDuration) {
-                var durEl = document.getElementById('storageDuration');
-                if (durEl) durEl.value = data.storageDuration;
-            }
-            if (data.deliveryDate) {
-                var dateEl = document.getElementById('deliveryDate');
-                if (dateEl) dateEl.value = data.deliveryDate;
-            }
+            setField('deliveryZip', data.deliveryZip);
+            setField('destinationZip', data.destinationZip);
+            setField('storageDuration', data.storageDuration);
+            setField('deliveryDate', data.deliveryDate);
 
             // Pre-fill Step 2 fields
-            if (data.firstName) {
-                var fnEl = document.getElementById('firstName');
-                if (fnEl) fnEl.value = data.firstName;
-            }
-            if (data.lastName) {
-                var lnEl = document.getElementById('lastName');
-                if (lnEl) lnEl.value = data.lastName;
-            }
-            if (data.email) {
-                var emEl = document.getElementById('email');
-                if (emEl) emEl.value = data.email;
-            }
-            if (data.phone) {
-                var phEl = document.getElementById('phone');
-                if (phEl) phEl.value = data.phone;
-            }
-            if (data.company) {
-                var coEl = document.getElementById('company');
-                if (coEl) coEl.value = data.company;
-            }
+            setField('firstName', data.firstName);
+            setField('lastName', data.lastName);
+            setField('email', data.email);
+            setField('phone', data.phone);
+            setField('company', data.company);
 
             // Store pricing data for Step 3
             quoteData.serviceType = data.serviceDisplay || '';
@@ -869,8 +852,7 @@ function prefillFromQuoteId() {
             }
 
             // Pre-fill delivery ZIP on Step 4
-            var zipConfirm = document.getElementById('deliveryZipConfirm');
-            if (zipConfirm && data.deliveryZip) zipConfirm.value = data.deliveryZip;
+            setField('deliveryZipConfirm', data.deliveryZip);
 
             goToStep(4);
         })
@@ -1070,9 +1052,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Clear validation styling on input
+    // Clear validation styling on input and change (change handles browser autofill)
     document.querySelectorAll('.form-control, .form-select').forEach(field => {
         field.addEventListener('input', function() {
+            this.classList.remove('is-invalid');
+        });
+        field.addEventListener('change', function() {
             this.classList.remove('is-invalid');
         });
     });
