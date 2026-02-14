@@ -670,13 +670,12 @@ async function refreshAudit() {
     const type = document.getElementById('auditTypeFilter').value;
 
     try {
-        const data = await api.getAudit({
-            from: fromDate || undefined,
-            to: toDate || undefined,
-            type: type || undefined,
-            limit: auditLimit,
-            offset: auditPage * auditLimit,
-        });
+        const params = { limit: auditLimit, offset: auditPage * auditLimit };
+        if (fromDate) params.from = fromDate;
+        if (toDate) params.to = toDate;
+        if (type) params.type = type;
+
+        const data = await api.getAudit(params);
 
         const tbody = document.getElementById('auditTable');
         tbody.innerHTML = data.entries.map(e =>
