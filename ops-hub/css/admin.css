@@ -831,7 +831,186 @@ body.login-page {
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
 }
 
+/* === QUICK QUOTE === */
+.qq-layout {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.qq-summary-panel {
+  position: sticky;
+  top: calc(var(--header-height) + 32px);
+}
+
+.qq-container-item {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-100);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.qq-container-item:last-child {
+  margin-bottom: 0;
+}
+
+.qq-container-item .form-select {
+  flex: 1;
+}
+
+.qq-container-item .btn-remove {
+  flex-shrink: 0;
+}
+
+.qq-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 14px;
+  color: var(--gray-600);
+}
+
+.qq-summary-row .label {
+  font-weight: 500;
+}
+
+.qq-summary-row .value {
+  font-weight: 700;
+  color: var(--black);
+}
+
+.qq-summary-row.total {
+  border-top: 2px solid var(--yellow);
+  margin-top: 8px;
+  padding-top: 12px;
+  font-size: 16px;
+}
+
+.qq-summary-row.total .label,
+.qq-summary-row.total .value {
+  font-weight: 800;
+  color: var(--black);
+}
+
+.qq-summary-row.discount .value {
+  color: var(--green);
+  font-weight: 700;
+}
+
+.qq-discount-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: var(--green-dim);
+  color: var(--green);
+  border: 1px solid var(--green-border);
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.qq-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--gray-400);
+  padding: 12px 0 4px;
+  border-bottom: 1px solid var(--gray-100);
+  margin-bottom: 8px;
+}
+
+.qq-zip-status {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+}
+
+.qq-zip-ok { color: var(--green); }
+.qq-zip-error { color: var(--red); }
+.qq-zip-loading { color: var(--gray-400); }
+
+/* Quote status badges */
+.badge-draft {
+  background: var(--gray-50);
+  color: var(--gray-500);
+  border: 1px solid var(--gray-200);
+}
+
+.badge-sent {
+  background: var(--blue-dim);
+  color: var(--blue);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.badge-converted {
+  background: var(--green-dim);
+  color: var(--green);
+  border: 1px solid var(--green-border);
+}
+
+/* === PRINT === */
+@media print {
+  .app-header,
+  .app-sidebar,
+  .qq-form-panel,
+  .qq-summary-card .card-body:last-child,
+  #qqActions {
+    display: none !important;
+  }
+
+  .app-layout {
+    display: block;
+  }
+
+  .app-main {
+    padding: 0;
+    max-height: none;
+  }
+
+  .qq-layout {
+    display: block;
+  }
+
+  .qq-summary-panel {
+    position: static;
+    width: 100%;
+  }
+
+  .qq-summary-card {
+    border: none;
+    box-shadow: none;
+  }
+
+  .qq-summary-card .card-header {
+    text-align: center;
+    font-size: 18px;
+    border-bottom: 2px solid var(--yellow);
+  }
+
+  .page-content:not(.d-none) {
+    animation: none;
+  }
+}
+
 /* === RESPONSIVE === */
+@media (max-width: 1024px) {
+  .qq-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .qq-summary-panel {
+    position: static;
+  }
+}
+
 @media (max-width: 768px) {
   .app-layout {
     grid-template-columns: 1fr;
