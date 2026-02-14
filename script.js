@@ -339,75 +339,76 @@ function goToStep(step) {
     scrollToForm();
 }
 
-// Google Places Autocomplete for delivery address
-var placesAutocompleteInstance = null;
+// Google Places Autocomplete for delivery address (PlaceAutocompleteElement API)
+var placesAutocompleteInit = false;
 
 function initPlacesAutocomplete() {
-    if (placesAutocompleteInstance) return;
+    if (placesAutocompleteInit) return;
+    placesAutocompleteInit = true;
 
-    if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
+    if (typeof google === 'undefined' || !google.maps || !google.maps.importLibrary) {
         return;
     }
 
-    var addressInput = document.getElementById('deliveryAddress');
-    if (!addressInput) return;
+    google.maps.importLibrary('places').then(function() {
+        var addressInput = document.getElementById('deliveryAddress');
+        var wrap = document.getElementById('deliveryAddressWrap');
+        if (!addressInput || !wrap) return;
 
-    placesAutocompleteInstance = new google.maps.places.Autocomplete(addressInput, {
-        componentRestrictions: { country: 'us' },
-        fields: ['address_components', 'formatted_address'],
-        types: ['address']
-    });
+        var placeAutocomplete = new google.maps.places.PlaceAutocompleteElement({
+            includedRegionCodes: ['us'],
+            includedPrimaryTypes: ['street_address'],
+        });
 
-    placesAutocompleteInstance.addListener('place_changed', function() {
-        var place = placesAutocompleteInstance.getPlace();
-        if (!place || !place.address_components) return;
+        // Hide the original input and insert the autocomplete element
+        addressInput.style.display = 'none';
+        wrap.appendChild(placeAutocomplete);
 
-        var streetNumber = '';
-        var route = '';
-        var city = '';
-        var state = '';
-        var zip = '';
+        placeAutocomplete.addEventListener('gmp-select', function(event) {
+            var place = event.placePrediction.toPlace();
 
-        for (var i = 0; i < place.address_components.length; i++) {
-            var comp = place.address_components[i];
-            var types = comp.types;
+            place.fetchFields({ fields: ['addressComponents'] }).then(function() {
+                var streetNumber = '';
+                var route = '';
+                var city = '';
+                var state = '';
+                var zip = '';
 
-            if (types.indexOf('street_number') !== -1) streetNumber = comp.long_name;
-            if (types.indexOf('route') !== -1) route = comp.short_name;
-            if (types.indexOf('locality') !== -1) city = comp.long_name;
-            if (types.indexOf('administrative_area_level_1') !== -1) state = comp.short_name;
-            if (types.indexOf('postal_code') !== -1) zip = comp.long_name;
-        }
+                for (var i = 0; i < place.addressComponents.length; i++) {
+                    var comp = place.addressComponents[i];
+                    var types = comp.types;
 
-        addressInput.value = (streetNumber + ' ' + route).trim();
+                    if (types.indexOf('street_number') !== -1) streetNumber = comp.longText;
+                    if (types.indexOf('route') !== -1) route = comp.shortText;
+                    if (types.indexOf('locality') !== -1) city = comp.longText;
+                    if (types.indexOf('administrative_area_level_1') !== -1) state = comp.shortText;
+                    if (types.indexOf('postal_code') !== -1) zip = comp.longText;
+                }
 
-        var cityField = document.getElementById('deliveryCity');
-        if (cityField && city) {
-            cityField.value = city;
-            cityField.dispatchEvent(new Event('input', { bubbles: true }));
-        }
+                // Store street address in hidden input for form validation/submission
+                addressInput.value = (streetNumber + ' ' + route).trim();
+                addressInput.dispatchEvent(new Event('input', { bubbles: true }));
 
-        var stateField = document.getElementById('deliveryState');
-        if (stateField && state) {
-            stateField.value = state;
-        }
+                var cityField = document.getElementById('deliveryCity');
+                if (cityField && city) {
+                    cityField.value = city;
+                    cityField.dispatchEvent(new Event('input', { bubbles: true }));
+                }
 
-        var zipField = document.getElementById('deliveryZipConfirm');
-        if (zipField && zip) {
-            zipField.value = zip;
-            zipField.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-    });
+                var stateField = document.getElementById('deliveryState');
+                if (stateField && state) {
+                    stateField.value = state;
+                }
 
-    // Prevent Enter key from submitting form when Places dropdown is open
-    addressInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter' || e.keyCode === 13) {
-            var pacContainer = document.querySelector('.pac-container');
-            if (pacContainer && pacContainer.style.display !== 'none' &&
-                pacContainer.querySelectorAll('.pac-item').length > 0) {
-                e.preventDefault();
-            }
-        }
+                var zipField = document.getElementById('deliveryZipConfirm');
+                if (zipField && zip) {
+                    zipField.value = zip;
+                    zipField.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            });
+        });
+    }).catch(function() {
+        // Google API failed to load — original input stays visible as fallback
     });
 }
 
@@ -608,11 +609,22 @@ function validateStep(step) {
         fields.forEach(fieldId => {
             const field = document.getElementById(fieldId);
             if (!field.value) {
-                field.classList.add('is-invalid');
+                // For deliveryAddress (hidden when autocomplete active), show error on wrapper
+                if (fieldId === 'deliveryAddress') {
+                    var wrap = document.getElementById('deliveryAddressWrap');
+                    if (wrap) wrap.classList.add('is-invalid');
+                } else {
+                    field.classList.add('is-invalid');
+                }
                 isValid = false;
-                if (!firstInvalid) firstInvalid = field;
+                if (!firstInvalid) firstInvalid = field.style.display === 'none' ? field.parentElement : field;
             } else {
-                field.classList.remove('is-invalid');
+                if (fieldId === 'deliveryAddress') {
+                    var wrap2 = document.getElementById('deliveryAddressWrap');
+                    if (wrap2) wrap2.classList.remove('is-invalid');
+                } else {
+                    field.classList.remove('is-invalid');
+                }
             }
         });
     }
