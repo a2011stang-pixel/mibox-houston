@@ -100,17 +100,38 @@ staffQuotesRoutes.post('/', async (c) => {
     if (!body.customer_name?.trim()) {
       return c.json({ error: 'Customer name is required' }, 400);
     }
-    if (!body.zip || !/^\d{5}$/.test(body.zip)) {
-      return c.json({ error: 'Valid 5-digit ZIP code is required' }, 400);
-    }
-    if (!body.service_type) {
-      return c.json({ error: 'Service type is required' }, 400);
-    }
     if (!body.items || body.items.length === 0) {
       return c.json({ error: 'At least one container is required' }, 400);
     }
     if (body.items.length > 10) {
       return c.json({ error: 'Maximum 10 containers per quote' }, 400);
+    }
+
+    const isAdvanced = body.quote_type === 'advanced';
+
+    if (isAdvanced) {
+      // Advanced mode: per-item service_type required, non-facility items need zip_1
+      for (let i = 0; i < body.items.length; i++) {
+        const item = body.items[i];
+        if (!item.service_type) {
+          return c.json({ error: `Container ${i + 1}: service type is required` }, 400);
+        }
+        const isFacility = item.service_type.startsWith('Facility Storage');
+        if (!isFacility && (!item.zip_1 || !/^\d{5}$/.test(item.zip_1))) {
+          return c.json({ error: `Container ${i + 1}: valid 5-digit ZIP is required` }, 400);
+        }
+      }
+      // Global zip/service_type fall back to first item
+      if (!body.zip) body.zip = body.items[0].zip_1 || '00000';
+      if (!body.service_type) body.service_type = body.items[0].service_type || '';
+    } else {
+      // Quick Quote mode: global zip + service_type required
+      if (!body.zip || !/^\d{5}$/.test(body.zip)) {
+        return c.json({ error: 'Valid 5-digit ZIP code is required' }, 400);
+      }
+      if (!body.service_type) {
+        return c.json({ error: 'Service type is required' }, 400);
+      }
     }
 
     // Validate override reason if override set

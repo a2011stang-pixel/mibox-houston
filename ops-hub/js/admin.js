@@ -47,6 +47,7 @@ async function navigateTo(page) {
         case 'pricing': await loadPricing(); break;
         case 'promotions': await loadPromotions(); break;
         case 'quick-quote': await loadQuickQuote(); break;
+        case 'advanced-quote': await loadAdvancedQuote(); break;
         case 'quote-history': await loadQuoteHistory(); break;
         case 'audit': await loadAudit(); break;
     }
@@ -1295,6 +1296,726 @@ async function viewQuoteDetail(id) {
     }
 }
 window.viewQuoteDetail = viewQuoteDetail;
+
+// ============================================================
+// Advanced Quote
+// ============================================================
+let aqContainers = [];
+let aqSavedQuoteId = null;
+let aqActivePromos = [];
+let aqAutocompleteInstances = [];
+let aqZipTimers = {};
+
+const AQ_SERVICE_TYPES = [
+    'Storage at Your Location',
+    'Facility Storage (Inside)',
+    'Facility Storage (Outside)',
+    'Moving - Local',
+    'Relocation',
+];
+
+const AQ_SERVICE_LOCATION_MAP = {
+    'Storage at Your Location': 'onsite',
+    'Facility Storage (Inside)': 'facility_inside',
+    'Facility Storage (Outside)': 'facility_outside',
+    'Moving - Local': 'onsite',
+    'Relocation': 'onsite',
+};
+
+function aqGetAddressFields(serviceType) {
+    switch (serviceType) {
+        case 'Storage at Your Location':
+            return [{ label: 'Delivery Address', key: '1' }];
+        case 'Moving - Local':
+            return [{ label: 'Pickup Address', key: '1' }, { label: 'Destination Address', key: '2' }];
+        case 'Relocation':
+            return [{ label: 'Current Location', key: '1' }, { label: 'New Location', key: '2' }];
+        default: // Facility Storage
+            return [];
+    }
+}
+
+function aqGetDeliveryFeeType(serviceType) {
+    switch (serviceType) {
+        case 'Storage at Your Location':
+        case 'Moving - Local':
+            return 'delivery';
+        case 'Relocation':
+            return 'relocation';
+        default:
+            return 'none';
+    }
+}
+
+async function loadAdvancedQuote() {
+    aqContainers = [{
+        size: '16', serviceType: 'Storage at Your Location',
+        addr1: '', apt1: '', city1: '', state1: 'TX', zip1: '',
+        addr2: '', apt2: '', city2: '', state2: 'TX', zip2: '',
+        zoneData: null, pricingData: null,
+    }];
+    aqSavedQuoteId = null;
+    aqAutocompleteInstances = [];
+    aqZipTimers = {};
+
+    const fields = ['aqName', 'aqPhone', 'aqEmail', 'aqPromoCode', 'aqOverride', 'aqOverrideReason', 'aqNotes'];
+    fields.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    document.getElementById('aqDeliveryDate').value = '';
+    document.getElementById('aqMonths').value = '1';
+    document.getElementById('aqPromo').value = '';
+    document.getElementById('aqNumberBadge').style.display = 'none';
+    document.getElementById('aqActions').style.display = 'none';
+    document.getElementById('aqSaveBtn').disabled = false;
+    document.getElementById('aqSaveBtn').innerHTML = '<i class="bi bi-save me-1"></i>Save Quote';
+    document.getElementById('aqEmailBtn').disabled = true;
+    document.getElementById('aqStellaBtn').disabled = true;
+
+    aqRenderContainers();
+    aqRenderSummary();
+
+    // Load promos
+    try {
+        const data = await api.getPromotions();
+        const now = new Date().toISOString().split('T')[0];
+        aqActivePromos = (data.promotions || []).filter(p => p.is_active && p.start_date <= now && p.end_date >= now);
+        const select = document.getElementById('aqPromo');
+        select.innerHTML = '<option value="">No promotion</option>' +
+            aqActivePromos.map(p => '<option value="' + p.id + '">' + escapeHtml(p.name) +
+                ' (' + (p.discount_type === 'percent' ? p.discount_value + '%' : '$' + Number(p.discount_value).toFixed(2)) + ' off)' +
+                '</option>').join('');
+    } catch (err) {
+        // Non-critical
+    }
+}
+
+function aqRenderContainers() {
+    // Clean up old autocomplete instances
+    aqAutocompleteInstances.forEach(ac => {
+        if (ac && ac.unbindAll) ac.unbindAll();
+    });
+    aqAutocompleteInstances = [];
+
+    const wrap = document.getElementById('aqContainersWrap');
+    wrap.innerHTML = aqContainers.map((c, i) => {
+        const addrFields = aqGetAddressFields(c.serviceType);
+        const svcOptions = AQ_SERVICE_TYPES.map(s =>
+            '<option value="' + s + '"' + (c.serviceType === s ? ' selected' : '') + '>' + s + '</option>'
+        ).join('');
+
+        let html = '<div class="aq-container-card">';
+        // Header row: badge + size + service type + remove
+        html += '<div class="aq-container-header">';
+        html += '<span class="aq-badge">#' + (i + 1) + '</span>';
+        html += '<select class="form-select form-select-sm" onchange="aqUpdateContainer(' + i + ',\'size\',this.value)">' +
+            '<option value="16"' + (c.size === '16' ? ' selected' : '') + '>16-ft</option>' +
+            '<option value="20"' + (c.size === '20' ? ' selected' : '') + '>20-ft</option>' +
+            '</select>';
+        html += '<select class="form-select form-select-sm" onchange="aqServiceTypeChanged(' + i + ',this.value)">' + svcOptions + '</select>';
+        if (aqContainers.length > 1) {
+            html += '<button class="btn btn-sm btn-outline-danger btn-remove" onclick="aqRemoveContainer(' + i + ')" type="button"><i class="bi bi-x-lg"></i></button>';
+        }
+        html += '</div>';
+
+        // Address blocks
+        addrFields.forEach(af => {
+            const key = af.key; // '1' or '2'
+            const addrVal = c['addr' + key] || '';
+            const aptVal = c['apt' + key] || '';
+            const cityVal = c['city' + key] || '';
+            const stateVal = c['state' + key] || 'TX';
+            const zipVal = c['zip' + key] || '';
+
+            html += '<div class="aq-address-block">';
+            html += '<div class="aq-address-label">' + escapeHtml(af.label) + '</div>';
+            html += '<div class="row g-2">';
+            html += '<div class="col-md-8"><input type="text" class="form-control form-control-sm aq-autocomplete" id="aqAddr_' + i + '_' + key + '" placeholder="Start typing address..." value="' + escapeHtml(addrVal) + '" data-idx="' + i + '" data-key="' + key + '"></div>';
+            html += '<div class="col-md-4"><input type="text" class="form-control form-control-sm" placeholder="Apt/Suite" value="' + escapeHtml(aptVal) + '" onchange="aqUpdateAddr(' + i + ',\'apt' + key + '\',this.value)"></div>';
+            html += '<div class="col-md-4"><input type="text" class="form-control form-control-sm" placeholder="City" value="' + escapeHtml(cityVal) + '" onchange="aqUpdateAddr(' + i + ',\'city' + key + '\',this.value)"></div>';
+            html += '<div class="col-md-3"><input type="text" class="form-control form-control-sm" placeholder="State" value="' + escapeHtml(stateVal) + '" maxlength="2" onchange="aqUpdateAddr(' + i + ',\'state' + key + '\',this.value)"></div>';
+            html += '<div class="col-md-5"><div class="position-relative"><input type="text" class="form-control form-control-sm" placeholder="ZIP" value="' + escapeHtml(zipVal) + '" maxlength="5" id="aqZip_' + i + '_' + key + '" oninput="aqZipInput(' + i + ',\'' + key + '\',this.value)"><span class="aq-zip-status" id="aqZipStatus_' + i + '_' + key + '"></span></div></div>';
+            html += '</div>';
+            html += '</div>';
+        });
+
+        // Pricing preview
+        const pricingInfo = aqGetContainerPricing(i);
+        if (pricingInfo) {
+            html += '<div class="aq-container-pricing">';
+            html += '<span>' + escapeHtml(pricingInfo.zoneName || '') + '</span>';
+            html += '<span>';
+            html += '<span class="aq-price">$' + (pricingInfo.monthlyRate / 100).toFixed(2) + '/mo</span>';
+            if (pricingInfo.deliveryFee > 0) {
+                html += ' &middot; Delivery $' + (pricingInfo.deliveryFee / 100).toFixed(2);
+            }
+            html += '</span>';
+            html += '</div>';
+        }
+
+        html += '</div>';
+        return html;
+    }).join('');
+
+    // Init Google Places autocomplete on address inputs
+    setTimeout(() => aqInitAllAutocomplete(), 100);
+}
+
+function aqInitAllAutocomplete() {
+    if (typeof google === 'undefined' || !google.maps || !google.maps.places) return;
+
+    document.querySelectorAll('.aq-autocomplete').forEach(input => {
+        const idx = parseInt(input.dataset.idx);
+        const key = input.dataset.key;
+
+        const ac = new google.maps.places.Autocomplete(input, {
+            componentRestrictions: { country: 'us' },
+            fields: ['address_components', 'formatted_address'],
+            types: ['address'],
+        });
+
+        ac.addListener('place_changed', () => {
+            const place = ac.getPlace();
+            if (!place.address_components) return;
+
+            let street = '';
+            let city = '';
+            let state = '';
+            let zip = '';
+
+            for (const comp of place.address_components) {
+                const types = comp.types;
+                if (types.includes('street_number')) street = comp.long_name + ' ';
+                if (types.includes('route')) street += comp.short_name;
+                if (types.includes('locality')) city = comp.long_name;
+                if (types.includes('administrative_area_level_1')) state = comp.short_name;
+                if (types.includes('postal_code')) zip = comp.long_name;
+            }
+
+            aqContainers[idx]['addr' + key] = street.trim();
+            aqContainers[idx]['city' + key] = city;
+            aqContainers[idx]['state' + key] = state;
+            aqContainers[idx]['zip' + key] = zip;
+
+            // Update the visible fields
+            const cityEl = input.closest('.aq-address-block').querySelector('[placeholder="City"]');
+            const stateEl = input.closest('.aq-address-block').querySelector('[placeholder="State"]');
+            const zipEl = document.getElementById('aqZip_' + idx + '_' + key);
+            if (cityEl) cityEl.value = city;
+            if (stateEl) stateEl.value = state;
+            if (zipEl) zipEl.value = zip;
+
+            input.value = street.trim();
+
+            // Trigger zone lookup
+            if (zip && /^\d{5}$/.test(zip) && key === '1') {
+                aqDoZipLookup(idx, key, zip);
+            }
+        });
+
+        aqAutocompleteInstances.push(ac);
+    });
+}
+
+function aqUpdateContainer(idx, field, value) {
+    aqContainers[idx][field] = value;
+    aqRecalculate();
+}
+window.aqUpdateContainer = aqUpdateContainer;
+
+function aqUpdateAddr(idx, field, value) {
+    aqContainers[idx][field] = value;
+}
+window.aqUpdateAddr = aqUpdateAddr;
+
+function aqServiceTypeChanged(idx, value) {
+    aqContainers[idx].serviceType = value;
+    // Clear zone data when service type changes
+    aqContainers[idx].zoneData = null;
+    aqContainers[idx].pricingData = null;
+    aqRenderContainers();
+    aqRenderSummary();
+}
+window.aqServiceTypeChanged = aqServiceTypeChanged;
+
+function aqZipInput(idx, key, value) {
+    aqContainers[idx]['zip' + key] = value;
+    clearTimeout(aqZipTimers[idx + '_' + key]);
+
+    const statusEl = document.getElementById('aqZipStatus_' + idx + '_' + key);
+    if (value.length < 5) {
+        if (key === '1') {
+            aqContainers[idx].zoneData = null;
+            aqContainers[idx].pricingData = null;
+        }
+        if (statusEl) { statusEl.textContent = ''; statusEl.className = 'aq-zip-status'; }
+        aqRenderSummary();
+        return;
+    }
+
+    if (!/^\d{5}$/.test(value)) return;
+
+    if (statusEl) {
+        statusEl.innerHTML = '<i class="bi bi-arrow-repeat"></i>';
+        statusEl.className = 'aq-zip-status qq-zip-loading';
+    }
+
+    aqZipTimers[idx + '_' + key] = setTimeout(() => aqDoZipLookup(idx, key, value), 400);
+}
+window.aqZipInput = aqZipInput;
+
+async function aqDoZipLookup(idx, key, zip) {
+    const statusEl = document.getElementById('aqZipStatus_' + idx + '_' + key);
+    try {
+        const data = await api.request('GET', '/public/pricing/' + zip, null, true);
+        if (key === '1') {
+            aqContainers[idx].zoneData = {
+                zone: data.zone,
+                zone_name: data.zone_name,
+                delivery_fee: data.delivery_fee,
+                pickup_fee: data.pickup_fee,
+                relocation_fee: data.relocation_fee,
+            };
+            aqContainers[idx].pricingData = {
+                monthly: data.monthly,
+                first_month: data.first_month,
+            };
+        }
+        if (statusEl) {
+            statusEl.innerHTML = '<i class="bi bi-check-circle-fill"></i>';
+            statusEl.className = 'aq-zip-status qq-zip-ok';
+        }
+        aqRenderSummary();
+        // Re-render just the pricing preview for this container
+        aqUpdateContainerPricingPreview(idx);
+    } catch (err) {
+        if (key === '1') {
+            aqContainers[idx].zoneData = null;
+            aqContainers[idx].pricingData = null;
+        }
+        if (statusEl) {
+            statusEl.innerHTML = '<i class="bi bi-x-circle-fill"></i>';
+            statusEl.className = 'aq-zip-status qq-zip-error';
+        }
+        aqRenderSummary();
+    }
+}
+
+function aqUpdateContainerPricingPreview(idx) {
+    const card = document.querySelectorAll('.aq-container-card')[idx];
+    if (!card) return;
+
+    let existing = card.querySelector('.aq-container-pricing');
+    const info = aqGetContainerPricing(idx);
+
+    if (!info) {
+        if (existing) existing.remove();
+        return;
+    }
+
+    const html = '<span>' + escapeHtml(info.zoneName || '') + '</span>' +
+        '<span><span class="aq-price">$' + (info.monthlyRate / 100).toFixed(2) + '/mo</span>' +
+        (info.deliveryFee > 0 ? ' &middot; Delivery $' + (info.deliveryFee / 100).toFixed(2) : '') +
+        '</span>';
+
+    if (existing) {
+        existing.innerHTML = html;
+    } else {
+        const div = document.createElement('div');
+        div.className = 'aq-container-pricing';
+        div.innerHTML = html;
+        card.appendChild(div);
+    }
+}
+
+function aqGetContainerPricing(idx) {
+    const c = aqContainers[idx];
+    if (!c.zoneData || !c.pricingData) {
+        // Facility storage doesn't need zone data
+        if (c.serviceType.startsWith('Facility Storage') && c.pricingData) {
+            // We might not have pricingData either for facility — skip for now
+        }
+        if (!c.pricingData) return null;
+    }
+
+    const storageLocation = AQ_SERVICE_LOCATION_MAP[c.serviceType] || 'onsite';
+    const monthly = c.pricingData?.monthly || {};
+    const sizeRates = monthly[c.size] || {};
+    const monthlyRate = sizeRates[storageLocation];
+    if (monthlyRate === undefined) return null;
+
+    const feeType = aqGetDeliveryFeeType(c.serviceType);
+    let deliveryFee = 0;
+    if (c.zoneData && feeType !== 'none') {
+        deliveryFee = feeType === 'relocation'
+            ? (c.zoneData.relocation_fee || 0)
+            : (c.zoneData.delivery_fee || 0);
+    }
+
+    return {
+        monthlyRate: Math.round(monthlyRate * 100),
+        deliveryFee: deliveryFee, // already in cents from zone
+        zoneName: c.zoneData?.zone_name || '',
+    };
+}
+
+function aqGetPricing() {
+    const count = aqContainers.length;
+    let allReady = true;
+    const items = [];
+    let totalDeliveryFee = 0;
+
+    for (let i = 0; i < count; i++) {
+        const c = aqContainers[i];
+        const storageLocation = AQ_SERVICE_LOCATION_MAP[c.serviceType] || 'onsite';
+        const isFacility = c.serviceType.startsWith('Facility Storage');
+
+        // For non-facility, we need zone data
+        if (!isFacility && !c.zoneData) { allReady = false; continue; }
+        if (!c.pricingData) { allReady = false; continue; }
+
+        const monthly = c.pricingData.monthly || {};
+        const firstMonth = c.pricingData.first_month || {};
+        const sizeRates = monthly[c.size] || {};
+        const monthlyRate = sizeRates[storageLocation];
+        if (monthlyRate === undefined) { allReady = false; continue; }
+
+        const firstMonthRate = firstMonth[c.size] || monthlyRate;
+        const feeType = aqGetDeliveryFeeType(c.serviceType);
+        let deliveryFee = 0;
+        if (c.zoneData && feeType !== 'none') {
+            deliveryFee = feeType === 'relocation'
+                ? (c.zoneData.relocation_fee || 0)
+                : (c.zoneData.delivery_fee || 0);
+        }
+        totalDeliveryFee += deliveryFee;
+
+        items.push({
+            container_size: c.size,
+            storage_location: storageLocation,
+            service_type: c.serviceType,
+            monthly_rate: monthlyRate,
+            first_month_rate: firstMonthRate,
+            delivery_fee: deliveryFee,
+            zone_name: c.zoneData?.zone_name || '',
+        });
+    }
+
+    if (!allReady || items.length === 0) return null;
+
+    // Multi-container discount
+    let multiPct = 0;
+    if (count === 2) multiPct = 5;
+    else if (count >= 3) multiPct = 10;
+
+    let monthlySubtotal = items.reduce((s, i) => s + i.monthly_rate, 0);
+
+    // Override
+    const overrideVal = parseFloat(document.getElementById('aqOverride').value);
+    const hasOverride = !isNaN(overrideVal) && overrideVal > 0;
+    if (hasOverride) monthlySubtotal = overrideVal * count;
+
+    const multiDiscount = monthlySubtotal * multiPct / 100;
+
+    // Promo discount
+    let promoDiscount = 0;
+    const promoId = document.getElementById('aqPromo').value;
+    if (promoId) {
+        const promo = aqActivePromos.find(p => p.id === parseInt(promoId));
+        if (promo) {
+            const appliesTo = safeJsonParse(promo.applies_to, []);
+            if (appliesTo.includes('rent')) {
+                const applicableMonthly = monthlySubtotal - multiDiscount;
+                promoDiscount += promo.discount_type === 'percent'
+                    ? applicableMonthly * promo.discount_value / 100
+                    : promo.discount_value;
+            }
+            if (appliesTo.includes('delivery')) {
+                const deliveryDollars = totalDeliveryFee / 100;
+                promoDiscount += promo.discount_type === 'percent'
+                    ? deliveryDollars * promo.discount_value / 100
+                    : promo.discount_value;
+            }
+        }
+    }
+
+    const totalMonthly = monthlySubtotal - multiDiscount;
+    const firstMonthRent = items.reduce((s, i) => s + i.first_month_rate, 0);
+    const firstMonthTotal = firstMonthRent + (totalDeliveryFee / 100) - promoDiscount;
+
+    return {
+        items,
+        totalDeliveryFee: totalDeliveryFee / 100,
+        monthlySubtotal,
+        multiPct,
+        multiDiscount,
+        promoDiscount,
+        totalMonthly,
+        firstMonthRent,
+        firstMonthTotal,
+        dueToday: firstMonthTotal,
+        hasOverride,
+        count,
+    };
+}
+
+function aqRenderSummary() {
+    const body = document.getElementById('aqSummaryBody');
+    const pricing = aqGetPricing();
+
+    if (!pricing) {
+        body.innerHTML = '<p class="text-muted text-center py-4">Add containers and enter ZIP codes to begin</p>';
+        document.getElementById('aqActions').style.display = 'none';
+        return;
+    }
+
+    document.getElementById('aqActions').style.display = '';
+    const fmt = v => '$' + Number(v).toFixed(2);
+    const name = document.getElementById('aqName').value;
+
+    let html = '';
+
+    if (name) {
+        html += '<div class="qq-section-label">Customer</div>';
+        html += '<div class="qq-summary-row"><span class="label">' + escapeHtml(name) + '</span></div>';
+    }
+
+    // Containers section
+    html += '<div class="qq-section-label">Containers';
+    if (pricing.multiPct > 0) {
+        html += ' <span class="qq-discount-badge">' + pricing.multiPct + '% multi-discount</span>';
+    }
+    html += '</div>';
+
+    pricing.items.forEach((item, i) => {
+        html += '<div class="qq-summary-row"><span class="label">' + item.container_size + "' " + escapeHtml(item.service_type) + '</span><span class="value">' + fmt(item.monthly_rate) + '/mo</span></div>';
+        if (item.zone_name) {
+            html += '<div class="qq-summary-row"><span class="label" style="padding-left:12px;font-size:12px;color:var(--gray-400);">' + escapeHtml(item.zone_name) + '</span>';
+            if (item.delivery_fee > 0) {
+                html += '<span class="value" style="font-size:12px;color:var(--gray-500);">Delivery ' + fmt(item.delivery_fee / 100) + '</span>';
+            }
+            html += '</div>';
+        }
+    });
+
+    // Pricing section
+    html += '<div class="qq-section-label">Pricing</div>';
+    html += '<div class="qq-summary-row"><span class="label">First Month Rent</span><span class="value">' + fmt(pricing.firstMonthRent) + '</span></div>';
+    html += '<div class="qq-summary-row"><span class="label">Delivery Fees</span><span class="value">' + fmt(pricing.totalDeliveryFee) + '</span></div>';
+
+    if (pricing.multiDiscount > 0) {
+        html += '<div class="qq-summary-row discount"><span class="label">Multi-Container (' + pricing.multiPct + '%)</span><span class="value">-' + fmt(pricing.multiDiscount) + '</span></div>';
+    }
+    if (pricing.promoDiscount > 0) {
+        html += '<div class="qq-summary-row discount"><span class="label">Promo Discount</span><span class="value">-' + fmt(pricing.promoDiscount) + '</span></div>';
+    }
+    if (pricing.hasOverride) {
+        html += '<div class="qq-summary-row"><span class="label" style="color:var(--orange);font-weight:700;">Override Applied</span></div>';
+    }
+
+    html += '<div class="qq-summary-row total"><span class="label">Due at Delivery</span><span class="value">' + fmt(pricing.dueToday) + '</span></div>';
+    html += '<div class="qq-summary-row"><span class="label">Monthly After First</span><span class="value">' + fmt(pricing.totalMonthly) + '</span></div>';
+
+    body.innerHTML = html;
+}
+
+function aqRecalculate() {
+    aqRenderSummary();
+}
+
+function aqAddContainer() {
+    if (aqContainers.length >= 10) {
+        showToast('Limit', 'Maximum 10 containers per quote', 'error');
+        return;
+    }
+    aqContainers.push({
+        size: '16', serviceType: 'Storage at Your Location',
+        addr1: '', apt1: '', city1: '', state1: 'TX', zip1: '',
+        addr2: '', apt2: '', city2: '', state2: 'TX', zip2: '',
+        zoneData: null, pricingData: null,
+    });
+    aqRenderContainers();
+    aqRecalculate();
+}
+
+function aqRemoveContainer(idx) {
+    if (aqContainers.length <= 1) return;
+    aqContainers.splice(idx, 1);
+    aqRenderContainers();
+    aqRecalculate();
+}
+window.aqRemoveContainer = aqRemoveContainer;
+
+// For facility storage, we need pricing data even without a zone
+// Try to load pricing from any other container that has it
+function aqEnsureFacilityPricing(idx) {
+    const c = aqContainers[idx];
+    if (!c.serviceType.startsWith('Facility Storage')) return;
+    if (c.pricingData) return;
+
+    // Copy pricing data from any other container that has it
+    for (const other of aqContainers) {
+        if (other.pricingData) {
+            c.pricingData = other.pricingData;
+            return;
+        }
+    }
+}
+
+// Save Advanced Quote
+document.getElementById('aqSaveBtn').addEventListener('click', async function() {
+    const name = document.getElementById('aqName').value.trim();
+    if (!name) { showToast('Validation', 'Customer name is required', 'error'); return; }
+
+    // Validate each container
+    for (let i = 0; i < aqContainers.length; i++) {
+        const c = aqContainers[i];
+        const isFacility = c.serviceType.startsWith('Facility Storage');
+        if (!isFacility && (!c.zip1 || !/^\d{5}$/.test(c.zip1))) {
+            showToast('Validation', 'Container #' + (i + 1) + ': valid ZIP code is required', 'error');
+            return;
+        }
+        aqEnsureFacilityPricing(i);
+        if (!isFacility && !c.zoneData) {
+            showToast('Validation', 'Container #' + (i + 1) + ': ZIP not in service area', 'error');
+            return;
+        }
+    }
+
+    const overrideVal = parseFloat(document.getElementById('aqOverride').value);
+    const hasOverride = !isNaN(overrideVal) && overrideVal > 0;
+    const overrideReason = document.getElementById('aqOverrideReason').value.trim();
+    if (hasOverride && !overrideReason) {
+        showToast('Validation', 'Override reason is required', 'error');
+        return;
+    }
+
+    const promoId = document.getElementById('aqPromo').value;
+
+    // Build per-item data
+    const itemsPayload = aqContainers.map(c => {
+        const storageLocation = AQ_SERVICE_LOCATION_MAP[c.serviceType] || 'onsite';
+        return {
+            container_size: c.size,
+            storage_location: storageLocation,
+            service_type: c.serviceType,
+            address_1: c.addr1 || undefined,
+            apt_1: c.apt1 || undefined,
+            city_1: c.city1 || undefined,
+            state_1: c.state1 || undefined,
+            zip_1: c.zip1 || undefined,
+            address_2: c.addr2 || undefined,
+            apt_2: c.apt2 || undefined,
+            city_2: c.city2 || undefined,
+            state_2: c.state2 || undefined,
+            zip_2: c.zip2 || undefined,
+        };
+    });
+
+    // Use first non-facility container's ZIP as global
+    const firstZip = aqContainers.find(c => c.zip1)?.zip1 || '00000';
+    const firstServiceType = aqContainers[0].serviceType;
+
+    const data = {
+        customer_name: name,
+        phone: document.getElementById('aqPhone').value.trim() || undefined,
+        email: document.getElementById('aqEmail').value.trim() || undefined,
+        zip: firstZip,
+        service_type: firstServiceType,
+        delivery_date: document.getElementById('aqDeliveryDate').value || undefined,
+        months_needed: parseInt(document.getElementById('aqMonths').value) || 1,
+        items: itemsPayload,
+        promo_id: promoId ? parseInt(promoId) : undefined,
+        promo_code: document.getElementById('aqPromoCode').value || undefined,
+        override_monthly_cents: hasOverride ? Math.round(overrideVal * 100) : undefined,
+        override_reason: hasOverride ? overrideReason : undefined,
+        notes: document.getElementById('aqNotes').value.trim() || undefined,
+        quote_type: 'advanced',
+    };
+
+    this.disabled = true;
+    this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
+
+    try {
+        const result = await api.createStaffQuote(data);
+        aqSavedQuoteId = result.quote.id;
+
+        const badge = document.getElementById('aqNumberBadge');
+        badge.textContent = result.quote.quote_number;
+        badge.style.display = '';
+
+        document.getElementById('aqEmailBtn').disabled = !result.quote.email;
+        document.getElementById('aqStellaBtn').disabled = false;
+        this.innerHTML = '<i class="bi bi-check-lg me-1"></i>Saved';
+
+        showToast('Quote Saved', 'Quote ' + result.quote.quote_number + ' created');
+    } catch (err) {
+        showToast('Error', err.message, 'error');
+        this.disabled = false;
+        this.innerHTML = '<i class="bi bi-save me-1"></i>Save Quote';
+    }
+});
+
+// Email Advanced Quote
+document.getElementById('aqEmailBtn').addEventListener('click', async function() {
+    if (!aqSavedQuoteId) return;
+    this.disabled = true;
+    this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Sending...';
+
+    try {
+        await api.emailStaffQuote(aqSavedQuoteId);
+        this.innerHTML = '<i class="bi bi-check-lg me-1"></i>Email Sent';
+        showToast('Email Sent', 'Quote emailed to customer');
+    } catch (err) {
+        showToast('Error', err.message, 'error');
+        this.disabled = false;
+        this.innerHTML = '<i class="bi bi-envelope me-1"></i>Email to Customer';
+    }
+});
+
+// Stella Advanced Quote
+document.getElementById('aqStellaBtn').addEventListener('click', async function() {
+    if (!aqSavedQuoteId) return;
+    this.disabled = true;
+    this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Sending...';
+
+    try {
+        await api.convertStaffQuote(aqSavedQuoteId);
+        this.innerHTML = '<i class="bi bi-check-lg me-1"></i>Sent to Stella';
+        showToast('Stella CRM', 'Quote forwarded to Stella');
+    } catch (err) {
+        showToast('Error', err.message, 'error');
+        this.disabled = false;
+        this.innerHTML = '<i class="bi bi-send me-1"></i>Send to Stella CRM';
+    }
+});
+
+// Print Advanced Quote
+document.getElementById('aqPrintBtn').addEventListener('click', function() {
+    window.print();
+});
+
+// Add Container button
+document.getElementById('aqAddContainerBtn').addEventListener('click', aqAddContainer);
+
+// Recalculate on input changes
+['aqPromo', 'aqMonths'].forEach(id => {
+    document.getElementById(id).addEventListener('change', aqRecalculate);
+});
+['aqOverride', 'aqName'].forEach(id => {
+    document.getElementById(id).addEventListener('input', aqRecalculate);
+});
+
+// Promo selection updates promo code display
+document.getElementById('aqPromo').addEventListener('change', function() {
+    const promoId = this.value;
+    const codeInput = document.getElementById('aqPromoCode');
+    if (promoId) {
+        const promo = aqActivePromos.find(p => p.id === parseInt(promoId));
+        codeInput.value = promo?.promo_code || '';
+    } else {
+        codeInput.value = '';
+    }
+    aqRecalculate();
+});
 
 // ============================================================
 // Utilities
