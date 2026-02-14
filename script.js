@@ -326,15 +326,89 @@ function goToStep(step) {
         displayQuoteSummary();
     }
 
-    // If going to step 4, pre-populate the ZIP from step 1
+    // If going to step 4, pre-populate the ZIP from step 1 and init autocomplete
     if (step === 4) {
         var zipConfirmField = document.getElementById('deliveryZipConfirm');
         zipConfirmField.value = document.getElementById('deliveryZip').value;
         zipConfirmField.dispatchEvent(new Event('input', { bubbles: true }));
+
+        initPlacesAutocomplete();
     }
 
     // Scroll to top of form so user sees the new step
     scrollToForm();
+}
+
+// Google Places Autocomplete for delivery address
+var placesAutocompleteInstance = null;
+
+function initPlacesAutocomplete() {
+    if (placesAutocompleteInstance) return;
+
+    if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
+        return;
+    }
+
+    var addressInput = document.getElementById('deliveryAddress');
+    if (!addressInput) return;
+
+    placesAutocompleteInstance = new google.maps.places.Autocomplete(addressInput, {
+        componentRestrictions: { country: 'us' },
+        fields: ['address_components', 'formatted_address'],
+        types: ['address']
+    });
+
+    placesAutocompleteInstance.addListener('place_changed', function() {
+        var place = placesAutocompleteInstance.getPlace();
+        if (!place || !place.address_components) return;
+
+        var streetNumber = '';
+        var route = '';
+        var city = '';
+        var state = '';
+        var zip = '';
+
+        for (var i = 0; i < place.address_components.length; i++) {
+            var comp = place.address_components[i];
+            var types = comp.types;
+
+            if (types.indexOf('street_number') !== -1) streetNumber = comp.long_name;
+            if (types.indexOf('route') !== -1) route = comp.short_name;
+            if (types.indexOf('locality') !== -1) city = comp.long_name;
+            if (types.indexOf('administrative_area_level_1') !== -1) state = comp.short_name;
+            if (types.indexOf('postal_code') !== -1) zip = comp.long_name;
+        }
+
+        addressInput.value = (streetNumber + ' ' + route).trim();
+
+        var cityField = document.getElementById('deliveryCity');
+        if (cityField && city) {
+            cityField.value = city;
+            cityField.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
+        var stateField = document.getElementById('deliveryState');
+        if (stateField && state) {
+            stateField.value = state;
+        }
+
+        var zipField = document.getElementById('deliveryZipConfirm');
+        if (zipField && zip) {
+            zipField.value = zip;
+            zipField.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    });
+
+    // Prevent Enter key from submitting form when Places dropdown is open
+    addressInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.keyCode === 13) {
+            var pacContainer = document.querySelector('.pac-container');
+            if (pacContainer && pacContainer.style.display !== 'none' &&
+                pacContainer.querySelectorAll('.pac-item').length > 0) {
+                e.preventDefault();
+            }
+        }
+    });
 }
 
 // Display quote summary on step 3
