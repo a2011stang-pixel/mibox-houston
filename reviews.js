@@ -40,15 +40,26 @@
     var snippet = r.review_snippet ? esc(r.review_snippet) : '';
     var body = esc(r.review_text);
 
+    // Bold the snippet inline within the body text
+    var bodyHtml = body;
+    if (snippet && body.length > snippet.length) {
+      var idx = body.toLowerCase().indexOf(snippet.toLowerCase());
+      if (idx !== -1) {
+        bodyHtml = body.substring(0, idx) +
+          '<strong>' + body.substring(idx, idx + snippet.length) + '</strong>' +
+          body.substring(idx + snippet.length);
+      }
+    }
+
     var html = '<div class="rv-card">';
     html += '<div class="rv-card-top">';
-    html += '<h4 class="rv-name">' + esc(r.reviewer_name) + '</h4>';
     html += sourceIcon(r.source);
-    html += '</div>';
+    html += '<div class="rv-meta">';
+    html += '<span class="rv-name">' + esc(r.reviewer_name) + '</span>';
     html += badge(r.service_type, r.review_date);
-    html += '<div class="rv-stars">★★★★★</div>';
-    if (snippet) html += '<p class="rv-snippet">' + snippet + '</p>';
-    html += '<p class="rv-body">' + body + '</p>';
+    html += '</div>';
+    html += '</div>';
+    html += '<p class="rv-body">' + bodyHtml + '</p>';
     html += '</div>';
     return html;
   }
