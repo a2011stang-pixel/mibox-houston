@@ -11,23 +11,15 @@
     return d.innerHTML;
   }
 
-  function badge(type, dateStr) {
+  function badge(type) {
     var label = '';
     if (type === 'moving') label = 'Moved';
     else if (type === 'storage') label = 'Stored';
     else if (type === 'both') label = 'Moved & Stored';
     else if (type === 'event') label = 'Event';
 
-    var date = '';
-    if (dateStr) {
-      var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      var p = dateStr.split('-');
-      var m = p[1] ? months[parseInt(p[1], 10) - 1] : '';
-      date = m ? m + '. ' + p[0] : p[0];
-    }
-
-    if (!label && !date) return '';
-    return '<span class="rv-badge">' + (label ? label + ' ' : '') + date + '</span>';
+    if (!label) return '';
+    return '<span class="rv-badge">' + label + '</span>';
   }
 
   function sourceIcon(src) {
@@ -56,7 +48,7 @@
     html += '<span class="rv-name">' + esc(r.reviewer_name) + '</span>';
     html += sourceIcon(r.source);
     html += '</div>';
-    html += badge(r.service_type, r.review_date);
+    html += badge(r.service_type);
     // Stars
     html += '<div class="rv-stars">★★★★★</div>';
     // Body text with snippet bolded inline
