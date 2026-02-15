@@ -80,7 +80,7 @@ reviewsAdminRoutes.get('/', async (c) => {
 // POST / — Create a new review
 reviewsAdminRoutes.post('/', async (c) => {
   const body = await c.req.json();
-  const { reviewer_name, rating, review_date, review_text, review_snippet, service_type, owner_response, google_review_id, is_featured, is_active, tags } = body;
+  const { reviewer_name, rating, review_date, review_text, review_snippet, service_type, source, owner_response, google_review_id, is_featured, is_active, tags } = body;
 
   if (!reviewer_name || !review_text || !review_date) {
     return c.json({ error: 'reviewer_name, review_text, and review_date are required' }, 400);
@@ -93,8 +93,8 @@ reviewsAdminRoutes.post('/', async (c) => {
 
   const result = await c.env.DB
     .prepare(
-      `INSERT INTO reviews (reviewer_name, rating, review_date, review_text, review_snippet, service_type, owner_response, google_review_id, is_featured, is_active)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO reviews (reviewer_name, rating, review_date, review_text, review_snippet, service_type, source, owner_response, google_review_id, is_featured, is_active)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .bind(
       reviewer_name,
@@ -103,6 +103,7 @@ reviewsAdminRoutes.post('/', async (c) => {
       review_text,
       review_snippet || null,
       service_type || null,
+      source || 'google',
       owner_response || null,
       google_review_id || null,
       is_featured ? 1 : 0,
@@ -164,6 +165,7 @@ reviewsAdminRoutes.put('/:id', async (c) => {
     { key: 'review_text', value: body.review_text },
     { key: 'review_snippet', value: body.review_snippet },
     { key: 'service_type', value: body.service_type },
+    { key: 'source', value: body.source },
     { key: 'owner_response', value: body.owner_response },
     { key: 'google_review_id', value: body.google_review_id },
     { key: 'is_featured', value: body.is_featured },
