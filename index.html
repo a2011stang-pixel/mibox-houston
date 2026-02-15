@@ -755,8 +755,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="container">
             <h2 class="text-center mb-2">What Our Customers Say</h2>
             <p class="text-center text-muted mb-4" id="reviewsSubtitle">★★★★★ on Google &amp; Yelp</p>
-            <div class="reviews-grid" id="reviewsGrid">
-                <!-- Populated by reviews.js -->
+            <div class="rv-scroll-wrap">
+                <button class="rv-arrow rv-arrow-left" id="rvPrev" aria-label="Previous"><i class="bi bi-chevron-left"></i></button>
+                <div class="reviews-grid" id="reviewsGrid">
+                    <!-- Populated by reviews.js -->
+                </div>
+                <button class="rv-arrow rv-arrow-right" id="rvNext" aria-label="Next"><i class="bi bi-chevron-right"></i></button>
             </div>
         </div>
     </section>
