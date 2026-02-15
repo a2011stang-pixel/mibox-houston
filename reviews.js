@@ -31,9 +31,9 @@
   }
 
   function sourceIcon(src) {
-    if (src === 'yelp') return '<span class="rv-src rv-src-yelp" title="Yelp">Y</span>';
+    if (src === 'yelp') return '<img class="rv-src" src="images/yelp-icon.png" alt="Yelp" title="Yelp" width="16" height="16">';
     if (src === 'facebook') return '<span class="rv-src rv-src-fb" title="Facebook">f</span>';
-    return '<span class="rv-src rv-src-google" title="Google">G</span>';
+    return '<img class="rv-src" src="images/google-icon.png" alt="Google" title="Google" width="16" height="16">';
   }
 
   function boldSnippet(body, snippet) {
