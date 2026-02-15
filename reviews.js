@@ -1,15 +1,14 @@
-// MI-BOX Houston — Reviews Carousel Component
-// Fetches reviews from API and renders a carousel on the homepage
-
+// MI-BOX Houston — Reviews Carousel (PODS-style cards)
 (function () {
   'use strict';
 
   var API_BASE = 'https://mibox-houston-api.cmykprnt.workers.dev/api/public/reviews';
-  var AUTOPLAY_INTERVAL = 6000;
+  var AUTOPLAY_INTERVAL = 8000;
   var autoplayTimer = null;
-  var currentSlide = 0;
+  var currentIndex = 0;
   var reviews = [];
-  var slidesPerView = 3;
+  var cardsPerView = 3;
+  var GAP = 16; // px between cards
 
   function escapeHtml(str) {
     if (!str) return '';
@@ -18,238 +17,232 @@
     return div.innerHTML;
   }
 
-  function renderStars(rating) {
-    var html = '';
-    for (var i = 0; i < 5; i++) {
-      html += i < rating
-        ? '<i class="bi bi-star-fill"></i>'
-        : '<i class="bi bi-star"></i>';
-    }
-    return html;
+  function renderStars(count) {
+    var s = '';
+    for (var i = 0; i < count; i++) s += '<i class="bi bi-star-fill"></i>';
+    return s;
   }
 
-  function getServiceLabel(serviceType) {
-    switch (serviceType) {
-      case 'moving': return 'Moving';
-      case 'storage': return 'Storage';
-      case 'both': return 'Moving & Storage';
-      case 'event': return 'Event Storage';
+  function getServiceBadge(type) {
+    switch (type) {
+      case 'moving': return 'Moved';
+      case 'storage': return 'Stored';
+      case 'both': return 'Moved & Stored';
+      case 'event': return 'Event';
       default: return '';
     }
   }
 
-  function renderReviewCard(review) {
-    var text = escapeHtml(review.review_text);
-    var serviceLabel = getServiceLabel(review.service_type);
-
-    var card = '<div class="review-card">';
-    card += '<div class="review-card-stars">' + renderStars(review.rating) + '</div>';
-    card += '<blockquote class="review-card-quote">"' + text + '"</blockquote>';
-    card += '<div class="review-card-meta">';
-    card += '<span class="review-card-name">' + escapeHtml(review.reviewer_name) + '</span>';
-    if (serviceLabel) {
-      card += '<span class="review-card-service">' + serviceLabel + '</span>';
+  function getServiceIcon(type) {
+    if (type === 'moving' || type === 'both') {
+      return '<i class="bi bi-truck"></i>';
     }
-    card += '</div>';
-    card += '<div class="review-card-source">';
-    card += '<svg class="google-icon" viewBox="0 0 24 24" width="16" height="16"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>';
-    card += ' Google Review';
-    card += '</div>';
-    card += '</div>';
-
-    return card;
+    return '<i class="bi bi-box-seam"></i>';
   }
 
-  function updateSlidesPerView() {
-    var width = window.innerWidth;
-    if (width < 768) {
-      slidesPerView = 1;
-    } else if (width < 992) {
-      slidesPerView = 2;
+  function formatDate(dateStr) {
+    if (!dateStr) return '';
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var parts = dateStr.split('-');
+    var year = parts[0];
+    var month = parts[1] ? months[parseInt(parts[1], 10) - 1] : '';
+    return month ? month + '. ' + year : year;
+  }
+
+  function renderCard(review) {
+    var badge = getServiceBadge(review.service_type);
+    var icon = getServiceIcon(review.service_type);
+    var date = formatDate(review.review_date);
+    var snippet = review.review_snippet ? escapeHtml(review.review_snippet) : '';
+    var fullText = escapeHtml(review.review_text);
+
+    // Bold the snippet within the full text if both exist
+    var bodyHtml = '';
+    if (snippet && fullText.length > snippet.length) {
+      var idx = fullText.toLowerCase().indexOf(snippet.toLowerCase());
+      if (idx !== -1) {
+        bodyHtml = fullText.substring(0, idx) +
+          '<strong>' + fullText.substring(idx, idx + snippet.length) + '</strong>' +
+          fullText.substring(idx + snippet.length);
+      } else {
+        bodyHtml = '<strong>' + snippet + '</strong> ' + fullText;
+      }
     } else {
-      slidesPerView = 3;
+      bodyHtml = fullText;
     }
+
+    var html = '<div class="rc-card">';
+
+    // Header: icon + name/date/badge
+    html += '<div class="rc-header">';
+    html += '<div class="rc-icon">' + icon + '</div>';
+    html += '<div class="rc-info">';
+    html += '<div class="rc-name">' + escapeHtml(review.reviewer_name) + '</div>';
+    html += '<div class="rc-date">';
+    if (badge) html += '<span class="rc-badge">' + badge + '</span> ';
+    html += date + '</div>';
+    html += '</div>';
+    html += '</div>';
+
+    // Stars
+    html += '<div class="rc-stars">' + renderStars(review.rating) + '</div>';
+
+    // Review body
+    html += '<div class="rc-body">' + bodyHtml + '</div>';
+
+    html += '</div>';
+    return html;
   }
 
-  function getMaxSlide() {
-    return Math.max(0, reviews.length - slidesPerView);
+  function updateCardsPerView() {
+    var w = window.innerWidth;
+    if (w < 600) cardsPerView = 1;
+    else if (w < 900) cardsPerView = 2;
+    else cardsPerView = 3;
   }
 
-  function updateCarousel() {
-    var track = document.getElementById('reviewsTrack');
-    var dots = document.querySelectorAll('.reviews-dot');
+  function maxIndex() {
+    return Math.max(0, reviews.length - cardsPerView);
+  }
+
+  function scrollTo(idx) {
+    currentIndex = Math.max(0, Math.min(idx, maxIndex()));
+    var track = document.getElementById('rcTrack');
     if (!track) return;
-
-    var cardWidth = 100 / slidesPerView;
-    track.style.transform = 'translateX(-' + (currentSlide * cardWidth) + '%)';
-
-    dots.forEach(function (dot, i) {
-      dot.classList.toggle('active', i === currentSlide);
-    });
+    var card = track.children[0];
+    if (!card) return;
+    var cardW = card.offsetWidth + GAP;
+    track.style.transform = 'translateX(-' + (currentIndex * cardW) + 'px)';
+    updateArrows();
   }
 
-  function goToSlide(index) {
-    var maxSlide = getMaxSlide();
-    currentSlide = Math.max(0, Math.min(index, maxSlide));
-    updateCarousel();
+  function updateArrows() {
+    var prev = document.querySelector('.rc-prev');
+    var next = document.querySelector('.rc-next');
+    if (prev) prev.style.opacity = currentIndex <= 0 ? '0.3' : '1';
+    if (next) next.style.opacity = currentIndex >= maxIndex() ? '0.3' : '1';
   }
 
-  function nextSlide() {
-    var maxSlide = getMaxSlide();
-    currentSlide = currentSlide >= maxSlide ? 0 : currentSlide + 1;
-    updateCarousel();
+  function next() {
+    if (currentIndex < maxIndex()) scrollTo(currentIndex + 1);
+    else scrollTo(0);
   }
 
-  function prevSlide() {
-    var maxSlide = getMaxSlide();
-    currentSlide = currentSlide <= 0 ? maxSlide : currentSlide - 1;
-    updateCarousel();
+  function prev() {
+    if (currentIndex > 0) scrollTo(currentIndex - 1);
+    else scrollTo(maxIndex());
   }
 
   function startAutoplay() {
     stopAutoplay();
-    autoplayTimer = setInterval(nextSlide, AUTOPLAY_INTERVAL);
+    autoplayTimer = setInterval(next, AUTOPLAY_INTERVAL);
   }
 
   function stopAutoplay() {
-    if (autoplayTimer) {
-      clearInterval(autoplayTimer);
-      autoplayTimer = null;
-    }
+    if (autoplayTimer) { clearInterval(autoplayTimer); autoplayTimer = null; }
   }
 
-  function renderDots() {
-    var maxSlide = getMaxSlide();
-    var html = '';
-    for (var i = 0; i <= maxSlide; i++) {
-      html += '<button class="reviews-dot' + (i === 0 ? ' active' : '') + '" data-slide="' + i + '" aria-label="Go to slide ' + (i + 1) + '"></button>';
-    }
-    return html;
-  }
+  function build(container) {
+    if (!reviews.length) return;
+    updateCardsPerView();
 
-  function buildCarousel(container) {
-    if (reviews.length === 0) return;
+    var html = '<div class="rc-wrapper">';
 
-    updateSlidesPerView();
+    // Left arrow
+    html += '<button class="rc-arrow rc-prev" aria-label="Previous"><i class="bi bi-chevron-left"></i></button>';
 
-    var html = '';
-
-    // Carousel wrapper
-    html += '<div class="reviews-carousel-wrapper">';
-    html += '<button class="reviews-nav reviews-nav-prev" aria-label="Previous reviews"><i class="bi bi-chevron-left"></i></button>';
-    html += '<div class="reviews-carousel-viewport">';
-    html += '<div class="reviews-carousel-track" id="reviewsTrack">';
-
+    // Viewport
+    html += '<div class="rc-viewport">';
+    html += '<div class="rc-track" id="rcTrack">';
     for (var i = 0; i < reviews.length; i++) {
-      html += '<div class="reviews-carousel-slide" style="min-width:' + (100 / slidesPerView) + '%;padding:0 8px;">';
-      html += renderReviewCard(reviews[i]);
-      html += '</div>';
+      html += '<div class="rc-slide">' + renderCard(reviews[i]) + '</div>';
     }
+    html += '</div></div>';
 
+    // Right arrow
+    html += '<button class="rc-arrow rc-next" aria-label="Next"><i class="bi bi-chevron-right"></i></button>';
     html += '</div>';
-    html += '</div>';
-    html += '<button class="reviews-nav reviews-nav-next" aria-label="Next reviews"><i class="bi bi-chevron-right"></i></button>';
-    html += '</div>';
-
-    // Dots
-    html += '<div class="reviews-dots">' + renderDots() + '</div>';
 
     container.innerHTML = html;
 
-    // Event listeners
-    var prevBtn = container.querySelector('.reviews-nav-prev');
-    var nextBtn = container.querySelector('.reviews-nav-next');
-    if (prevBtn) prevBtn.addEventListener('click', function () { prevSlide(); startAutoplay(); });
-    if (nextBtn) nextBtn.addEventListener('click', function () { nextSlide(); startAutoplay(); });
+    // Size slides based on viewport
+    sizeSlides();
 
-    container.querySelectorAll('.reviews-dot').forEach(function (dot) {
-      dot.addEventListener('click', function () {
-        goToSlide(parseInt(this.getAttribute('data-slide')));
-        startAutoplay();
-      });
-    });
+    // Arrows
+    container.querySelector('.rc-prev').addEventListener('click', function () { prev(); startAutoplay(); });
+    container.querySelector('.rc-next').addEventListener('click', function () { next(); startAutoplay(); });
 
     // Pause on hover
-    var wrapper = container.querySelector('.reviews-carousel-wrapper');
-    if (wrapper) {
-      wrapper.addEventListener('mouseenter', stopAutoplay);
-      wrapper.addEventListener('mouseleave', startAutoplay);
-    }
+    var wrapper = container.querySelector('.rc-wrapper');
+    wrapper.addEventListener('mouseenter', stopAutoplay);
+    wrapper.addEventListener('mouseleave', startAutoplay);
 
-    // Touch swipe support
-    var touchStartX = 0;
-    var viewport = container.querySelector('.reviews-carousel-viewport');
-    if (viewport) {
-      viewport.addEventListener('touchstart', function (e) {
-        touchStartX = e.touches[0].clientX;
-        stopAutoplay();
-      }, { passive: true });
-      viewport.addEventListener('touchend', function (e) {
-        var diff = touchStartX - e.changedTouches[0].clientX;
-        if (Math.abs(diff) > 50) {
-          if (diff > 0) nextSlide();
-          else prevSlide();
-        }
-        startAutoplay();
-      }, { passive: true });
-    }
+    // Touch swipe
+    var startX = 0;
+    var viewport = container.querySelector('.rc-viewport');
+    viewport.addEventListener('touchstart', function (e) { startX = e.touches[0].clientX; stopAutoplay(); }, { passive: true });
+    viewport.addEventListener('touchend', function (e) {
+      var diff = startX - e.changedTouches[0].clientX;
+      if (Math.abs(diff) > 40) { diff > 0 ? next() : prev(); }
+      startAutoplay();
+    }, { passive: true });
 
+    updateArrows();
     startAutoplay();
   }
 
-  function loadStats(container) {
-    fetch(API_BASE + '/stats')
-      .then(function (res) { return res.json(); })
-      .then(function (data) {
-        var statsEl = container.querySelector('.reviews-stats-badge');
-        if (statsEl && data.average_rating) {
-          statsEl.innerHTML =
-            '<span class="reviews-stats-stars">' + renderStars(Math.round(data.average_rating)) + '</span>' +
-            '<span class="reviews-stats-text">' + data.average_rating.toFixed(1) + ' from ' + data.total_reviews + ' Google Reviews</span>';
-        }
-      })
-      .catch(function () {});
+  function sizeSlides() {
+    var viewport = document.querySelector('.rc-viewport');
+    if (!viewport) return;
+    var vw = viewport.offsetWidth;
+    var slideW = (vw - GAP * (cardsPerView - 1)) / cardsPerView;
+    var slides = document.querySelectorAll('.rc-slide');
+    slides.forEach(function (s) {
+      s.style.width = slideW + 'px';
+      s.style.marginRight = GAP + 'px';
+    });
   }
 
   function init() {
     var section = document.getElementById('reviews');
     if (!section) return;
+    var container = document.getElementById('reviewsCarousel');
+    if (!container) return;
 
-    var carouselContainer = document.getElementById('reviewsCarousel');
-    if (!carouselContainer) return;
-
-    loadStats(section);
-
-    fetch(API_BASE + '?featured=1&random=1&limit=10')
-      .then(function (res) { return res.json(); })
-      .then(function (data) {
-        if (data.reviews && data.reviews.length > 0) {
-          reviews = data.reviews;
-          buildCarousel(carouselContainer);
+    // Load stats
+    fetch(API_BASE + '/stats')
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var el = section.querySelector('.reviews-stats-badge');
+        if (el && d.average_rating) {
+          el.innerHTML =
+            '<span class="reviews-stats-stars">' + renderStars(Math.round(d.average_rating)) + '</span>' +
+            '<span class="reviews-stats-text">' + d.average_rating.toFixed(1) + ' from ' + d.total_reviews + ' Google Reviews</span>';
         }
-      })
-      .catch(function (err) {
-        console.error('Failed to load reviews:', err);
-      });
+      }).catch(function () {});
 
-    // Handle resize
-    var resizeTimer;
+    // Load reviews
+    fetch(API_BASE + '?featured=1&random=1&limit=12')
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d.reviews && d.reviews.length) {
+          reviews = d.reviews;
+          build(container);
+        }
+      }).catch(function (e) { console.error('Reviews load failed:', e); });
+
+    // Resize
+    var timer;
     window.addEventListener('resize', function () {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(function () {
-        var oldPerView = slidesPerView;
-        updateSlidesPerView();
-        if (oldPerView !== slidesPerView) {
-          currentSlide = 0;
-          buildCarousel(carouselContainer);
-        }
-      }, 250);
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        updateCardsPerView();
+        sizeSlides();
+        scrollTo(Math.min(currentIndex, maxIndex()));
+      }, 200);
     });
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
 })();
