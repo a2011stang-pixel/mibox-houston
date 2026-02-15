@@ -2272,3 +2272,63 @@ document.getElementById('reviewForm')?.addEventListener('submit', async (e) => {
 document.getElementById('applyReviewFilters')?.addEventListener('click', () => {
     loadReviews();
 });
+
+// Quick-add toggle
+let qaAddedCount = 0;
+document.getElementById('quickAddToggle')?.addEventListener('click', () => {
+    const body = document.getElementById('quickAddBody');
+    const chevron = document.getElementById('quickAddChevron');
+    if (body) {
+        body.classList.toggle('d-none');
+        chevron.classList.toggle('bi-chevron-down');
+        chevron.classList.toggle('bi-chevron-up');
+    }
+});
+
+// Quick-add form submit
+document.getElementById('quickAddForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const btn = document.getElementById('qaSubmitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+    const tagsStr = document.getElementById('qaTags').value;
+    const tags = tagsStr ? tagsStr.split(',').map(t => t.trim().toLowerCase()).filter(Boolean) : [];
+
+    const data = {
+        reviewer_name: document.getElementById('qaName').value.trim(),
+        rating: 5,
+        review_date: document.getElementById('qaDate').value.trim(),
+        review_text: document.getElementById('qaText').value.trim(),
+        review_snippet: document.getElementById('qaSnippet').value.trim() || null,
+        service_type: document.getElementById('qaService').value || null,
+        is_featured: document.getElementById('qaFeatured').checked,
+        is_active: true,
+        tags: tags,
+    };
+
+    try {
+        await api.createReview(data);
+        qaAddedCount++;
+        document.getElementById('qaCount').textContent = qaAddedCount + ' added';
+
+        // Clear fields but keep tags and service type for rapid entry
+        document.getElementById('qaName').value = '';
+        document.getElementById('qaDate').value = '';
+        document.getElementById('qaText').value = '';
+        document.getElementById('qaSnippet').value = '';
+        document.getElementById('qaFeatured').checked = false;
+
+        // Focus back to name for next entry
+        document.getElementById('qaName').focus();
+
+        showToast('Success', 'Review saved (' + qaAddedCount + ')');
+        await loadReviews();
+    } catch (err) {
+        showToast('Error', err.message, 'danger');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-plus-lg me-1"></i>Save';
+    }
+});

@@ -785,6 +785,62 @@
                     <div class="col-md-3"><div class="stat-card"><div class="stat-value" id="reviewStatActive">-</div><div class="stat-label">Active</div></div></div>
                 </div>
 
+                <!-- Quick Add -->
+                <div class="card mb-3" id="quickAddCard">
+                    <div class="card-header d-flex justify-content-between align-items-center" style="cursor:pointer;" id="quickAddToggle">
+                        <strong><i class="bi bi-lightning-fill me-1 text-warning"></i>Quick Add Review</strong>
+                        <i class="bi bi-chevron-down" id="quickAddChevron"></i>
+                    </div>
+                    <div class="card-body d-none" id="quickAddBody">
+                        <form id="quickAddForm">
+                            <div class="row g-2 mb-2">
+                                <div class="col-md-3">
+                                    <input type="text" class="form-control" id="qaName" placeholder="Reviewer name" required>
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="text" class="form-control" id="qaDate" placeholder="YYYY-MM" required>
+                                </div>
+                                <div class="col-md-2">
+                                    <select class="form-select" id="qaService">
+                                        <option value="">Service type</option>
+                                        <option value="storage">Storage</option>
+                                        <option value="moving">Moving</option>
+                                        <option value="both">Both</option>
+                                        <option value="event">Event</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="text" class="form-control" id="qaTags" placeholder="Tags (comma-sep)">
+                                </div>
+                                <div class="col-md-2 d-flex gap-2">
+                                    <div class="form-check form-switch pt-2">
+                                        <input class="form-check-input" type="checkbox" id="qaFeatured">
+                                        <label class="form-check-label small" for="qaFeatured">Featured</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row g-2 mb-2">
+                                <div class="col-md-10">
+                                    <textarea class="form-control" id="qaText" rows="3" placeholder="Paste the full review text here..." required></textarea>
+                                </div>
+                                <div class="col-md-2 d-grid">
+                                    <button type="submit" class="btn btn-success" id="qaSubmitBtn">
+                                        <i class="bi bi-plus-lg me-1"></i>Save
+                                    </button>
+                                    <div class="text-center mt-2">
+                                        <span class="badge bg-secondary" id="qaCount">0 added</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-md-10">
+                                    <input type="text" class="form-control" id="qaSnippet" placeholder="Snippet / pull-quote (optional)">
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
                 <!-- Filters -->
                 <div class="card mb-3">
                     <div class="card-header">
