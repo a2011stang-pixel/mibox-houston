@@ -39,28 +39,12 @@
   }
 
   function renderReviewCard(review) {
-    var displayText = review.review_snippet
-      ? escapeHtml(review.review_snippet)
-      : escapeHtml(review.review_text.length > 120
-          ? review.review_text.substring(0, 120) + '...'
-          : review.review_text);
-
-    var fullText = escapeHtml(review.review_text);
-    var needsReadMore = review.review_text.length > 120;
+    var text = escapeHtml(review.review_text);
     var serviceLabel = getServiceLabel(review.service_type);
-    var reviewId = 'review-' + review.id;
 
     var card = '<div class="review-card">';
     card += '<div class="review-card-stars">' + renderStars(review.rating) + '</div>';
-    card += '<blockquote class="review-card-quote">"' + displayText + '"</blockquote>';
-
-    if (needsReadMore) {
-      card += '<div class="review-card-full" id="' + reviewId + '" style="display:none;">';
-      card += '<p class="review-card-fulltext">"' + fullText + '"</p>';
-      card += '</div>';
-      card += '<button class="review-card-readmore" data-target="' + reviewId + '">Read full review</button>';
-    }
-
+    card += '<blockquote class="review-card-quote">"' + text + '"</blockquote>';
     card += '<div class="review-card-meta">';
     card += '<span class="review-card-name">' + escapeHtml(review.reviewer_name) + '</span>';
     if (serviceLabel) {
@@ -182,24 +166,6 @@
       dot.addEventListener('click', function () {
         goToSlide(parseInt(this.getAttribute('data-slide')));
         startAutoplay();
-      });
-    });
-
-    // Read more buttons
-    container.querySelectorAll('.review-card-readmore').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var card = this.closest('.review-card');
-        var quote = card.querySelector('.review-card-quote');
-        var full = card.querySelector('.review-card-full');
-        if (full && full.style.display === 'none') {
-          full.style.display = 'block';
-          if (quote) quote.style.display = 'none';
-          this.textContent = 'Show less';
-        } else if (full) {
-          full.style.display = 'none';
-          if (quote) quote.style.display = 'block';
-          this.textContent = 'Read full review';
-        }
       });
     });
 

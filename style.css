@@ -592,34 +592,6 @@ body {
     border: none;
     padding: 0;
 }
-.review-card-full {
-    overflow-wrap: break-word;
-    word-wrap: break-word;
-}
-.review-card-fulltext {
-    font-size: 0.95rem;
-    color: #444;
-    line-height: 1.6;
-    font-style: italic;
-    overflow-wrap: break-word;
-    word-wrap: break-word;
-    white-space: normal;
-    margin: 0;
-}
-.review-card-readmore {
-    background: none;
-    border: none;
-    color: var(--mibox-dark);
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    padding: 0;
-    margin-bottom: 12px;
-    text-decoration: underline;
-}
-.review-card-readmore:hover {
-    color: #000;
-}
 .review-card-meta {
     display: flex;
     align-items: center;
