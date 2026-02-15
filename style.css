@@ -553,7 +553,8 @@ body {
     gap: 8px;
 }
 .reviews-carousel-viewport {
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: visible;
     flex: 1;
 }
 .reviews-carousel-track {
@@ -563,6 +564,7 @@ body {
 .reviews-carousel-slide {
     flex-shrink: 0;
     box-sizing: border-box;
+    overflow: visible;
 }
 
 /* Review Card */
@@ -590,11 +592,19 @@ body {
     border: none;
     padding: 0;
 }
+.review-card-full {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+}
 .review-card-fulltext {
     font-size: 0.95rem;
     color: #444;
     line-height: 1.6;
     font-style: italic;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    white-space: normal;
+    margin: 0;
 }
 .review-card-readmore {
     background: none;
