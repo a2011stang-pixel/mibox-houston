@@ -31,35 +31,28 @@
   }
 
   function sourceIcon(src) {
-    if (src === 'yelp') return '<span class="rv-source rv-source-yelp" title="Yelp">Y</span>';
-    if (src === 'facebook') return '<span class="rv-source rv-source-fb" title="Facebook">f</span>';
-    return '<span class="rv-source rv-source-google" title="Google">G</span>';
+    if (src === 'yelp') return '<span class="rv-src rv-src-yelp" title="Yelp">Y</span>';
+    if (src === 'facebook') return '<span class="rv-src rv-src-fb" title="Facebook">f</span>';
+    return '<span class="rv-src rv-src-google" title="Google">G</span>';
   }
 
   function card(r) {
     var snippet = r.review_snippet ? esc(r.review_snippet) : '';
     var body = esc(r.review_text);
 
-    // Bold the snippet inline within the body text
-    var bodyHtml = body;
-    if (snippet && body.length > snippet.length) {
-      var idx = body.toLowerCase().indexOf(snippet.toLowerCase());
-      if (idx !== -1) {
-        bodyHtml = body.substring(0, idx) +
-          '<strong>' + body.substring(idx, idx + snippet.length) + '</strong>' +
-          body.substring(idx + snippet.length);
-      }
-    }
-
     var html = '<div class="rv-card">';
+    // Header: name + tiny source icon + badge
     html += '<div class="rv-card-top">';
-    html += sourceIcon(r.source);
-    html += '<div class="rv-meta">';
     html += '<span class="rv-name">' + esc(r.reviewer_name) + '</span>';
+    html += sourceIcon(r.source);
+    html += '</div>';
     html += badge(r.service_type, r.review_date);
-    html += '</div>';
-    html += '</div>';
-    html += '<p class="rv-body">' + bodyHtml + '</p>';
+    // Stars
+    html += '<div class="rv-stars">★★★★★</div>';
+    // Snippet as pull-quote
+    if (snippet) html += '<p class="rv-snippet">"' + snippet + '"</p>';
+    // Body text (truncated via CSS)
+    html += '<p class="rv-body">' + body + '</p>';
     html += '</div>';
     return html;
   }
