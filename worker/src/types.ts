@@ -176,6 +176,7 @@ export interface Review {
   review_text: string;
   review_snippet: string | null;
   service_type: string | null;
+  source: string;
   owner_response: string | null;
   google_review_id: string | null;
   is_featured: number;

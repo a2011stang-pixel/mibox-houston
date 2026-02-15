@@ -809,7 +809,14 @@
                                         <option value="event">Event</option>
                                     </select>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-1">
+                                    <select class="form-select" id="qaSource">
+                                        <option value="google">Google</option>
+                                        <option value="yelp">Yelp</option>
+                                        <option value="facebook">Facebook</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
                                     <input type="text" class="form-control" id="qaTags" placeholder="Tags (comma-sep)">
                                 </div>
                                 <div class="col-md-2 d-flex gap-2">
@@ -874,6 +881,7 @@
                                         <th>Rating</th>
                                         <th>Snippet</th>
                                         <th>Tags</th>
+                                        <th>Source</th>
                                         <th>Date</th>
                                         <th>Featured</th>
                                         <th>Active</th>
@@ -929,7 +937,7 @@
                             <input type="text" class="form-control" id="reviewSnippet" placeholder="Short bold quote for display">
                         </div>
                         <div class="row">
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-4 mb-3">
                                 <label class="form-label">Service Type</label>
                                 <select class="form-select" id="reviewServiceType">
                                     <option value="">None</option>
@@ -939,7 +947,15 @@
                                     <option value="event">Event</option>
                                 </select>
                             </div>
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Source</label>
+                                <select class="form-select" id="reviewSource">
+                                    <option value="google">Google</option>
+                                    <option value="yelp">Yelp</option>
+                                    <option value="facebook">Facebook</option>
+                                </select>
+                            </div>
+                            <div class="col-md-5 mb-3">
                                 <label class="form-label">Tags (comma-separated)</label>
                                 <input type="text" class="form-control" id="reviewTags" placeholder="homepage, pricing, moving">
                             </div>

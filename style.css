@@ -538,11 +538,40 @@ body {
     padding: 24px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
+.rv-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
 .rv-name {
     font-size: 1.05rem;
     font-weight: 700;
     color: var(--mibox-dark);
-    margin: 0 0 8px;
+    margin: 0;
+}
+.rv-source {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+.rv-source-google {
+    background: #4285F4;
+    color: white;
+}
+.rv-source-yelp {
+    background: #D32323;
+    color: white;
+}
+.rv-source-fb {
+    background: #1877F2;
+    color: white;
 }
 .rv-badge {
     display: inline-block;

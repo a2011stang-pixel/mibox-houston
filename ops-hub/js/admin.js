@@ -2133,7 +2133,7 @@ function renderReviewsTable() {
     if (!tbody) return;
 
     if (reviews.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">No reviews found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-4">No reviews found</td></tr>';
         return;
     }
 
@@ -2145,12 +2145,17 @@ function renderReviewsTable() {
         const tags = (r.tags || []).map(t =>
             '<span class="badge bg-secondary me-1">' + escapeHtmlAdmin(t) + '</span>'
         ).join('');
+        const src = r.source || 'google';
+        const srcBadge = src === 'yelp' ? '<span class="badge bg-danger">Yelp</span>'
+            : src === 'facebook' ? '<span class="badge bg-primary">FB</span>'
+            : '<span class="badge bg-info">Google</span>';
 
         return '<tr>' +
             '<td><strong>' + escapeHtmlAdmin(r.reviewer_name) + '</strong></td>' +
             '<td>' + stars + '</td>' +
             '<td>' + snippet + '</td>' +
             '<td>' + (tags || '<span class="text-muted">-</span>') + '</td>' +
+            '<td>' + srcBadge + '</td>' +
             '<td>' + escapeHtmlAdmin(r.review_date) + '</td>' +
             '<td><div class="form-check form-switch"><input class="form-check-input" type="checkbox" ' +
                 (r.is_featured ? 'checked' : '') +
@@ -2200,6 +2205,7 @@ function editReview(id) {
     document.getElementById('reviewText').value = review.review_text;
     document.getElementById('reviewSnippet').value = review.review_snippet || '';
     document.getElementById('reviewServiceType').value = review.service_type || '';
+    document.getElementById('reviewSource').value = review.source || 'google';
     document.getElementById('reviewTags').value = (review.tags || []).join(', ');
     document.getElementById('reviewOwnerResponse').value = review.owner_response || '';
     document.getElementById('reviewIsFeatured').checked = !!review.is_featured;
@@ -2247,6 +2253,7 @@ document.getElementById('reviewForm')?.addEventListener('submit', async (e) => {
         review_text: document.getElementById('reviewText').value,
         review_snippet: document.getElementById('reviewSnippet').value || null,
         service_type: document.getElementById('reviewServiceType').value || null,
+        source: document.getElementById('reviewSource').value || 'google',
         owner_response: document.getElementById('reviewOwnerResponse').value || null,
         is_featured: document.getElementById('reviewIsFeatured').checked,
         is_active: document.getElementById('reviewIsActive').checked,
@@ -2303,6 +2310,7 @@ document.getElementById('quickAddForm')?.addEventListener('submit', async (e) =>
         review_text: document.getElementById('qaText').value.trim(),
         review_snippet: document.getElementById('qaSnippet').value.trim() || null,
         service_type: document.getElementById('qaService').value || null,
+        source: document.getElementById('qaSource').value || 'google',
         is_featured: document.getElementById('qaFeatured').checked,
         is_active: true,
         tags: tags,

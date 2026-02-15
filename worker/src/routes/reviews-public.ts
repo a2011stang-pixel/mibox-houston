@@ -67,6 +67,7 @@ reviewsPublicRoutes.get('/', async (c) => {
       review_text: r.review_text,
       review_snippet: r.review_snippet,
       service_type: r.service_type,
+      source: r.source,
       owner_response: r.owner_response,
       google_review_id: r.google_review_id,
       is_featured: r.is_featured,

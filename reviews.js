@@ -30,12 +30,21 @@
     return '<span class="rv-badge">' + (label ? label + ' ' : '') + date + '</span>';
   }
 
+  function sourceIcon(src) {
+    if (src === 'yelp') return '<span class="rv-source rv-source-yelp" title="Yelp">Y</span>';
+    if (src === 'facebook') return '<span class="rv-source rv-source-fb" title="Facebook">f</span>';
+    return '<span class="rv-source rv-source-google" title="Google">G</span>';
+  }
+
   function card(r) {
     var snippet = r.review_snippet ? esc(r.review_snippet) : '';
     var body = esc(r.review_text);
 
     var html = '<div class="rv-card">';
+    html += '<div class="rv-card-top">';
     html += '<h4 class="rv-name">' + esc(r.reviewer_name) + '</h4>';
+    html += sourceIcon(r.source);
+    html += '</div>';
     html += badge(r.service_type, r.review_date);
     html += '<div class="rv-stars">★★★★★</div>';
     if (snippet) html += '<p class="rv-snippet">' + snippet + '</p>';
