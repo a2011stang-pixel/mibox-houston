@@ -36,9 +36,19 @@
     return '<span class="rv-src rv-src-google" title="Google">G</span>';
   }
 
+  function boldSnippet(body, snippet) {
+    if (!snippet) return body;
+    var idx = body.toLowerCase().indexOf(snippet.toLowerCase());
+    if (idx === -1) return body;
+    var before = body.slice(0, idx);
+    var match = body.slice(idx, idx + snippet.length);
+    var after = body.slice(idx + snippet.length);
+    return before + '<strong>' + match + '</strong>' + after;
+  }
+
   function card(r) {
     var snippet = r.review_snippet ? esc(r.review_snippet) : '';
-    var body = esc(r.review_text);
+    var body = boldSnippet(esc(r.review_text), snippet);
 
     var html = '<div class="rv-card">';
     // Header: name + tiny source icon + badge
@@ -49,9 +59,7 @@
     html += badge(r.service_type, r.review_date);
     // Stars
     html += '<div class="rv-stars">★★★★★</div>';
-    // Snippet as pull-quote
-    if (snippet) html += '<p class="rv-snippet">"' + snippet + '"</p>';
-    // Body text (truncated via CSS)
+    // Body text with snippet bolded inline
     html += '<p class="rv-body">' + body + '</p>';
     html += '</div>';
     return html;
@@ -70,6 +78,25 @@
           html += card(d.reviews[i]);
         }
         grid.innerHTML = html;
+
+        // Add "Read more" only for reviews that overflow 6 lines
+        var bodies = grid.querySelectorAll('.rv-body');
+        for (var j = 0; j < bodies.length; j++) {
+          (function (el) {
+            if (el.scrollHeight > el.clientHeight + 1) {
+              var link = document.createElement('a');
+              link.className = 'rv-read-more';
+              link.href = '#';
+              link.textContent = 'Read more';
+              link.addEventListener('click', function (e) {
+                e.preventDefault();
+                el.classList.add('rv-body-expanded');
+                link.style.display = 'none';
+              });
+              el.parentNode.appendChild(link);
+            }
+          })(bodies[j]);
+        }
 
         // Arrow scroll
         var prevBtn = document.getElementById('rvPrev');
