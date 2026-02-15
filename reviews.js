@@ -57,7 +57,7 @@
     var grid = document.getElementById('reviewsGrid');
     if (!grid) return;
 
-    fetch(API + '?tag=homepage&featured=1&limit=3')
+    fetch(API + '?tag=homepage&featured=1&limit=7')
       .then(function (r) { return r.json(); })
       .then(function (d) {
         if (!d.reviews || !d.reviews.length) return;
