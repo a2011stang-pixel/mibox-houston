@@ -192,6 +192,39 @@ class AdminAPI {
     async getQuoteStats() {
         return this.request('GET', '/quotes/stats/summary');
     }
+
+    // Reviews
+    async getReviews(params = {}) {
+        const filtered = Object.fromEntries(
+            Object.entries(params).filter(([_, v]) => v != null && v !== '')
+        );
+        const query = new URLSearchParams(filtered).toString();
+        return this.request('GET', '/reviews' + (query ? '?' + query : ''));
+    }
+
+    async createReview(data) {
+        return this.request('POST', '/reviews', data);
+    }
+
+    async updateReview(id, data) {
+        return this.request('PUT', '/reviews/' + id, data);
+    }
+
+    async deleteReview(id) {
+        return this.request('DELETE', '/reviews/' + id);
+    }
+
+    async toggleReviewFeatured(id, isFeatured) {
+        return this.request('PUT', '/reviews/' + id + '/featured', { is_featured: isFeatured });
+    }
+
+    async toggleReviewActive(id, isActive) {
+        return this.request('PUT', '/reviews/' + id + '/active', { is_active: isActive });
+    }
+
+    async getReviewTags() {
+        return this.request('GET', '/reviews/tags');
+    }
 }
 
 const api = new AdminAPI();

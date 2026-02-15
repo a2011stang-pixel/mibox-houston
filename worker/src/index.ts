@@ -12,6 +12,8 @@ import { getQuoteRoutes } from './routes/get-quote';
 import { adminRoutes } from './routes/admin';
 import { promotionsRoutes } from './routes/promotions';
 import { staffQuotesRoutes } from './routes/staff-quotes';
+import { reviewsPublicRoutes } from './routes/reviews-public';
+import { reviewsAdminRoutes } from './routes/reviews-admin';
 import { authMiddleware } from './middleware/auth';
 import { runBackup } from './services/backup';
 
@@ -45,6 +47,7 @@ app.route('/api/public', publicRoutes);
 app.route('/api/public/quote', quoteRoutes);
 app.route('/api/public/quote', getQuoteRoutes);
 app.route('/api/public/booking', bookingRoutes);
+app.route('/api/public/reviews', reviewsPublicRoutes);
 app.route('/api/auth', authRoutes);
 
 // Protected routes (auth required)
@@ -55,6 +58,7 @@ app.use('/api/audit/*', authMiddleware);
 app.use('/api/admin/*', authMiddleware);
 app.use('/api/promotions/*', authMiddleware);
 app.use('/api/quotes/*', authMiddleware);
+app.use('/api/reviews/*', authMiddleware);
 
 app.route('/api/zones', zonesRoutes);
 app.route('/api/zips', zipsRoutes);
@@ -63,6 +67,7 @@ app.route('/api/audit', auditRoutes);
 app.route('/api/admin', adminRoutes);
 app.route('/api/promotions', promotionsRoutes);
 app.route('/api/quotes', staffQuotesRoutes);
+app.route('/api/reviews', reviewsAdminRoutes);
 
 // Health check
 app.get('/api/health', (c) => c.json({ status: 'ok', timestamp: Date.now() }));

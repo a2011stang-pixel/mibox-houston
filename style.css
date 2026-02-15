@@ -497,7 +497,7 @@ body {
     object-fit: cover;
 }
 
-/* Testimonial */
+/* Testimonial (legacy) */
 .testimonial-section {
     background: var(--mibox-dark);
     color: white;
@@ -512,6 +512,193 @@ body {
     font-size: 1.4rem;
     font-style: italic;
     margin-bottom: 20px;
+}
+
+/* Reviews Section */
+.reviews-section {
+    padding: 60px 0;
+    background: #f8f9fa;
+}
+.reviews-section h2 {
+    font-weight: 700;
+    color: var(--mibox-dark);
+}
+
+/* Stats Badge */
+.reviews-stats-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: white;
+    padding: 8px 20px;
+    border-radius: 24px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    margin-bottom: 8px;
+}
+.reviews-stats-stars {
+    color: var(--mibox-yellow);
+    font-size: 1.1rem;
+}
+.reviews-stats-text {
+    font-size: 0.95rem;
+    color: var(--mibox-dark);
+    font-weight: 600;
+}
+
+/* Carousel Wrapper */
+.reviews-carousel-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.reviews-carousel-viewport {
+    overflow: hidden;
+    flex: 1;
+}
+.reviews-carousel-track {
+    display: flex;
+    transition: transform 0.4s ease;
+}
+.reviews-carousel-slide {
+    flex-shrink: 0;
+    box-sizing: border-box;
+}
+
+/* Review Card */
+.review-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.review-card-stars {
+    color: var(--mibox-yellow);
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+}
+.review-card-quote {
+    font-size: 1.05rem;
+    font-style: italic;
+    color: var(--mibox-dark);
+    margin-bottom: 12px;
+    flex: 1;
+    line-height: 1.5;
+    border: none;
+    padding: 0;
+}
+.review-card-fulltext {
+    font-size: 0.95rem;
+    color: #444;
+    line-height: 1.6;
+    font-style: italic;
+}
+.review-card-readmore {
+    background: none;
+    border: none;
+    color: var(--mibox-dark);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: 12px;
+    text-decoration: underline;
+}
+.review-card-readmore:hover {
+    color: #000;
+}
+.review-card-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+.review-card-name {
+    font-weight: 700;
+    color: var(--mibox-dark);
+    font-size: 0.95rem;
+}
+.review-card-service {
+    display: inline-block;
+    background: var(--mibox-yellow);
+    color: var(--mibox-dark);
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+.review-card-source {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.8rem;
+    color: #888;
+}
+.google-icon {
+    vertical-align: middle;
+}
+
+/* Carousel Navigation */
+.reviews-nav {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-size: 1.1rem;
+    color: var(--mibox-dark);
+    transition: background 0.2s, box-shadow 0.2s;
+}
+.reviews-nav:hover {
+    background: var(--mibox-yellow);
+    border-color: var(--mibox-yellow);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+/* Dots */
+.reviews-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 20px;
+}
+.reviews-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: none;
+    background: #ccc;
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.2s;
+}
+.reviews-dot.active {
+    background: var(--mibox-yellow);
+}
+
+/* Responsive */
+@media (max-width: 767px) {
+    .reviews-nav {
+        display: none;
+    }
+    .review-card {
+        padding: 20px;
+    }
+    .review-card-quote {
+        font-size: 1rem;
+    }
+    .reviews-carousel-wrapper {
+        gap: 0;
+    }
 }
 
 /* How It Works */

@@ -10,6 +10,8 @@ const BACKUP_TABLES: Record<string, string> = {
   staff_quotes: 'SELECT * FROM staff_quotes',
   staff_quote_items: 'SELECT * FROM staff_quote_items',
   staff_quote_counter: 'SELECT * FROM staff_quote_counter',
+  reviews: 'SELECT * FROM reviews',
+  review_tags: 'SELECT * FROM review_tags',
 };
 
 const RESTORABLE_TABLES = ['zones', 'zip_codes', 'pricing', 'promotions'] as const;

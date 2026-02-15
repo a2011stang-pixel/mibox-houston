@@ -56,6 +56,9 @@
                 <a class="nav-item" href="#" data-page="quote-history">
                     <i class="bi bi-clock-history"></i><span>Quote History</span>
                 </a>
+                <a class="nav-item" href="#" data-page="reviews">
+                    <i class="bi bi-star"></i><span>Reviews</span>
+                </a>
                 <a class="nav-item" href="#" data-page="audit">
                     <i class="bi bi-journal-text"></i><span>Audit Log</span>
                 </a>
@@ -764,7 +767,153 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Reviews Management -->
+            <div id="page-reviews" class="page-content d-none">
+                <div class="section-header">
+                    <h4 class="page-title">Reviews</h4>
+                    <button class="btn btn-primary" id="addReviewBtn">
+                        <i class="bi bi-plus-lg me-1"></i>Add Review
+                    </button>
+                </div>
+
+                <!-- Stats Strip -->
+                <div class="row g-3 mb-4" id="reviewStatsStrip">
+                    <div class="col-md-3"><div class="stat-card"><div class="stat-value" id="reviewStatTotal">-</div><div class="stat-label">Total Reviews</div></div></div>
+                    <div class="col-md-3"><div class="stat-card"><div class="stat-value" id="reviewStatAvg">-</div><div class="stat-label">Avg Rating</div></div></div>
+                    <div class="col-md-3"><div class="stat-card"><div class="stat-value" id="reviewStatFeatured">-</div><div class="stat-label">Featured</div></div></div>
+                    <div class="col-md-3"><div class="stat-card"><div class="stat-value" id="reviewStatActive">-</div><div class="stat-label">Active</div></div></div>
+                </div>
+
+                <!-- Filters -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <div class="row g-2">
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" id="reviewSearch" placeholder="Search by name or text...">
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="reviewTagFilter">
+                                    <option value="">All Tags</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-select" id="reviewFeaturedFilter">
+                                    <option value="">All</option>
+                                    <option value="1">Featured</option>
+                                    <option value="0">Not Featured</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-primary w-100" id="applyReviewFilters">Apply Filters</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-sm mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Reviewer</th>
+                                        <th>Rating</th>
+                                        <th>Snippet</th>
+                                        <th>Tags</th>
+                                        <th>Date</th>
+                                        <th>Featured</th>
+                                        <th>Active</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="reviewsTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
+    </div>
+
+    <!-- Review Modal -->
+    <div class="modal fade" id="reviewModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reviewModalTitle">Add Review</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="reviewForm">
+                    <div class="modal-body">
+                        <input type="hidden" id="reviewEditId">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Reviewer Name</label>
+                                <input type="text" class="form-control" id="reviewName" required>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Rating</label>
+                                <select class="form-select" id="reviewRating">
+                                    <option value="5">5 Stars</option>
+                                    <option value="4">4 Stars</option>
+                                    <option value="3">3 Stars</option>
+                                    <option value="2">2 Stars</option>
+                                    <option value="1">1 Star</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Review Date</label>
+                                <input type="text" class="form-control" id="reviewDate" placeholder="YYYY-MM" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Review Text</label>
+                            <textarea class="form-control" id="reviewText" rows="4" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Snippet (pull-quote for cards)</label>
+                            <input type="text" class="form-control" id="reviewSnippet" placeholder="Short bold quote for display">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Service Type</label>
+                                <select class="form-select" id="reviewServiceType">
+                                    <option value="">None</option>
+                                    <option value="moving">Moving</option>
+                                    <option value="storage">Storage</option>
+                                    <option value="both">Moving & Storage</option>
+                                    <option value="event">Event</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Tags (comma-separated)</label>
+                                <input type="text" class="form-control" id="reviewTags" placeholder="homepage, pricing, moving">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Owner Response</label>
+                            <textarea class="form-control" id="reviewOwnerResponse" rows="2"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="reviewIsFeatured">
+                                    <label class="form-check-label" for="reviewIsFeatured">Featured</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="reviewIsActive" checked>
+                                    <label class="form-check-label" for="reviewIsActive">Active</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="reviewSubmitBtn">Save Review</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <!-- Zone Modal -->

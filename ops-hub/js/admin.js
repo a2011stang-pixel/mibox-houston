@@ -1,6 +1,7 @@
 // Admin Dashboard Main Script
 let zones = [];
 let promotions = [];
+let reviews = [];
 let currentPage = 'dashboard';
 
 // Check authentication on load
@@ -50,6 +51,7 @@ async function navigateTo(page) {
         case 'advanced-quote': await loadAdvancedQuote(); break;
         case 'quote-history': await loadQuoteHistory(); break;
         case 'audit': await loadAudit(); break;
+        case 'reviews': await loadReviews(); break;
     }
 }
 
@@ -2067,3 +2069,206 @@ function renderPagination(containerId, total, limit, currentPage, onPageChange) 
         });
     });
 }
+
+// ==========================================
+// Reviews Management
+// ==========================================
+
+function escapeHtmlAdmin(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+}
+
+async function loadReviews() {
+    try {
+        const params = {};
+        const search = document.getElementById('reviewSearch')?.value;
+        const tag = document.getElementById('reviewTagFilter')?.value;
+        const featured = document.getElementById('reviewFeaturedFilter')?.value;
+
+        if (search) params.search = search;
+        if (tag) params.tag = tag;
+        if (featured) params.featured = featured;
+
+        const data = await api.getReviews(params);
+        reviews = data.reviews || [];
+
+        // Update stats
+        let featuredCount = 0;
+        let activeCount = 0;
+        reviews.forEach(r => {
+            if (r.is_featured) featuredCount++;
+            if (r.is_active) activeCount++;
+        });
+        document.getElementById('reviewStatTotal').textContent = data.total || reviews.length;
+        document.getElementById('reviewStatAvg').textContent = '5.0';
+        document.getElementById('reviewStatFeatured').textContent = featuredCount;
+        document.getElementById('reviewStatActive').textContent = activeCount;
+
+        renderReviewsTable();
+
+        // Load tags for filter dropdown
+        try {
+            const tagData = await api.getReviewTags();
+            const tagSelect = document.getElementById('reviewTagFilter');
+            if (tagSelect && tagData.tags) {
+                const currentVal = tagSelect.value;
+                tagSelect.innerHTML = '<option value="">All Tags</option>';
+                tagData.tags.forEach(t => {
+                    tagSelect.innerHTML += '<option value="' + escapeHtmlAdmin(t.tag) + '">' +
+                        escapeHtmlAdmin(t.tag) + ' (' + t.count + ')</option>';
+                });
+                tagSelect.value = currentVal;
+            }
+        } catch (e) {}
+    } catch (err) {
+        showToast('Error', 'Failed to load reviews: ' + err.message, 'danger');
+    }
+}
+
+function renderReviewsTable() {
+    const tbody = document.getElementById('reviewsTable');
+    if (!tbody) return;
+
+    if (reviews.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">No reviews found</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = reviews.map(r => {
+        const stars = '<span style="color:#FFDD00;">' + '&#9733;'.repeat(r.rating) + '</span>';
+        const snippet = r.review_snippet
+            ? escapeHtmlAdmin(r.review_snippet.length > 60 ? r.review_snippet.substring(0, 60) + '...' : r.review_snippet)
+            : '<span class="text-muted">-</span>';
+        const tags = (r.tags || []).map(t =>
+            '<span class="badge bg-secondary me-1">' + escapeHtmlAdmin(t) + '</span>'
+        ).join('');
+
+        return '<tr>' +
+            '<td><strong>' + escapeHtmlAdmin(r.reviewer_name) + '</strong></td>' +
+            '<td>' + stars + '</td>' +
+            '<td>' + snippet + '</td>' +
+            '<td>' + (tags || '<span class="text-muted">-</span>') + '</td>' +
+            '<td>' + escapeHtmlAdmin(r.review_date) + '</td>' +
+            '<td><div class="form-check form-switch"><input class="form-check-input" type="checkbox" ' +
+                (r.is_featured ? 'checked' : '') +
+                ' onchange="toggleReviewFeatured(' + r.id + ', this.checked)"></div></td>' +
+            '<td><div class="form-check form-switch"><input class="form-check-input" type="checkbox" ' +
+                (r.is_active ? 'checked' : '') +
+                ' onchange="toggleReviewActive(' + r.id + ', this.checked)"></div></td>' +
+            '<td>' +
+                '<button class="btn btn-sm btn-outline-primary me-1" onclick="editReview(' + r.id + ')"><i class="bi bi-pencil"></i></button>' +
+                '<button class="btn btn-sm btn-outline-danger" onclick="deleteReview(' + r.id + ')"><i class="bi bi-trash"></i></button>' +
+            '</td>' +
+        '</tr>';
+    }).join('');
+}
+
+async function toggleReviewFeatured(id, isFeatured) {
+    try {
+        await api.toggleReviewFeatured(id, isFeatured);
+        showToast('Success', 'Featured status updated');
+        await loadReviews();
+    } catch (err) {
+        showToast('Error', err.message, 'danger');
+        await loadReviews();
+    }
+}
+
+async function toggleReviewActive(id, isActive) {
+    try {
+        await api.toggleReviewActive(id, isActive);
+        showToast('Success', 'Active status updated');
+        await loadReviews();
+    } catch (err) {
+        showToast('Error', err.message, 'danger');
+        await loadReviews();
+    }
+}
+
+function editReview(id) {
+    const review = reviews.find(r => r.id === id);
+    if (!review) return;
+
+    document.getElementById('reviewModalTitle').textContent = 'Edit Review';
+    document.getElementById('reviewEditId').value = id;
+    document.getElementById('reviewName').value = review.reviewer_name;
+    document.getElementById('reviewRating').value = review.rating;
+    document.getElementById('reviewDate').value = review.review_date;
+    document.getElementById('reviewText').value = review.review_text;
+    document.getElementById('reviewSnippet').value = review.review_snippet || '';
+    document.getElementById('reviewServiceType').value = review.service_type || '';
+    document.getElementById('reviewTags').value = (review.tags || []).join(', ');
+    document.getElementById('reviewOwnerResponse').value = review.owner_response || '';
+    document.getElementById('reviewIsFeatured').checked = !!review.is_featured;
+    document.getElementById('reviewIsActive').checked = !!review.is_active;
+
+    new bootstrap.Modal(document.getElementById('reviewModal')).show();
+}
+
+async function deleteReview(id) {
+    const review = reviews.find(r => r.id === id);
+    if (!review) return;
+
+    if (!confirm('Delete review from ' + review.reviewer_name + '?')) return;
+
+    try {
+        await api.deleteReview(id);
+        showToast('Success', 'Review deleted');
+        await loadReviews();
+    } catch (err) {
+        showToast('Error', err.message, 'danger');
+    }
+}
+
+// Add Review button
+document.getElementById('addReviewBtn')?.addEventListener('click', () => {
+    document.getElementById('reviewModalTitle').textContent = 'Add Review';
+    document.getElementById('reviewForm').reset();
+    document.getElementById('reviewEditId').value = '';
+    document.getElementById('reviewIsActive').checked = true;
+    new bootstrap.Modal(document.getElementById('reviewModal')).show();
+});
+
+// Review form submit
+document.getElementById('reviewForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const id = document.getElementById('reviewEditId').value;
+    const tagsStr = document.getElementById('reviewTags').value;
+    const tags = tagsStr ? tagsStr.split(',').map(t => t.trim().toLowerCase()).filter(Boolean) : [];
+
+    const data = {
+        reviewer_name: document.getElementById('reviewName').value,
+        rating: parseInt(document.getElementById('reviewRating').value),
+        review_date: document.getElementById('reviewDate').value,
+        review_text: document.getElementById('reviewText').value,
+        review_snippet: document.getElementById('reviewSnippet').value || null,
+        service_type: document.getElementById('reviewServiceType').value || null,
+        owner_response: document.getElementById('reviewOwnerResponse').value || null,
+        is_featured: document.getElementById('reviewIsFeatured').checked,
+        is_active: document.getElementById('reviewIsActive').checked,
+        tags: tags,
+    };
+
+    try {
+        if (id) {
+            await api.updateReview(id, data);
+            showToast('Success', 'Review updated');
+        } else {
+            await api.createReview(data);
+            showToast('Success', 'Review created');
+        }
+        bootstrap.Modal.getInstance(document.getElementById('reviewModal')).hide();
+        await loadReviews();
+    } catch (err) {
+        showToast('Error', err.message, 'danger');
+    }
+});
+
+// Review filter button
+document.getElementById('applyReviewFilters')?.addEventListener('click', () => {
+    loadReviews();
+});
