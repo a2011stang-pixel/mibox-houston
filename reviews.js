@@ -57,7 +57,7 @@
     var grid = document.getElementById('reviewsGrid');
     if (!grid) return;
 
-    fetch(API + '?tag=homepage&featured=1&limit=7')
+    fetch(API + '?tag=homepage&featured=1&limit=12')
       .then(function (r) { return r.json(); })
       .then(function (d) {
         if (!d.reviews || !d.reviews.length) return;
@@ -66,6 +66,22 @@
           html += card(d.reviews[i]);
         }
         grid.innerHTML = html;
+
+        // Arrow scroll
+        var prevBtn = document.getElementById('rvPrev');
+        var nextBtn = document.getElementById('rvNext');
+        if (prevBtn && nextBtn) {
+          var scrollAmount = function () {
+            var first = grid.querySelector('.rv-card');
+            return first ? first.offsetWidth + 20 : 300;
+          };
+          nextBtn.addEventListener('click', function () {
+            grid.scrollBy({ left: scrollAmount(), behavior: 'smooth' });
+          });
+          prevBtn.addEventListener('click', function () {
+            grid.scrollBy({ left: -scrollAmount(), behavior: 'smooth' });
+          });
+        }
       })
       .catch(function (e) { console.error('Reviews:', e); });
   }
