@@ -188,14 +188,15 @@
     // Read more buttons
     container.querySelectorAll('.review-card-readmore').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        var target = document.getElementById(this.getAttribute('data-target'));
-        var quote = this.previousElementSibling.previousElementSibling;
-        if (target && target.style.display === 'none') {
-          target.style.display = 'block';
+        var card = this.closest('.review-card');
+        var quote = card.querySelector('.review-card-quote');
+        var full = card.querySelector('.review-card-full');
+        if (full && full.style.display === 'none') {
+          full.style.display = 'block';
           if (quote) quote.style.display = 'none';
           this.textContent = 'Show less';
-        } else if (target) {
-          target.style.display = 'none';
+        } else if (full) {
+          full.style.display = 'none';
           if (quote) quote.style.display = 'block';
           this.textContent = 'Read full review';
         }
