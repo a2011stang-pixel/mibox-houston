@@ -750,18 +750,25 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </div>
     </section>
 
-    <!-- Testimonial -->
-    <section class="testimonial-section">
-        <div class="container text-center">
-            <div class="stars">
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
-                <i class="bi bi-star-fill"></i>
+    <!-- Reviews Carousel -->
+    <section class="reviews-section" id="reviews">
+        <div class="container">
+            <h2 class="text-center mb-2">What Our Customers Say</h2>
+            <div class="text-center mb-4">
+                <div class="reviews-stats-badge">
+                    <span class="reviews-stats-stars">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                    </span>
+                    <span class="reviews-stats-text">5.0 from 79 Google Reviews</span>
+                </div>
             </div>
-            <blockquote>"I would recommend 10/10 times! Mike and his team made our move so much easier. The container was clean, delivery was on time, and the price was unbeatable."</blockquote>
-            <p class="mb-0">— <strong>Jonathan Prifan</strong>, Google Review</p>
+            <div id="reviewsCarousel">
+                <!-- Populated dynamically by reviews.js -->
+            </div>
         </div>
     </section>
 
@@ -800,24 +807,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </div>
     </section>
 
-    <!-- Second Testimonial -->
-    <section class="py-5 bg-light">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-lg-8 text-center">
-                    <div class="stars mb-3" style="color: var(--mibox-yellow); font-size: 1.3rem;">
-                        <i class="bi bi-star-fill"></i>
-                        <i class="bi bi-star-fill"></i>
-                        <i class="bi bi-star-fill"></i>
-                        <i class="bi bi-star-fill"></i>
-                        <i class="bi bi-star-fill"></i>
-                    </div>
-                    <blockquote class="fs-5 fst-italic mb-3">"Service, responsiveness and communication were excellent. The unit was clean, sturdy, and seems to be of a higher quality than the others I've used. Would use again!"</blockquote>
-                    <p class="mb-0 text-muted">— <strong>Michael Siegel</strong>, 5-Star Google Review</p>
-                </div>
-            </div>
-        </div>
-    </section>
+    <!-- Reviews are now displayed in the carousel above -->
 
     <!-- Why Rent With Us -->
     <section class="why-section">
@@ -993,6 +983,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <!-- Quote Calculator JavaScript -->
     <script src="script.js"></script>
+    <script src="reviews.js" defer></script>
 
     <!-- Dynamic Pricing Script -->
     <script>

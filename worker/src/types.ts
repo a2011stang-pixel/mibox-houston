@@ -167,3 +167,26 @@ export interface StaffQuoteItem {
   zone_name: string | null;
   delivery_fee_cents: number;
 }
+
+export interface Review {
+  id: number;
+  reviewer_name: string;
+  rating: number;
+  review_date: string;
+  review_text: string;
+  review_snippet: string | null;
+  service_type: string | null;
+  owner_response: string | null;
+  google_review_id: string | null;
+  is_featured: number;
+  is_active: number;
+  created_at: string;
+  updated_at: string;
+  tags?: string[];
+}
+
+export interface ReviewTag {
+  id: number;
+  review_id: number;
+  tag: string;
+}
